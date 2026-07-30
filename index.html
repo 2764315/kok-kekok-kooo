@@ -4,7 +4,7 @@
 <head>
 	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>Streamスライド マネージャー</title>
+	<title>Preview Deck - プレビューデック</title>
 	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 	<script src="https://www.youtube.com/iframe_api"></script>
 
@@ -92,9 +92,14 @@
 			justify-content: center;
 		}
 
+		#sidebar.collapsed .group-toggle-btn {
+			display: none;
+		}
+
 		#sidebar-header {
 			display: flex;
-			justify-content: flex-end;
+			justify-content: space-between;
+			align-items: center;
 			padding: 5px;
 			background-color: rgba(255, 255, 255, 0.2);
 			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -112,10 +117,88 @@
 			display: flex;
 			align-items: center;
 			gap: 4px;
+			transition: background-color 0.2s;
 		}
 
 		#toggle-sidebar-btn:hover {
 			background-color: rgba(0, 0, 0, 0.05);
+		}
+
+		#chromakey-btn {
+			width: 36px;
+			height: 36px;
+			border-radius: 50%;
+			background-color: #ffffff;
+			border: 1px solid rgba(0, 0, 0, 0.1);
+			color: #444;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 0;
+			transition: transform 0.1s, box-shadow 0.2s, background-color 0.1s;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+			position: relative;
+		}
+
+		#chromakey-btn:hover {
+			transform: scale(1.05);
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+			background-color: #00FF00;
+			color: #333;
+		}
+
+		body.chromakey-mode #chromakey-btn {
+			background-color: #00FF00;
+			color: #333;
+		}
+
+		body.chromakey-mode #chromakey-btn:hover {
+			background-color: #ffffff;
+		}
+
+		/* ★変更: ツールチップをボタンの右側に配置 */
+		#chromakey-btn::after {
+			content: attr(data-tooltip);
+			position: absolute;
+			top: 50%;
+			left: calc(100% + 10px);
+			transform: translateY(-50%);
+			background-color: #2c3e50;
+			color: #ffffff;
+			padding: 6px 12px;
+			border-radius: 6px;
+			font-size: 12px;
+			font-weight: bold;
+			white-space: nowrap;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			z-index: 1000;
+			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+		}
+
+		/* ★変更: ツールチップの矢印を左向きにして右側配置に対応 */
+		#chromakey-btn::before {
+			content: '';
+			position: absolute;
+			top: 50%;
+			left: calc(100% + 2px);
+			transform: translateY(-50%);
+			border-width: 6px;
+			border-style: solid;
+			border-color: transparent #2c3e50 transparent transparent;
+			opacity: 0;
+			visibility: hidden;
+			pointer-events: none;
+			z-index: 1000;
+		}
+
+		#chromakey-btn:hover::after,
+		#chromakey-btn:hover::before {
+			opacity: 1;
+			visibility: visible;
+			transition: opacity 0s;
 		}
 
 		#sidebar-content {
@@ -180,6 +263,11 @@
 			background-color: rgba(255, 255, 255, 0.8);
 		}
 
+		.group-container.collapsed-group .list-item,
+		.group-container.collapsed-group .sub-group-title {
+			display: none !important;
+		}
+
 		.group-title {
 			margin-top: 0;
 			margin-bottom: 10px;
@@ -188,7 +276,6 @@
 			background-color: #e0f2ec;
 			padding: 8px 10px;
 			border-bottom: 1px solid #b0d4c8;
-			pointer-events: none;
 			font-weight: bold;
 			display: flex;
 			align-items: center;
@@ -196,6 +283,7 @@
 		}
 
 		.group-title-full {
+			pointer-events: none;
 			display: flex;
 			align-items: center;
 			gap: 4px;
@@ -223,6 +311,25 @@
 			margin-bottom: 4px;
 			font-weight: 900;
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+
+		.group-toggle-btn {
+			margin-left: auto;
+			background: none;
+			border: none;
+			color: #666;
+			cursor: pointer;
+			padding: 2px;
+			border-radius: 4px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			pointer-events: auto;
+		}
+
+		.group-toggle-btn:hover {
+			background-color: rgba(0, 0, 0, 0.05);
+			color: #333;
 		}
 
 		.sub-group-title {
@@ -279,7 +386,6 @@
 			background-color: #F1CF0F;
 			color: #333;
 			border-color: #dcb800;
-			/* 太字を解除 */
 			font-weight: normal;
 			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
 		}
@@ -312,6 +418,21 @@
 			align-items: center;
 			overflow: auto;
 			position: relative;
+		}
+
+		body.chromakey-mode #main {
+			background-color: #00FF00 !important;
+		}
+
+		body.chromakey-mode #presentation-controls,
+		body.chromakey-mode #wrapper-header {
+			visibility: hidden !important;
+		}
+
+		body.chromakey-mode #presentation-area {
+			border-color: transparent !important;
+			box-shadow: none !important;
+			background-color: transparent !important;
 		}
 
 		#presentation-controls {
@@ -589,7 +710,6 @@
 			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 			position: relative;
 			cursor: grab;
-			/* パン操作のカーソル */
 		}
 
 		#presentation-area:active {
@@ -794,6 +914,9 @@
 
 	<div id="sidebar">
 		<div id="sidebar-header">
+			<button id="chromakey-btn" data-tooltip="クロマキー背景で表示する">
+				<span class="material-symbols-outlined">background_replace</span>
+			</button>
 			<button id="toggle-sidebar-btn" title="サイドバーを縮小する">
 				<span class="material-symbols-outlined" id="sidebar-chevron">chevron_left</span>
 				<span class="toggle-text">閉じる</span>
@@ -898,7 +1021,7 @@
 			<div id="presentation-area">
 				<div id="zoom-wrapper">
 					<div id="content-layer">
-						<p style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
+						<p id="empty-message" style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
 					</div>
 					<canvas id="drawing-canvas"></canvas>
 				</div>
@@ -974,6 +1097,7 @@
 		const presentationArea = document.getElementById('presentation-area');
 		const zoomWrapper = document.getElementById('zoom-wrapper');
 		const contentLayer = document.getElementById('content-layer');
+		const emptyMessage = document.getElementById('empty-message');
 		const presentationControls = document.getElementById('presentation-controls');
 
 		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
@@ -983,6 +1107,8 @@
 
 		const prevBtn = document.getElementById('prev-btn');
 		const nextBtn = document.getElementById('next-btn');
+
+		const chromakeyBtn = document.getElementById('chromakey-btn');
 
 		const canvas = document.getElementById('drawing-canvas');
 		const ctx = canvas.getContext('2d');
@@ -1002,7 +1128,6 @@
 		let drawingHistory = [];
 		let currentStroke = null;
 
-		// パン機能（表示位置のドラッグ移動）用変数
 		let isPanning = false;
 		let startPanX, startPanY, startScrollLeft, startScrollTop;
 
@@ -1055,10 +1180,23 @@
 			}
 		});
 
-		// ズーム適用関数（中央を起点にする）
+		// ★変更: クロマキーボタンの属性切り替え
+		chromakeyBtn.addEventListener('click', () => {
+			document.body.classList.toggle('chromakey-mode');
+			const icon = chromakeyBtn.querySelector('.material-symbols-outlined');
+			if (document.body.classList.contains('chromakey-mode')) {
+				if (emptyMessage) emptyMessage.style.display = 'none';
+				icon.innerText = 'person';
+				chromakeyBtn.setAttribute('data-tooltip', 'クロマキー背景を解除する');
+			} else {
+				if (emptyMessage) emptyMessage.style.display = 'block';
+				icon.innerText = 'background_replace';
+				chromakeyBtn.setAttribute('data-tooltip', 'クロマキー背景で表示する');
+			}
+		});
+
 		function applyZoom(oldZoom, newZoom) {
 			const rect = presentationArea.getBoundingClientRect();
-			// 現在の表示領域の中心座標を計算
 			const centerX = presentationArea.scrollLeft + rect.width / 2;
 			const centerY = presentationArea.scrollTop + rect.height / 2;
 
@@ -1068,7 +1206,6 @@
 			zoomLevelText.innerText = `${Math.round(newZoom * 100)}%`;
 			zoomSlider.value = newZoom;
 
-			// 新しいズーム倍率に合わせてスクロール位置を調整
 			presentationArea.scrollLeft = centerX * ratio - rect.width / 2;
 			presentationArea.scrollTop = centerY * ratio - rect.height / 2;
 		}
@@ -1096,7 +1233,6 @@
 			currentZoom = 1.0;
 		});
 
-		// パン機能 (ドラッグでスクロール)
 		presentationArea.addEventListener('mousedown', (e) => {
 			if (isDrawingMode) return;
 			isPanning = true;
@@ -1136,7 +1272,6 @@
 			}
 		}
 
-		// 描画の復元（キャンバスの中央を基準に描画）
 		function redrawCanvas() {
 			ctx.clearRect(0, 0, canvas.width, canvas.height);
 			const centerX = canvas.width / 2;
@@ -1225,7 +1360,6 @@
 			};
 		}
 
-		// 描画座標の記録（キャンバスの中央からの相対位置として保存）
 		canvas.addEventListener('mousedown', (e) => {
 			if (!isDrawingMode) return;
 			isDrawing = true;
@@ -1426,7 +1560,7 @@
 
 		const resizeObserver = new ResizeObserver(entries => {
 			for (let entry of entries) {
-				const width = presentationArea.offsetWidth; // ★変更: 外側の幅でコントロール幅を固定
+				const width = presentationArea.offsetWidth;
 				presentationControls.style.width = `${width}px`;
 
 				const contentWidth = Math.round(entry.contentRect.width);
@@ -1447,9 +1581,7 @@
 			groups.forEach((group, index) => {
 				const numStr = `${index + 1}`;
 				const fullNumSpan = group.querySelector('.group-number');
-				const shortNumSpan = group.querySelector('.group-number-short');
 				if (fullNumSpan) fullNumSpan.innerText = numStr;
-				if (shortNumSpan) shortNumSpan.innerText = numStr;
 			});
 		}
 
@@ -1495,7 +1627,22 @@
 					const groupTitle = document.createElement('h4');
 					groupTitle.className = 'group-title';
 
-					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><span class="material-symbols-outlined" style="font-size:18px;">folder</span> ${mainGroupName}</span><span class="group-title-short"><span class="group-number-short"></span>${shortName}</span>`;
+					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><span class="material-symbols-outlined" style="font-size:18px;">folder</span> ${mainGroupName}</span><span class="group-title-short">${shortName}</span><button class="group-toggle-btn"><span class="material-symbols-outlined">unfold_less</span></button>`;
+
+					const toggleBtn = groupTitle.querySelector('.group-toggle-btn');
+					toggleBtn.addEventListener('click', (e) => {
+						e.stopPropagation();
+						const container = e.target.closest('.group-container');
+						if (container) {
+							container.classList.toggle('collapsed-group');
+							const icon = toggleBtn.querySelector('.material-symbols-outlined');
+							if (container.classList.contains('collapsed-group')) {
+								icon.innerText = 'unfold_more';
+							} else {
+								icon.innerText = 'unfold_less';
+							}
+						}
+					});
 
 					currentGroupContainer.appendChild(groupTitle);
 					setupGroupDragAndDrop(currentGroupContainer);
@@ -1519,7 +1666,10 @@
 
 		function setupGroupDragAndDrop(group) {
 			group.addEventListener('dragstart', (e) => {
-				if (e.target.classList.contains('list-item')) return;
+				if (e.target.classList.contains('list-item') || e.target.closest('.group-toggle-btn')) {
+					e.preventDefault();
+					return;
+				}
 				group.classList.add('dragging');
 				e.dataTransfer.effectAllowed = 'move';
 			});
