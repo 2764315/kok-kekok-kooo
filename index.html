@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta charset="UTF-8">
+	<title>自由研究発表ツール</title>
+	<style>
+		/* 柔らかい雰囲気の全体レイアウト */
+		body {
+			display: flex;
+			font-family: "Segoe UI", "Meiryo", sans-serif;
+			margin: 0;
+			height: 100vh;
+			background-color: #f9fdfc;
+			color: #333333;
+		}
+
+		/* 左側のリスト部分（メインカラー：#A7E0CF） */
+		#sidebar {
+			width: 350px;
+			background-color: #A7E0CF;
+			border-right: 1px solid #8ecbb9;
+			display: flex;
+			flex-direction: column;
+			box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+			z-index: 10;
+			transition: width 0.3s ease;
+			position: relative;
+		}
+
+		#sidebar.collapsed {
+			width: 40px;
+		}
+
+		#sidebar.collapsed .hide-on-collapse {
+			display: none;
+		}
+
+		/* サイドバー上部のヘッダー */
+		#sidebar-header {
+			display: flex;
+			justify-content: flex-end;
+			padding: 5px;
+			background-color: rgba(255, 255, 255, 0.2);
+			border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+		}
+
+		#toggle-sidebar-btn {
+			background: none;
+			border: none;
+			color: #444;
+			cursor: pointer;
+			font-size: 14px;
+			padding: 5px;
+			font-weight: bold;
+		}
+
+		#toggle-sidebar-btn:hover {
+			color: #000;
+		}
+
+		#sidebar-content {
+			padding: 15px;
+			display: flex;
+			flex-direction: column;
+			flex-grow: 1;
+			overflow: hidden;
+		}
+
+		/* 読み込みボタン（サブカラー：#F1CF0F） */
+		#load-btn {
+			padding: 12px;
+			background-color: #F1CF0F;
+			color: #333;
+			border: none;
+			border-radius: 8px;
+			cursor: pointer;
+			font-size: 14px;
+			font-weight: bold;
+			margin-bottom: 20px;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+			transition: background-color 0.2s, transform 0.1s;
+		}
+
+		#load-btn:hover {
+			background-color: #e2c00a;
+			transform: translateY(-1px);
+		}
+
+		#sidebar h3 {
+			margin-top: 0;
+			font-size: 16px;
+			color: #333;
+			border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+			padding-bottom: 8px;
+		}
+
+		#list-container {
+			flex-grow: 1;
+			overflow-y: auto;
+			padding-right: 5px;
+		}
+
+		/* グループ（フォルダごと）の枠のデザイン */
+		.group-container {
+			border: 2px dashed rgba(0, 0, 0, 0.15);
+			border-radius: 8px;
+			padding: 10px;
+			margin-bottom: 15px;
+			background-color: rgba(255, 255, 255, 0.4);
+			cursor: grab;
+		}
+
+		.group-container.dragging {
+			opacity: 0.5;
+			background-color: rgba(255, 255, 255, 0.8);
+		}
+
+		.group-title {
+			margin-top: 0;
+			margin-bottom: 10px;
+			font-size: 14px;
+			color: #444;
+			padding-bottom: 5px;
+			pointer-events: none;
+			font-weight: bold;
+		}
+
+		/* リストの各ボタン */
+		.list-item {
+			display: block;
+			width: 100%;
+			padding: 10px;
+			margin-bottom: 8px;
+			background-color: #ffffff;
+			color: #444;
+			border: 1px solid #ddd;
+			border-radius: 6px;
+			cursor: grab;
+			text-align: left;
+			font-size: 13px;
+			word-wrap: break-word;
+			box-sizing: border-box;
+			transition: all 0.2s;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		}
+
+		.list-item:hover {
+			background-color: #fcfcfc;
+			border-color: #bbb;
+		}
+
+		/* 選択中（表示中）のファイルの色 */
+		.list-item.active {
+			background-color: #F1CF0F;
+			color: #333;
+			border-color: #dcb800;
+			font-weight: bold;
+			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
+		}
+
+		.list-item.dragging {
+			opacity: 0.5;
+			background-color: #eee;
+		}
+
+		/* 右側のメイン操作画面 */
+		#main {
+			flex-grow: 1;
+			padding: 20px;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			overflow: auto;
+		}
+
+		/* プレビュー上部のコントロールパネル */
+		#presentation-controls {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 1280px;
+			max-width: 100%;
+			margin-bottom: 10px;
+			padding: 0 5px;
+			box-sizing: border-box;
+			gap: 10px;
+		}
+
+		/* コントロールパネルのボタン類 */
+		.control-btn {
+			background-color: #ffffff;
+			color: #555;
+			border: 1px solid #ccc;
+			padding: 6px 12px;
+			border-radius: 20px;
+			cursor: pointer;
+			font-size: 13px;
+			font-weight: bold;
+			transition: all 0.2s;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		}
+
+		.control-btn:hover {
+			background-color: #F1CF0F;
+			color: #333;
+			border-color: #e2c00a;
+		}
+
+		/* サイズ入力エリア */
+		#size-inputs {
+			display: flex;
+			align-items: center;
+			background-color: #ffffff;
+			padding: 4px 12px;
+			border-radius: 20px;
+			border: 1px solid #ccc;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+			font-size: 14px;
+			font-weight: bold;
+			color: #555;
+		}
+
+		#size-inputs input {
+			width: 50px;
+			border: 1px solid #eee;
+			border-radius: 4px;
+			padding: 2px 4px;
+			text-align: center;
+			font-family: monospace;
+			font-size: 14px;
+			margin: 0 5px;
+		}
+
+		#presentation-wrapper {
+			position: relative;
+			display: inline-block;
+		}
+
+		/* ★変更: プレビュー画面の余白（padding）を削除し、初期サイズをHDに固定 */
+		#presentation-area {
+			width: 1280px;
+			height: 720px;
+			aspect-ratio: 16 / 9;
+			max-width: 1920px;
+			max-height: 1080px;
+			min-width: 320px;
+			background-color: #ffffff;
+			border: 4px solid #A7E0CF;
+			border-radius: 8px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			resize: both;
+			overflow: hidden;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+			/* marginやpaddingは設定せず枠いっぱいに表示させます */
+		}
+
+		#presentation-area:fullscreen {
+			background-color: #000;
+			border: none;
+			padding: 0;
+		}
+
+		#presentation-area img,
+		#presentation-area video,
+		#presentation-area iframe {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
+			border: none;
+		}
+
+		::-webkit-scrollbar {
+			width: 10px;
+			height: 10px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: transparent;
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: rgba(0, 0, 0, 0.2);
+			border-radius: 5px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+			background: rgba(0, 0, 0, 0.3);
+		}
+	</style>
+</head>
+
+<body>
+
+	<div id="sidebar">
+		<div id="sidebar-header">
+			<button id="toggle-sidebar-btn" title="サイドバーを折りたたむ">◀</button>
+		</div>
+
+		<div id="sidebar-content" class="hide-on-collapse">
+			<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+			<button id="load-btn">📁 フォルダを読み込む</button>
+			<h3>募集した研究リスト</h3>
+
+			<div id="list-container">
+				<p style="font-size: 13px; color: #555;">上のボタンから「research」フォルダを選ぶと、ここにファイルが並びます。</p>
+			</div>
+		</div>
+	</div>
+
+	<div id="main">
+		<div id="presentation-controls">
+			<div>
+				<button id="fullscreen-btn" class="control-btn">⛶ 全画面表示</button>
+				<button id="reset-size-btn" class="control-btn">↺ HDサイズにリセット</button>
+			</div>
+
+			<div id="size-inputs">
+				W: <input type="number" id="input-width" value="1280"> x
+				H: <input type="number" id="input-height" value="720">
+			</div>
+		</div>
+
+		<div id="presentation-wrapper">
+			<div id="presentation-area">
+				<p style="color: #888;">ここに発表内容が表示されます</p>
+			</div>
+		</div>
+	</div>
+
+	<script>
+		const folderInput = document.getElementById('folder-input');
+		const loadBtn = document.getElementById('load-btn');
+		const listContainer = document.getElementById('list-container');
+		const presentationArea = document.getElementById('presentation-area');
+		const presentationControls = document.getElementById('presentation-controls');
+
+		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
+		const sidebar = document.getElementById('sidebar');
+		const resetSizeBtn = document.getElementById('reset-size-btn');
+		const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+		const inputWidth = document.getElementById('input-width');
+		const inputHeight = document.getElementById('input-height');
+
+		toggleSidebarBtn.addEventListener('click', () => {
+			sidebar.classList.toggle('collapsed');
+			if (sidebar.classList.contains('collapsed')) {
+				toggleSidebarBtn.innerText = '▶';
+				toggleSidebarBtn.title = 'サイドバーを展開する';
+			} else {
+				toggleSidebarBtn.innerText = '◀';
+				toggleSidebarBtn.title = 'サイドバーを折りたたむ';
+			}
+		});
+
+		fullscreenBtn.addEventListener('click', () => {
+			if (presentationArea.requestFullscreen) {
+				presentationArea.requestFullscreen();
+			} else if (presentationArea.webkitRequestFullscreen) {
+				presentationArea.webkitRequestFullscreen();
+			}
+		});
+
+		// HDサイズへのリセット処理
+		resetSizeBtn.addEventListener('click', () => {
+			presentationArea.style.width = '1280px';
+			presentationArea.style.height = '720px';
+		});
+
+		function updateSizeFromInput() {
+			presentationArea.style.width = inputWidth.value + 'px';
+			presentationArea.style.height = inputHeight.value + 'px';
+		}
+		inputWidth.addEventListener('change', updateSizeFromInput);
+		inputHeight.addEventListener('change', updateSizeFromInput);
+
+		const resizeObserver = new ResizeObserver(entries => {
+			for (let entry of entries) {
+				const width = Math.round(entry.contentRect.width);
+				const height = Math.round(entry.contentRect.height);
+
+				inputWidth.value = width;
+				inputHeight.value = height;
+
+				presentationControls.style.width = `${width}px`;
+			}
+		});
+		resizeObserver.observe(presentationArea);
+
+		loadBtn.addEventListener('click', () => { folderInput.click(); });
+
+		folderInput.addEventListener('change', (event) => {
+			const files = event.target.files;
+			listContainer.innerHTML = '';
+
+			// ★変更: 読み込み対象にHTMLファイル（.html, .htm）を追加しました
+			const validFiles = Array.from(files).filter(file => {
+				const fileName = file.name.toLowerCase();
+				return fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') ||
+					fileName.endsWith('.png') || fileName.endsWith('.mp4') ||
+					fileName.endsWith('.pdf') || fileName.endsWith('.txt') ||
+					fileName.endsWith('.html') || fileName.endsWith('.htm');
+			});
+
+			validFiles.sort((a, b) => a.webkitRelativePath.localeCompare(b.webkitRelativePath));
+
+			let currentFolderName = "";
+			let currentGroupContainer = null;
+
+			validFiles.forEach(file => {
+				const pathParts = file.webkitRelativePath.split('/');
+				let folderName = "その他";
+
+				if (pathParts.length > 2) {
+					folderName = pathParts[pathParts.length - 2];
+				}
+
+				if (folderName !== currentFolderName) {
+					currentFolderName = folderName;
+
+					currentGroupContainer = document.createElement('div');
+					currentGroupContainer.className = 'group-container';
+					currentGroupContainer.draggable = true;
+
+					const groupTitle = document.createElement('h4');
+					groupTitle.className = 'group-title';
+					groupTitle.innerText = `📁 ${folderName}`;
+
+					currentGroupContainer.appendChild(groupTitle);
+					setupGroupDragAndDrop(currentGroupContainer);
+					listContainer.appendChild(currentGroupContainer);
+				}
+
+				createListButton(file, currentGroupContainer);
+			});
+		});
+
+		function setupGroupDragAndDrop(group) {
+			group.addEventListener('dragstart', (e) => {
+				if (e.target.classList.contains('list-item')) return;
+				group.classList.add('dragging');
+				e.dataTransfer.effectAllowed = 'move';
+			});
+			group.addEventListener('dragend', () => { group.classList.remove('dragging'); });
+			group.addEventListener('dragover', (e) => { e.preventDefault(); });
+			group.addEventListener('drop', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const draggingGroup = document.querySelector('.group-container.dragging');
+				if (draggingGroup && draggingGroup !== group) {
+					const allGroups = Array.from(listContainer.querySelectorAll('.group-container'));
+					const draggingIndex = allGroups.indexOf(draggingGroup);
+					const dropIndex = allGroups.indexOf(group);
+
+					if (draggingIndex < dropIndex) {
+						group.after(draggingGroup);
+					} else {
+						group.before(draggingGroup);
+					}
+				}
+			});
+		}
+
+		function createListButton(file, container) {
+			const button = document.createElement('button');
+			button.className = 'list-item';
+			button.innerText = file.name;
+
+			button.onclick = () => {
+				document.querySelectorAll('.list-item').forEach(btn => btn.classList.remove('active'));
+				button.classList.add('active');
+				showContent(file);
+			};
+
+			button.draggable = true;
+			button.addEventListener('dragstart', (e) => {
+				e.stopPropagation();
+				button.classList.add('dragging');
+			});
+			button.addEventListener('dragend', () => { button.classList.remove('dragging'); });
+			button.addEventListener('dragover', (e) => { e.preventDefault(); });
+			button.addEventListener('drop', (e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				const draggingItem = document.querySelector('.list-item.dragging');
+				if (draggingItem && draggingItem !== button) {
+					const groupChildren = Array.from(container.children);
+					const draggingIndex = groupChildren.indexOf(draggingItem);
+					const dropIndex = groupChildren.indexOf(button);
+
+					if (draggingIndex !== -1) {
+						if (draggingIndex < dropIndex) {
+							button.after(draggingItem);
+						} else {
+							button.before(draggingItem);
+						}
+					} else {
+						button.before(draggingItem);
+					}
+				}
+			});
+
+			container.appendChild(button);
+		}
+
+		function showContent(file) {
+			presentationArea.innerHTML = '';
+			const fileURL = URL.createObjectURL(file);
+			const fileName = file.name.toLowerCase();
+
+			if (fileName.endsWith('.mp4')) {
+				const video = document.createElement('video');
+				video.src = fileURL;
+				video.controls = true;
+				presentationArea.appendChild(video);
+
+			} else if (fileName.endsWith('.pdf')) {
+				const iframe = document.createElement('iframe');
+				iframe.src = fileURL;
+				iframe.style.width = '100%';
+				iframe.style.height = '100%';
+				iframe.style.border = 'none';
+				presentationArea.appendChild(iframe);
+
+				// ★変更: HTMLファイル（.html, .htm）の場合の処理を追加しました
+			} else if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+				const iframe = document.createElement('iframe');
+				iframe.src = fileURL;
+				iframe.style.width = '100%';
+				iframe.style.height = '100%';
+				iframe.style.border = 'none';
+				presentationArea.appendChild(iframe);
+
+			} else if (fileName.endsWith('.txt')) {
+				const reader = new FileReader();
+				reader.onload = function (e) {
+					let text = e.target.result.trim();
+
+					if (text.toLowerCase().startsWith('<iframe')) {
+						const paramToAdd = 'widget_referrer=http://localhost/';
+						text = text.replace(/src=["']([^"']+)["']/, (match, srcUrl) => {
+							let newUrl = srcUrl;
+							newUrl += newUrl.includes('?') ? '&' + paramToAdd : '?' + paramToAdd;
+							return `src="${newUrl}"`;
+						});
+						presentationArea.innerHTML = text;
+
+						// iframeを枠いっぱいに広げる
+						const iframe = presentationArea.querySelector('iframe');
+						if (iframe) {
+							iframe.style.width = '100%';
+							iframe.style.height = '100%';
+							iframe.style.border = 'none';
+						}
+					}
+					else if (text.startsWith('http')) {
+						let targetUrl = text;
+
+						if (targetUrl.includes('youtu.be/')) {
+							const videoId = targetUrl.split('youtu.be/')[1].split('?')[0];
+							targetUrl = `https://www.youtube.com/watch?v=${videoId}`;
+						}
+
+						let iframeSrc = targetUrl;
+						if (iframeSrc.includes('youtube.com/watch?v=')) {
+							const v = iframeSrc.split('v=')[1].split('&')[0];
+							iframeSrc = `https://www.youtube.com/embed/${v}?widget_referrer=http://localhost/`;
+						}
+
+						presentationArea.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+					}
+					else {
+						presentationArea.innerHTML = '<p style="color: #666;">有効なコードまたはURLが見つかりません。</p>';
+					}
+				};
+				reader.readAsText(file);
+
+			} else {
+				const img = document.createElement('img');
+				img.src = fileURL;
+				presentationArea.appendChild(img);
+			}
+		}
+	</script>
+</body>
+
+</html>
