@@ -2,10 +2,13 @@
 <html lang="ja">
 
 <head>
+	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>自由研究発表ツール</title>
+	<title>Streamスライド マネージャー</title>
+	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+	<script src="https://www.youtube.com/iframe_api"></script>
+
 	<style>
-		/* 柔らかい雰囲気の全体レイアウト */
 		body {
 			display: flex;
 			font-family: "Segoe UI", "Meiryo", sans-serif;
@@ -15,7 +18,11 @@
 			color: #333333;
 		}
 
-		/* 左側のリスト部分 */
+		.material-symbols-outlined {
+			vertical-align: middle;
+			font-size: 20px;
+		}
+
 		#sidebar {
 			width: 350px;
 			background-color: #A7E0CF;
@@ -37,13 +44,14 @@
 		}
 
 		#sidebar.collapsed .group-container {
-			padding: 10px 5px;
+			padding: 0 0 5px 0;
 		}
 
 		#sidebar.collapsed .list-item {
 			justify-content: center;
 			padding: 10px 0;
-			width: 100%;
+			width: calc(100% - 10px);
+			margin: 0 auto 8px auto;
 		}
 
 		#sidebar.collapsed .list-item .item-text {
@@ -52,8 +60,11 @@
 
 		#sidebar.collapsed .list-item .item-icon {
 			display: inline;
-			font-size: 20px;
 			margin-right: 0;
+		}
+
+		#sidebar.collapsed .list-item .item-icon .material-symbols-outlined {
+			font-size: 24px;
 		}
 
 		.group-title-short {
@@ -69,16 +80,16 @@
 			font-size: 11px;
 			text-align: center;
 			color: #333;
-			background-color: rgba(255, 255, 255, 0.6);
-			border-radius: 4px;
-			padding: 4px 0;
+			background-color: transparent;
+			padding: 0;
 			word-break: break-all;
+			width: 100%;
 		}
 
 		#sidebar.collapsed .group-title {
 			margin-bottom: 8px;
-			padding-bottom: 0;
-			border-bottom: none;
+			padding: 6px 0;
+			justify-content: center;
 		}
 
 		#sidebar-header {
@@ -98,6 +109,9 @@
 			padding: 5px 10px;
 			font-weight: bold;
 			border-radius: 4px;
+			display: flex;
+			align-items: center;
+			gap: 4px;
 		}
 
 		#toggle-sidebar-btn:hover {
@@ -131,6 +145,10 @@
 			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 			transition: background-color 0.2s, transform 0.1s;
 			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
 		}
 
 		#load-btn:hover {
@@ -147,11 +165,13 @@
 		}
 
 		.group-container {
-			border: 2px dashed rgba(0, 0, 0, 0.15);
+			border: 1px solid #b0d4c8;
 			border-radius: 8px;
-			padding: 10px;
+			padding: 0 0 10px 0;
 			margin-bottom: 15px;
-			background-color: rgba(255, 255, 255, 0.4);
+			background-color: #ffffff;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+			overflow: hidden;
 			cursor: grab;
 		}
 
@@ -165,17 +185,69 @@
 			margin-bottom: 10px;
 			font-size: 13px;
 			color: #444;
-			padding-bottom: 5px;
+			background-color: #e0f2ec;
+			padding: 8px 10px;
+			border-bottom: 1px solid #b0d4c8;
 			pointer-events: none;
 			font-weight: bold;
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		.group-title-full {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		/* ★変更: グループ番号を目立たせるスタイル */
+		.group-number {
+			display: inline-block;
+			background-color: #007b5e;
+			color: #ffffff;
+			font-size: 12px;
+			padding: 2px 8px;
+			border-radius: 12px;
+			margin-right: 4px;
+			font-weight: 900;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+
+		.group-number-short {
+			display: inline-block;
+			background-color: #007b5e;
+			color: #ffffff;
+			font-size: 10px;
+			padding: 2px 6px;
+			border-radius: 10px;
+			margin-bottom: 4px;
+			font-weight: 900;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+
+		.sub-group-title {
+			font-size: 11px;
+			color: #666;
+			margin: 4px 10px 6px 20px;
+			padding-bottom: 3px;
+			border-bottom: 1px dashed #d1e8e0;
+			display: flex;
+			align-items: center;
+			gap: 4px;
+			pointer-events: none;
+		}
+
+		#sidebar.collapsed .sub-group-title {
+			display: none;
 		}
 
 		.list-item {
 			display: flex;
 			align-items: center;
-			width: 100%;
+			width: calc(100% - 20px);
 			padding: 10px;
-			margin-bottom: 8px;
+			margin: 0 auto 8px auto;
 			background-color: #ffffff;
 			color: #444;
 			border: 1px solid #ddd;
@@ -187,6 +259,16 @@
 			box-sizing: border-box;
 			transition: all 0.2s;
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		}
+
+		.list-item.is-sub-item {
+			width: calc(100% - 35px);
+			margin-left: 25px;
+		}
+
+		#sidebar.collapsed .list-item.is-sub-item {
+			width: calc(100% - 10px);
+			margin-left: auto;
 		}
 
 		.list-item:hover {
@@ -209,7 +291,17 @@
 
 		.item-icon {
 			margin-right: 8px;
-			font-size: 14px;
+			display: flex;
+			align-items: center;
+		}
+
+		.item-icon .material-symbols-outlined {
+			color: #666;
+			font-size: 18px;
+		}
+
+		.list-item.active .item-icon .material-symbols-outlined {
+			color: #333;
 		}
 
 		#main {
@@ -232,6 +324,7 @@
 			padding: 0 5px;
 			box-sizing: border-box;
 			gap: 10px;
+			flex-wrap: wrap;
 		}
 
 		.controls-group {
@@ -251,6 +344,10 @@
 			font-weight: bold;
 			transition: all 0.2s;
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+			white-space: nowrap;
+			display: flex;
+			align-items: center;
+			gap: 4px;
 		}
 
 		.control-btn:hover {
@@ -282,26 +379,23 @@
 			color: #fff;
 		}
 
-		.timer-off {
-			background-color: #eee !important;
-			color: #999 !important;
-			border-color: #ddd !important;
-		}
-
 		#size-inputs {
 			display: flex;
 			align-items: center;
 			background-color: #ffffff;
-			padding: 4px 12px;
+			padding: 6px 12px;
 			border-radius: 20px;
 			border: 1px solid #ccc;
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 			font-size: 13px;
 			font-weight: bold;
 			color: #555;
+			gap: 8px;
+			flex-wrap: wrap;
+			justify-content: flex-end;
 		}
 
-		#size-inputs input {
+		#size-inputs input[type="number"] {
 			width: 50px;
 			border: 1px solid #eee;
 			border-radius: 4px;
@@ -309,20 +403,37 @@
 			text-align: center;
 			font-family: monospace;
 			font-size: 13px;
-			margin: 0 5px;
 		}
 
-		/* ★変更: プレビュー枠を囲むラッパーを右寄せに */
+		.volume-container {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+			margin-right: 8px;
+			padding-right: 12px;
+			border-right: 1px solid #ddd;
+		}
+
+		.volume-container .material-symbols-outlined {
+			font-size: 18px;
+			color: #666;
+		}
+
+		#volume-slider {
+			width: 70px;
+			cursor: pointer;
+			accent-color: #A7E0CF;
+		}
+
 		#presentation-wrapper {
 			position: relative;
 			display: flex;
 			flex-direction: column;
-			align-items: flex-end;
-			/* 右寄せにする */
+			align-items: flex-start;
 		}
 
-		/* ★変更: タイマーの表示エリアを右寄せ用に調整 */
 		#timer-display-container {
+			align-self: flex-end;
 			display: flex;
 			align-items: center;
 			background-color: #ffffff;
@@ -335,7 +446,49 @@
 			font-weight: bold;
 			color: #333;
 			margin-right: 20px;
-			/* 右端から少し離す */
+			transition: padding 0.2s;
+		}
+
+		#timer-text {
+			line-height: 1;
+			height: 14px;
+			display: flex;
+			align-items: center;
+		}
+
+		#toggle-timer-inline-btn {
+			background: none;
+			border: none;
+			cursor: pointer;
+			padding: 0;
+			margin-left: 10px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #666;
+			opacity: 0.15;
+			transition: opacity 0.2s, color 0.2s;
+		}
+
+		#timer-display-container:hover #toggle-timer-inline-btn {
+			opacity: 1;
+		}
+
+		#toggle-timer-inline-btn:hover {
+			color: #333;
+		}
+
+		.timer-hidden .analog-clock,
+		.timer-hidden #timer-text {
+			display: none;
+		}
+
+		.timer-hidden #toggle-timer-inline-btn {
+			margin-left: 0;
+		}
+
+		#timer-display-container.timer-hidden {
+			padding: 4px 8px;
 		}
 
 		.analog-clock {
@@ -375,6 +528,7 @@
 			align-items: center;
 			resize: both;
 			overflow: hidden;
+			text-align: center;
 			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 		}
 
@@ -391,6 +545,11 @@
 			height: 100%;
 			object-fit: contain;
 			border: none;
+		}
+
+		#yt-player-container {
+			width: 100%;
+			height: 100%;
 		}
 
 		#help-modal-overlay {
@@ -421,6 +580,9 @@
 			color: #007b5e;
 			border-bottom: 2px solid #A7E0CF;
 			padding-bottom: 10px;
+			display: flex;
+			align-items: center;
+			gap: 8px;
 		}
 
 		#help-modal h4 {
@@ -475,19 +637,24 @@
 
 	<div id="sidebar">
 		<div id="sidebar-header">
-			<button id="toggle-sidebar-btn" title="サイドバーを縮小する">◀ 縮小する</button>
+			<button id="toggle-sidebar-btn" title="サイドバーを縮小する">
+				<span class="material-symbols-outlined" id="sidebar-chevron">chevron_left</span>
+				<span class="toggle-text">閉じる</span>
+			</button>
 		</div>
 
 		<div id="sidebar-scroll-area">
 			<div class="hide-on-collapse" style="padding: 15px 15px 0 15px;">
 				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
-				<button id="load-btn">📁 フォルダを読み込む</button>
-				<h3>募集した研究リスト</h3>
+				<button id="load-btn">
+					<span class="material-symbols-outlined">folder_open</span>フォルダを読み込む
+				</button>
+				<h3>発表リスト</h3>
 			</div>
 
 			<div id="list-container" style="padding: 0 15px 15px 15px;">
 				<p class="hide-on-collapse" style="font-size: 13px; color: #555;">
-					上のボタンから「research」フォルダを選ぶと、ここにファイルが並びます。</p>
+					上のボタンからフォルダを読み込むと、ここにリストが並びます。</p>
 			</div>
 		</div>
 	</div>
@@ -495,20 +662,47 @@
 	<div id="main">
 		<div id="presentation-controls">
 			<div class="controls-group">
-				<button id="prev-btn" class="control-btn nav-btn">◀ 前へ</button>
-				<button id="next-btn" class="control-btn nav-btn">次へ ▶</button>
-			</div>
-
-			<div class="controls-group">
-				<button id="fullscreen-btn" class="control-btn">⛶ 全画面</button>
-				<button id="reset-size-btn" class="control-btn">↺ リセット</button>
-				<button id="toggle-timer-btn" class="control-btn">⏱️ タイマー</button>
-				<button id="help-btn" class="control-btn">ℹ️ 操作方法</button>
+				<button id="prev-btn" class="control-btn nav-btn">
+					<span class="material-symbols-outlined">arrow_back</span>前へ
+				</button>
+				<button id="next-btn" class="control-btn nav-btn">
+					次へ<span class="material-symbols-outlined">arrow_forward</span>
+				</button>
+				<button id="help-btn" class="control-btn">
+					<span class="material-symbols-outlined">help</span>操作方法
+				</button>
 			</div>
 
 			<div id="size-inputs">
-				W: <input type="number" id="input-width" value="1280"> x
-				H: <input type="number" id="input-height" value="720">
+				<div class="volume-container">
+					<span class="material-symbols-outlined" id="volume-icon" style="cursor: pointer;"
+						title="ミュート切替">volume_up</span>
+					<input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" title="音量調節">
+					<button id="rewind-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="5秒戻る">
+						<span class="material-symbols-outlined" style="font-size: 16px;">replay_5</span>
+					</button>
+					<button id="forward-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
+						title="5秒進む">
+						<span class="material-symbols-outlined" style="font-size: 16px;">forward_5</span>
+					</button>
+					<button id="play-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="再生">
+						<span class="material-symbols-outlined" style="font-size: 16px;">play_arrow</span>
+					</button>
+					<button id="pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="停止">
+						<span class="material-symbols-outlined" style="font-size: 16px;">pause</span>
+					</button>
+				</div>
+				<button id="fullscreen-btn" class="control-btn">
+					<span class="material-symbols-outlined">fullscreen</span>全画面
+				</button>
+				<button id="fhd-size-btn" class="control-btn">
+					<span class="material-symbols-outlined">high_quality</span>フルHD
+				</button>
+				<button id="reset-size-btn" class="control-btn">
+					<span class="material-symbols-outlined">hd</span>HD
+				</button>
+				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
+				<span>H:</span> <input type="number" id="input-height" value="720">
 			</div>
 		</div>
 
@@ -518,10 +712,13 @@
 					<div class="second-hand" id="second-hand"></div>
 				</div>
 				<span id="timer-text">0分</span>
+				<button id="toggle-timer-inline-btn" title="タイマーを隠す">
+					<span class="material-symbols-outlined">visibility</span>
+				</button>
 			</div>
 
 			<div id="presentation-area">
-				<p style="color: #888;">ここに発表内容が表示されます</p>
+				<p style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
 			</div>
 		</div>
 	</div>
@@ -529,17 +726,20 @@
 	<div id="help-modal-overlay">
 		<div id="help-modal">
 			<button class="close-btn" id="close-modal-btn">×</button>
-			<h2>📖 自由研究発表ツールの使い方</h2>
+			<h2><span class="material-symbols-outlined">menu_book</span> 自由研究発表ツールの使い方</h2>
 
 			<h4>① フォルダを読み込む</h4>
-			<p>左側の「📁 フォルダを読み込む」ボタンを押し、研究データがまとまったフォルダを選択します。</p>
+			<p>左側の「フォルダを読み込む」ボタンを押し、研究データがまとまったフォルダを選択します。</p>
 
 			<h4>② リストを選ぶ・移動する</h4>
 			<p>リストの項目やグループ枠は、マウスでドラッグ＆ドロップして順番を入れ替えられます。<br>
-				プレビュー上部の「◀ 前へ」「次へ ▶」ボタンを使えば、スムーズに次のファイルへ切り替えが可能です。</p>
+				プレビュー上部の「前へ」「次へ」ボタンを使えば、スムーズに次のファイルへ切り替えが可能です。</p>
 
 			<h4>③ プレビューのサイズを調節する</h4>
 			<p>枠の右下をマウスで引っ張るか、上部の入力欄（WとH）に数値を打ち込んで配信画面に合わせてください。</p>
+
+			<h4>💡 音量の調節について</h4>
+			<p>上部のスライダーでMP4動画やYouTube（リンク・埋め込み）の音量を手元で調整できます。</p>
 
 			<h4>💡 Googleスライドを操作するコツ</h4>
 			<p>セキュリティの都合上、マウスホイールでスライドをめくることはできません。<br>
@@ -552,6 +752,13 @@
 	</div>
 
 	<script>
+		let ytPlayer = null;
+		let isYtApiReady = false;
+
+		window.onYouTubeIframeAPIReady = function () {
+			isYtApiReady = true;
+		};
+
 		const folderInput = document.getElementById('folder-input');
 		const loadBtn = document.getElementById('load-btn');
 		const listContainer = document.getElementById('list-container');
@@ -560,6 +767,7 @@
 
 		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
 		const sidebar = document.getElementById('sidebar');
+		const fhdSizeBtn = document.getElementById('fhd-size-btn');
 		const resetSizeBtn = document.getElementById('reset-size-btn');
 		const fullscreenBtn = document.getElementById('fullscreen-btn');
 
@@ -573,16 +781,87 @@
 		const helpModalOverlay = document.getElementById('help-modal-overlay');
 		const closeModalBtn = document.getElementById('close-modal-btn');
 
+		const volumeIcon = document.getElementById('volume-icon');
+		const volumeSlider = document.getElementById('volume-slider');
+		const rewindBtn = document.getElementById('rewind-btn');
+		const forwardBtn = document.getElementById('forward-btn');
+		const playBtn = document.getElementById('play-btn');
+		const pauseBtn = document.getElementById('pause-btn');
+
 		const timerDisplayContainer = document.getElementById('timer-display-container');
-		const toggleTimerBtn = document.getElementById('toggle-timer-btn');
+		const toggleTimerInlineBtn = document.getElementById('toggle-timer-inline-btn');
 		const timerText = document.getElementById('timer-text');
 		const secondHand = document.getElementById('second-hand');
 
 		let timerInterval = null;
 		let secondsElapsed = 0;
-
-		// ★追加: 現在表示している「フォルダ名（グループ名）」を記憶する変数
 		let activeGroupName = "";
+
+		let isMuted = false;
+		let previousVolume = 1;
+
+		function applyVolume() {
+			const vol = parseFloat(volumeSlider.value);
+			const video = presentationArea.querySelector('video');
+			if (video) {
+				video.volume = vol;
+			}
+			if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+				ytPlayer.setVolume(vol * 100);
+			}
+		}
+
+		volumeIcon.addEventListener('click', () => {
+			isMuted = !isMuted;
+			if (isMuted) {
+				previousVolume = volumeSlider.value;
+				volumeSlider.value = 0;
+				volumeIcon.innerText = 'volume_off';
+			} else {
+				volumeSlider.value = previousVolume > 0 ? previousVolume : 0.5;
+				volumeIcon.innerText = previousVolume > 0.5 ? 'volume_up' : 'volume_down';
+			}
+			applyVolume();
+		});
+
+		volumeSlider.addEventListener('input', () => {
+			if (volumeSlider.value > 0) {
+				isMuted = false;
+				volumeIcon.innerText = volumeSlider.value > 0.5 ? 'volume_up' : 'volume_down';
+			} else {
+				isMuted = true;
+				volumeIcon.innerText = 'volume_off';
+			}
+			applyVolume();
+		});
+
+		rewindBtn.addEventListener('click', () => {
+			const video = presentationArea.querySelector('video');
+			if (video) video.currentTime = Math.max(0, video.currentTime - 5);
+			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
+				ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 5), true);
+			}
+		});
+
+		forwardBtn.addEventListener('click', () => {
+			const video = presentationArea.querySelector('video');
+			if (video) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 5);
+			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function') {
+				ytPlayer.seekTo(Math.min(ytPlayer.getDuration(), ytPlayer.getCurrentTime() + 5), true);
+			}
+		});
+
+		playBtn.addEventListener('click', () => {
+			const video = presentationArea.querySelector('video');
+			if (video) video.play();
+			if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
+		});
+
+		pauseBtn.addEventListener('click', () => {
+			const video = presentationArea.querySelector('video');
+			if (video) video.pause();
+			if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+		});
 
 		function startTimer() {
 			clearInterval(timerInterval);
@@ -598,21 +877,20 @@
 		function updateTimerDisplay() {
 			const minutes = Math.floor(secondsElapsed / 60);
 			timerText.innerText = `${minutes}分`;
-
 			const degrees = secondsElapsed * 6;
 			secondHand.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
 		}
 
-		toggleTimerBtn.addEventListener('click', () => {
-			if (timerDisplayContainer.style.display === 'none') {
-				timerDisplayContainer.style.display = 'flex';
-				toggleTimerBtn.classList.remove('timer-off');
+		toggleTimerInlineBtn.addEventListener('click', () => {
+			timerDisplayContainer.classList.toggle('timer-hidden');
+			if (timerDisplayContainer.classList.contains('timer-hidden')) {
+				toggleTimerInlineBtn.innerHTML = '<span class="material-symbols-outlined">visibility_off</span>';
+				toggleTimerInlineBtn.title = 'タイマーを表示';
 			} else {
-				timerDisplayContainer.style.display = 'none';
-				toggleTimerBtn.classList.add('timer-off');
+				toggleTimerInlineBtn.innerHTML = '<span class="material-symbols-outlined">visibility</span>';
+				toggleTimerInlineBtn.title = 'タイマーを隠す';
 			}
 		});
-
 
 		helpBtn.addEventListener('click', () => { helpModalOverlay.style.display = 'flex'; });
 		closeModalBtn.addEventListener('click', () => { helpModalOverlay.style.display = 'none'; });
@@ -622,11 +900,16 @@
 
 		toggleSidebarBtn.addEventListener('click', () => {
 			sidebar.classList.toggle('collapsed');
+			const chevron = document.getElementById('sidebar-chevron');
+			const textSpan = toggleSidebarBtn.querySelector('.toggle-text');
+
 			if (sidebar.classList.contains('collapsed')) {
-				toggleSidebarBtn.innerText = '▶';
+				chevron.innerText = 'chevron_right';
+				textSpan.style.display = 'none';
 				toggleSidebarBtn.title = 'サイドバーを展開する';
 			} else {
-				toggleSidebarBtn.innerText = '◀ 縮小する';
+				chevron.innerText = 'chevron_left';
+				textSpan.style.display = 'inline';
 				toggleSidebarBtn.title = 'サイドバーを縮小する';
 			}
 		});
@@ -634,6 +917,11 @@
 		fullscreenBtn.addEventListener('click', () => {
 			if (presentationArea.requestFullscreen) presentationArea.requestFullscreen();
 			else if (presentationArea.webkitRequestFullscreen) presentationArea.webkitRequestFullscreen();
+		});
+
+		fhdSizeBtn.addEventListener('click', () => {
+			presentationArea.style.width = '1920px';
+			presentationArea.style.height = '1080px';
 		});
 
 		resetSizeBtn.addEventListener('click', () => {
@@ -650,7 +938,6 @@
 
 			if (activeIndex !== -1) {
 				targetIndex = activeIndex + direction;
-
 				if (targetIndex < 0) targetIndex = items.length - 1;
 				if (targetIndex >= items.length) targetIndex = 0;
 			}
@@ -680,57 +967,80 @@
 		});
 		resizeObserver.observe(presentationArea);
 
+		function updateGroupNumbers() {
+			const groups = Array.from(listContainer.querySelectorAll('.group-container'));
+			groups.forEach((group, index) => {
+				const numStr = `${index + 1}`;
+				const fullNumSpan = group.querySelector('.group-number');
+				const shortNumSpan = group.querySelector('.group-number-short');
+				if (fullNumSpan) fullNumSpan.innerText = numStr;
+				if (shortNumSpan) shortNumSpan.innerText = numStr;
+			});
+		}
+
 		loadBtn.addEventListener('click', () => { folderInput.click(); });
 
 		folderInput.addEventListener('change', (event) => {
 			const files = event.target.files;
 			listContainer.innerHTML = '';
 
-			// フォルダを読み込み直した時は記憶しているグループ名もリセットする
 			activeGroupName = "";
 			clearInterval(timerInterval);
 			secondsElapsed = 0;
 			updateTimerDisplay();
 
+			// ★変更: 隠しファイル以外の全ファイルを読み込めるようにフィルタを変更
 			const validFiles = Array.from(files).filter(file => {
-				const fileName = file.name.toLowerCase();
-				return fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') ||
-					fileName.endsWith('.png') || fileName.endsWith('.mp4') ||
-					fileName.endsWith('.pdf') || fileName.endsWith('.txt') ||
-					fileName.endsWith('.html') || fileName.endsWith('.htm');
+				return !file.name.startsWith('.');
 			});
 
 			validFiles.sort((a, b) => a.webkitRelativePath.localeCompare(b.webkitRelativePath));
 
-			let currentFolderName = "";
+			let currentMainGroupName = "";
+			let currentSubGroupName = "";
 			let currentGroupContainer = null;
 
 			validFiles.forEach(file => {
 				const pathParts = file.webkitRelativePath.split('/');
-				let folderName = "その他";
+				let mainGroupName = pathParts.length > 1 ? pathParts[1] : "その他";
+				let subGroupName = "";
 
-				if (pathParts.length > 2) folderName = pathParts[pathParts.length - 2];
+				if (pathParts.length > 3) {
+					subGroupName = pathParts.slice(2, -1).join(' / ');
+				}
 
-				if (folderName !== currentFolderName) {
-					currentFolderName = folderName;
+				if (mainGroupName !== currentMainGroupName) {
+					currentMainGroupName = mainGroupName;
+					currentSubGroupName = "";
 
 					currentGroupContainer = document.createElement('div');
 					currentGroupContainer.className = 'group-container';
 					currentGroupContainer.draggable = true;
 
-					const shortName = folderName.substring(0, 3);
+					const shortName = mainGroupName.substring(0, 3);
 					const groupTitle = document.createElement('h4');
 					groupTitle.className = 'group-title';
-					groupTitle.innerHTML = `<span class="group-title-full">📁 ${folderName}</span><span class="group-title-short">${shortName}</span>`;
+
+					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><span class="material-symbols-outlined" style="font-size:18px;">folder</span> ${mainGroupName}</span><span class="group-title-short"><span class="group-number-short"></span>${shortName}</span>`;
 
 					currentGroupContainer.appendChild(groupTitle);
 					setupGroupDragAndDrop(currentGroupContainer);
 					listContainer.appendChild(currentGroupContainer);
 				}
 
-				// ★変更: createListButtonに「folderName」も一緒に渡すようにしました
-				createListButton(file, currentGroupContainer, folderName);
+				if (subGroupName !== "" && subGroupName !== currentSubGroupName) {
+					currentSubGroupName = subGroupName;
+
+					const subGroupTitle = document.createElement('div');
+					subGroupTitle.className = 'sub-group-title';
+					subGroupTitle.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">subdirectory_arrow_right</span> ${subGroupName}`;
+					currentGroupContainer.appendChild(subGroupTitle);
+				}
+
+				createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "");
 			});
+
+			updateGroupNumbers();
 		});
 
 		function setupGroupDragAndDrop(group) {
@@ -752,22 +1062,28 @@
 
 					if (draggingIndex < dropIndex) group.after(draggingGroup);
 					else group.before(draggingGroup);
+
+					updateGroupNumbers();
 				}
 			});
 		}
 
-		// ★変更: 引数に folderName を追加して受け取る
-		function createListButton(file, container, folderName) {
+		function createListButton(file, container, folderName, isSubItem = false) {
 			const button = document.createElement('button');
 			button.className = 'list-item';
+			if (isSubItem) {
+				button.classList.add('is-sub-item');
+			}
 
 			const fileName = file.name.toLowerCase();
-			let iconStr = "📄";
-			if (fileName.endsWith('.mp4')) iconStr = "🎬";
-			else if (fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png')) iconStr = "🖼️";
-			else if (fileName.endsWith('.txt')) iconStr = "🌐";
+			let iconStr = "draft";
+			if (fileName.endsWith('.mp4')) iconStr = "movie";
+			else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) iconStr = "image";
+			else if (fileName.endsWith('.txt')) iconStr = "language";
+			else if (fileName.endsWith('.pdf')) iconStr = "picture_as_pdf";
+			else if (fileName.match(/\.(html|htm)$/)) iconStr = "public";
 
-			button.innerHTML = `<span class="item-icon">${iconStr}</span><span class="item-text">${file.name}</span>`;
+			button.innerHTML = `<span class="item-icon"><span class="material-symbols-outlined">${iconStr}</span></span><span class="item-text">${file.name}</span>`;
 			button.title = file.name;
 
 			button.onclick = () => {
@@ -776,13 +1092,10 @@
 
 				showContent(file);
 
-				// ★追加: グループごとのタイマーリセット処理
-				// 前にクリックしたファイルと違うグループ(フォルダ)だったら、リセットして開始
 				if (activeGroupName !== folderName) {
 					activeGroupName = folderName;
 					startTimer();
 				}
-				// 同じグループだったら何もせず、タイマーはそのまま進み続けます
 			};
 
 			button.draggable = true;
@@ -815,6 +1128,12 @@
 
 		function showContent(file) {
 			presentationArea.innerHTML = '';
+
+			if (ytPlayer) {
+				ytPlayer.destroy();
+				ytPlayer = null;
+			}
+
 			const fileURL = URL.createObjectURL(file);
 			const fileName = file.name.toLowerCase();
 
@@ -822,9 +1141,10 @@
 				const video = document.createElement('video');
 				video.src = fileURL;
 				video.controls = true;
+				video.volume = volumeSlider.value;
 				presentationArea.appendChild(video);
 
-			} else if (fileName.endsWith('.pdf') || fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+			} else if (fileName.match(/\.(pdf|html|htm)$/)) {
 				const iframe = document.createElement('iframe');
 				iframe.src = fileURL;
 				iframe.style.width = '100%';
@@ -836,55 +1156,85 @@
 				const reader = new FileReader();
 				reader.onload = function (e) {
 					let text = e.target.result.trim();
+					const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
+
+					if (ytMatch && isYtApiReady) {
+						const videoId = ytMatch[1];
+						presentationArea.innerHTML = '<div id="yt-player-container"></div>';
+
+						// ★変更: 自動再生をOFFに設定 (autoplay: 0)
+						ytPlayer = new YT.Player('yt-player-container', {
+							videoId: videoId,
+							playerVars: {
+								'autoplay': 0,
+								'rel': 0,
+								'widget_referrer': 'http://localhost/'
+							},
+							events: {
+								'onReady': function (event) {
+									event.target.setVolume(parseFloat(volumeSlider.value) * 100);
+								}
+							}
+						});
+						return;
+					}
 
 					if (text.toLowerCase().startsWith('<iframe')) {
-						const paramToAdd = 'widget_referrer=http://localhost/';
-						text = text.replace(/src=["']([^"']+)["']/, (match, srcUrl) => {
-							let newUrl = srcUrl;
-							newUrl += newUrl.includes('?') ? '&' + paramToAdd : '?' + paramToAdd;
-							return `src="${newUrl}"`;
-						});
 						presentationArea.innerHTML = text;
-
 						const iframe = presentationArea.querySelector('iframe');
 						if (iframe) {
 							iframe.style.width = '100%';
 							iframe.style.height = '100%';
 							iframe.style.border = 'none';
+							// ★変更: iframe内の自動再生属性を削除
+							if (iframe.hasAttribute('allow')) {
+								iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, ''));
+							}
 						}
 					}
 					else if (text.startsWith('http')) {
-						let targetUrl = text;
-
-						if (targetUrl.includes('youtu.be/')) {
-							const videoId = targetUrl.split('youtu.be/')[1].split('?')[0];
-							targetUrl = `https://www.youtube.com/watch?v=${videoId}`;
-						}
-
-						let iframeSrc = targetUrl;
-
-						if (iframeSrc.includes('youtube.com/watch?v=')) {
-							const v = iframeSrc.split('v=')[1].split('&')[0];
-							iframeSrc = `https://www.youtube.com/embed/${v}?widget_referrer=http://localhost/`;
-						}
+						let iframeSrc = text;
 
 						if (iframeSrc.includes('docs.google.com/presentation/d/')) {
 							const presentationId = iframeSrc.split('/d/')[1].split('/')[0];
 							iframeSrc = `https://docs.google.com/presentation/d/${presentationId}/embed?rm=minimal`;
 						}
 
-						presentationArea.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+						// ★変更: URLによる埋め込みから autoplay を削除
+						presentationArea.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
 					}
 					else {
-						presentationArea.innerHTML = '<p style="color: #666;">有効なコードまたはURLが見つかりません。</p>';
+						const pre = document.createElement('pre');
+						pre.style.whiteSpace = 'pre-wrap';
+						pre.style.padding = '20px';
+						pre.style.width = '100%';
+						pre.style.height = '100%';
+						pre.style.boxSizing = 'border-box';
+						pre.style.overflow = 'auto';
+						pre.style.fontFamily = 'monospace';
+						pre.style.margin = '0';
+						pre.style.textAlign = 'left';
+						pre.style.color = '#333';
+						pre.textContent = text;
+						presentationArea.appendChild(pre);
 					}
 				};
 				reader.readAsText(file);
 
-			} else {
+			} else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
 				const img = document.createElement('img');
 				img.src = fileURL;
 				presentationArea.appendChild(img);
+
+			} else {
+				// ★変更: プレビュー非対応ファイルのフォールバック表示
+				presentationArea.innerHTML = `
+					<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+						<span class="material-symbols-outlined" style="font-size: 56px; margin-bottom: 12px; opacity: 0.5;">visibility_off</span>
+						<p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p>
+						<p style="font-size: 14px; margin-top: 8px; word-break: break-all; padding: 0 20px;">${file.name}</p>
+					</div>
+				`;
 			}
 		}
 	</script>
