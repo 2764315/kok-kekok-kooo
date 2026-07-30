@@ -201,7 +201,6 @@
 			gap: 4px;
 		}
 
-		/* ★変更: グループ番号を目立たせるスタイル */
 		.group-number {
 			display: inline-block;
 			background-color: #007b5e;
@@ -280,7 +279,8 @@
 			background-color: #F1CF0F;
 			color: #333;
 			border-color: #dcb800;
-			font-weight: bold;
+			/* 太字を解除 */
+			font-weight: normal;
 			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
 		}
 
@@ -331,6 +331,22 @@
 			display: flex;
 			gap: 8px;
 			align-items: center;
+			flex-wrap: wrap;
+		}
+
+		.panel-box {
+			display: flex;
+			align-items: center;
+			background-color: #ffffff;
+			padding: 6px 12px;
+			border-radius: 20px;
+			border: 1px solid #ccc;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+			font-size: 13px;
+			font-weight: bold;
+			color: #555;
+			gap: 8px;
+			flex-wrap: wrap;
 		}
 
 		.control-btn {
@@ -348,6 +364,11 @@
 			display: flex;
 			align-items: center;
 			gap: 4px;
+		}
+
+		select.control-btn {
+			cursor: pointer;
+			padding-right: 8px;
 		}
 
 		.control-btn:hover {
@@ -379,23 +400,16 @@
 			color: #fff;
 		}
 
-		#size-inputs {
+		#wrapper-header {
 			display: flex;
-			align-items: center;
-			background-color: #ffffff;
-			padding: 6px 12px;
-			border-radius: 20px;
-			border: 1px solid #ccc;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-			font-size: 13px;
-			font-weight: bold;
-			color: #555;
-			gap: 8px;
-			flex-wrap: wrap;
-			justify-content: flex-end;
+			justify-content: space-between;
+			align-items: flex-end;
+			width: 100%;
+			margin-bottom: -2px;
+			z-index: 20;
 		}
 
-		#size-inputs input[type="number"] {
+		.panel-box input[type="number"] {
 			width: 50px;
 			border: 1px solid #eee;
 			border-radius: 4px;
@@ -432,8 +446,52 @@
 			align-items: flex-start;
 		}
 
+		#zoom-controls-container {
+			display: flex;
+			align-items: center;
+			background-color: #ffffff;
+			padding: 4px 12px;
+			border-radius: 20px 20px 0 0;
+			border: 2px solid #A7E0CF;
+			border-bottom: none;
+			box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.03);
+			margin-left: 20px;
+			gap: 4px;
+			z-index: 70;
+		}
+
+		#zoom-controls-container .control-btn {
+			padding: 4px 8px;
+			border: none;
+			box-shadow: none;
+			background: transparent;
+			color: #666;
+		}
+
+		#zoom-controls-container .control-btn:hover {
+			color: #333;
+		}
+
+		#zoom-controls-container #zoom-reset-btn {
+			font-size: 12px;
+			font-weight: bold;
+			color: #007b5e;
+			padding: 4px 12px;
+		}
+
+		#zoom-controls-container #zoom-reset-btn:hover {
+			color: #005642;
+		}
+
+		#zoom-level-text {
+			width: 45px;
+			text-align: center;
+			font-size: 13px;
+			font-weight: bold;
+			color: #333;
+		}
+
 		#timer-display-container {
-			align-self: flex-end;
 			display: flex;
 			align-items: center;
 			background-color: #ffffff;
@@ -447,6 +505,7 @@
 			color: #333;
 			margin-right: 20px;
 			transition: padding 0.2s;
+			z-index: 70;
 		}
 
 		#timer-text {
@@ -523,13 +582,18 @@
 			background-color: #ffffff;
 			border: 4px solid #A7E0CF;
 			border-radius: 8px;
-			display: flex;
-			justify-content: center;
-			align-items: center;
+			display: block;
 			resize: both;
-			overflow: hidden;
+			overflow: auto;
 			text-align: center;
 			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+			position: relative;
+			cursor: grab;
+			/* パン操作のカーソル */
+		}
+
+		#presentation-area:active {
+			cursor: grabbing;
 		}
 
 		#presentation-area:fullscreen {
@@ -538,13 +602,106 @@
 			padding: 0;
 		}
 
-		#presentation-area img,
-		#presentation-area video,
-		#presentation-area iframe {
+		#zoom-wrapper {
+			width: 100%;
+			height: 100%;
+			transform-origin: top left;
+			transition: transform 0.2s ease;
+			position: relative;
+		}
+
+		#content-layer {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+
+		#content-layer img,
+		#content-layer video,
+		#content-layer iframe {
 			width: 100%;
 			height: 100%;
 			object-fit: contain;
 			border: none;
+		}
+
+		#drawing-canvas {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			z-index: 50;
+			pointer-events: none;
+		}
+
+		#drawing-canvas.active {
+			pointer-events: auto;
+			cursor: crosshair;
+		}
+
+		#drawing-sidebar {
+			position: absolute;
+			top: 50px;
+			right: 20px;
+			z-index: 80;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			background-color: rgba(255, 255, 255, 0.95);
+			padding: 10px;
+			border-radius: 12px;
+			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+			border: 1px solid #ccc;
+		}
+
+		.tool-btn {
+			background: none;
+			border: none;
+			cursor: pointer;
+			color: #555;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			padding: 10px;
+			border-radius: 8px;
+			transition: all 0.2s;
+		}
+
+		.tool-btn:hover {
+			background-color: rgba(0, 0, 0, 0.05);
+		}
+
+		.tool-btn.active-tool {
+			background-color: #F1CF0F;
+			color: #333;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+		}
+
+		.tool-divider {
+			height: 1px;
+			background-color: #ddd;
+			margin: 4px 0;
+		}
+
+		.done-btn {
+			background-color: #007b5e;
+			color: #fff;
+			font-weight: bold;
+			padding: 8px 12px;
+			border-radius: 8px;
+			border: none;
+			cursor: pointer;
+			margin-top: 4px;
+		}
+
+		.done-btn:hover {
+			background-color: #00664d;
 		}
 
 		#yt-player-container {
@@ -668,12 +825,17 @@
 				<button id="next-btn" class="control-btn nav-btn">
 					次へ<span class="material-symbols-outlined">arrow_forward</span>
 				</button>
+
+				<button id="activate-drawing-btn" class="control-btn" title="赤ペンを描画">
+					<span class="material-symbols-outlined">edit</span>赤ペン
+				</button>
+
 				<button id="help-btn" class="control-btn">
 					<span class="material-symbols-outlined">help</span>操作方法
 				</button>
 			</div>
 
-			<div id="size-inputs">
+			<div id="size-inputs" class="panel-box">
 				<div class="volume-container">
 					<span class="material-symbols-outlined" id="volume-icon" style="cursor: pointer;"
 						title="ミュート切替">volume_up</span>
@@ -695,30 +857,77 @@
 				<button id="fullscreen-btn" class="control-btn">
 					<span class="material-symbols-outlined">fullscreen</span>全画面
 				</button>
-				<button id="fhd-size-btn" class="control-btn">
-					<span class="material-symbols-outlined">high_quality</span>フルHD
-				</button>
-				<button id="reset-size-btn" class="control-btn">
-					<span class="material-symbols-outlined">hd</span>HD
-				</button>
+				<select id="size-selector" class="control-btn">
+					<option value="1920x1080">フルHD (1080p)</option>
+					<option value="1280x720" selected>HD (720p)</option>
+					<option value="720x480">SD (480p)</option>
+				</select>
 				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
 				<span>H:</span> <input type="number" id="input-height" value="720">
 			</div>
 		</div>
 
 		<div id="presentation-wrapper">
-			<div id="timer-display-container">
-				<div class="analog-clock">
-					<div class="second-hand" id="second-hand"></div>
+			<div id="wrapper-header">
+				<div id="zoom-controls-container">
+					<button id="zoom-out-btn" class="control-btn" title="縮小">
+						<span class="material-symbols-outlined">remove</span>
+					</button>
+					<input type="range" id="zoom-slider" min="0.5" max="3.0" step="0.1" value="1.0"
+						style="width: 70px; accent-color: #A7E0CF; cursor: pointer;">
+					<span id="zoom-level-text">100%</span>
+					<button id="zoom-in-btn" class="control-btn" title="拡大">
+						<span class="material-symbols-outlined">add</span>
+					</button>
+					<button id="zoom-reset-btn" class="control-btn" title="リセット">
+						リセット
+					</button>
 				</div>
-				<span id="timer-text">0分</span>
-				<button id="toggle-timer-inline-btn" title="タイマーを隠す">
-					<span class="material-symbols-outlined">visibility</span>
-				</button>
+
+				<div id="timer-display-container">
+					<div class="analog-clock">
+						<div class="second-hand" id="second-hand"></div>
+					</div>
+					<span id="timer-text">0分</span>
+					<button id="toggle-timer-inline-btn" title="タイマーを隠す">
+						<span class="material-symbols-outlined">visibility</span>
+					</button>
+				</div>
 			</div>
 
 			<div id="presentation-area">
-				<p style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
+				<div id="zoom-wrapper">
+					<div id="content-layer">
+						<p style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
+					</div>
+					<canvas id="drawing-canvas"></canvas>
+				</div>
+			</div>
+
+			<div id="drawing-sidebar" style="display: none;">
+				<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン">
+					<span class="material-symbols-outlined">edit</span>
+				</button>
+				<button id="tool-eraser-btn" class="tool-btn" title="消しゴム">
+					<span class="material-symbols-outlined">ink_eraser</span>
+				</button>
+
+				<div class="tool-divider"></div>
+
+				<button id="tool-thick-md" class="tool-btn active-tool" title="中サイズ">
+					<div style="width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%;"></div>
+				</button>
+				<button id="tool-thick-lg" class="tool-btn" title="大サイズ">
+					<div style="width: 16px; height: 16px; background-color: #e74c3c; border-radius: 50%;"></div>
+				</button>
+
+				<div class="tool-divider"></div>
+
+				<button id="tool-clear-btn" class="tool-btn" title="全消し">
+					<span class="material-symbols-outlined">delete</span>
+				</button>
+
+				<button id="tool-done-btn" class="done-btn">完了</button>
 			</div>
 		</div>
 	</div>
@@ -763,16 +972,46 @@
 		const loadBtn = document.getElementById('load-btn');
 		const listContainer = document.getElementById('list-container');
 		const presentationArea = document.getElementById('presentation-area');
+		const zoomWrapper = document.getElementById('zoom-wrapper');
+		const contentLayer = document.getElementById('content-layer');
 		const presentationControls = document.getElementById('presentation-controls');
 
 		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
 		const sidebar = document.getElementById('sidebar');
-		const fhdSizeBtn = document.getElementById('fhd-size-btn');
-		const resetSizeBtn = document.getElementById('reset-size-btn');
+		const sizeSelector = document.getElementById('size-selector');
 		const fullscreenBtn = document.getElementById('fullscreen-btn');
 
 		const prevBtn = document.getElementById('prev-btn');
 		const nextBtn = document.getElementById('next-btn');
+
+		const canvas = document.getElementById('drawing-canvas');
+		const ctx = canvas.getContext('2d');
+		const activateDrawingBtn = document.getElementById('activate-drawing-btn');
+		const drawingSidebar = document.getElementById('drawing-sidebar');
+		const toolPenBtn = document.getElementById('tool-pen-btn');
+		const toolEraserBtn = document.getElementById('tool-eraser-btn');
+		const toolClearBtn = document.getElementById('tool-clear-btn');
+		const toolThickMd = document.getElementById('tool-thick-md');
+		const toolThickLg = document.getElementById('tool-thick-lg');
+		const toolDoneBtn = document.getElementById('tool-done-btn');
+
+		let isDrawingMode = false;
+		let isDrawing = false;
+		let currentMode = 'pen';
+		let currentThickness = 3;
+		let drawingHistory = [];
+		let currentStroke = null;
+
+		// パン機能（表示位置のドラッグ移動）用変数
+		let isPanning = false;
+		let startPanX, startPanY, startScrollLeft, startScrollTop;
+
+		let currentZoom = 1.0;
+		const zoomSlider = document.getElementById('zoom-slider');
+		const zoomInBtn = document.getElementById('zoom-in-btn');
+		const zoomOutBtn = document.getElementById('zoom-out-btn');
+		const zoomResetBtn = document.getElementById('zoom-reset-btn');
+		const zoomLevelText = document.getElementById('zoom-level-text');
 
 		const inputWidth = document.getElementById('input-width');
 		const inputHeight = document.getElementById('input-height');
@@ -800,9 +1039,240 @@
 		let isMuted = false;
 		let previousVolume = 1;
 
+		window.addEventListener('DOMContentLoaded', () => {
+			if (window.innerWidth < 1600) {
+				presentationArea.style.width = '720px';
+				presentationArea.style.height = '480px';
+				inputWidth.value = 720;
+				inputHeight.value = 480;
+				sizeSelector.value = "720x480";
+			} else {
+				presentationArea.style.width = '1280px';
+				presentationArea.style.height = '720px';
+				inputWidth.value = 1280;
+				inputHeight.value = 720;
+				sizeSelector.value = "1280x720";
+			}
+		});
+
+		// ズーム適用関数（中央を起点にする）
+		function applyZoom(oldZoom, newZoom) {
+			const rect = presentationArea.getBoundingClientRect();
+			// 現在の表示領域の中心座標を計算
+			const centerX = presentationArea.scrollLeft + rect.width / 2;
+			const centerY = presentationArea.scrollTop + rect.height / 2;
+
+			const ratio = newZoom / oldZoom;
+
+			zoomWrapper.style.transform = `scale(${newZoom})`;
+			zoomLevelText.innerText = `${Math.round(newZoom * 100)}%`;
+			zoomSlider.value = newZoom;
+
+			// 新しいズーム倍率に合わせてスクロール位置を調整
+			presentationArea.scrollLeft = centerX * ratio - rect.width / 2;
+			presentationArea.scrollTop = centerY * ratio - rect.height / 2;
+		}
+
+		zoomSlider.addEventListener('input', (e) => {
+			const newZoom = parseFloat(e.target.value);
+			applyZoom(currentZoom, newZoom);
+			currentZoom = newZoom;
+		});
+
+		zoomInBtn.addEventListener('click', () => {
+			const newZoom = Math.min(currentZoom + 0.1, 3.0);
+			applyZoom(currentZoom, newZoom);
+			currentZoom = newZoom;
+		});
+
+		zoomOutBtn.addEventListener('click', () => {
+			const newZoom = Math.max(currentZoom - 0.1, 0.5);
+			applyZoom(currentZoom, newZoom);
+			currentZoom = newZoom;
+		});
+
+		zoomResetBtn.addEventListener('click', () => {
+			applyZoom(currentZoom, 1.0);
+			currentZoom = 1.0;
+		});
+
+		// パン機能 (ドラッグでスクロール)
+		presentationArea.addEventListener('mousedown', (e) => {
+			if (isDrawingMode) return;
+			isPanning = true;
+			startPanX = e.clientX;
+			startPanY = e.clientY;
+			startScrollLeft = presentationArea.scrollLeft;
+			startScrollTop = presentationArea.scrollTop;
+			presentationArea.style.cursor = 'grabbing';
+		});
+
+		window.addEventListener('mousemove', (e) => {
+			if (!isPanning || isDrawingMode) return;
+			e.preventDefault();
+			const walkX = e.clientX - startPanX;
+			const walkY = e.clientY - startPanY;
+			presentationArea.scrollLeft = startScrollLeft - walkX;
+			presentationArea.scrollTop = startScrollTop - walkY;
+		});
+
+		window.addEventListener('mouseup', () => {
+			if (isPanning) {
+				isPanning = false;
+				presentationArea.style.cursor = isDrawingMode ? 'crosshair' : 'grab';
+			}
+		});
+
+		function applyCurrentMode() {
+			ctx.lineCap = 'round';
+			ctx.lineJoin = 'round';
+			if (currentMode === 'eraser') {
+				ctx.globalCompositeOperation = 'destination-out';
+				ctx.lineWidth = 20;
+			} else {
+				ctx.globalCompositeOperation = 'source-over';
+				ctx.strokeStyle = '#e74c3c';
+				ctx.lineWidth = currentThickness;
+			}
+		}
+
+		// 描画の復元（キャンバスの中央を基準に描画）
+		function redrawCanvas() {
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const centerX = canvas.width / 2;
+			const centerY = canvas.height / 2;
+
+			drawingHistory.forEach(stroke => {
+				if (stroke.points.length === 0) return;
+
+				ctx.beginPath();
+				ctx.lineCap = 'round';
+				ctx.lineJoin = 'round';
+				if (stroke.mode === 'eraser') {
+					ctx.globalCompositeOperation = 'destination-out';
+					ctx.lineWidth = 20;
+				} else {
+					ctx.globalCompositeOperation = 'source-over';
+					ctx.strokeStyle = '#e74c3c';
+					ctx.lineWidth = stroke.thickness || 3;
+				}
+
+				const firstPt = stroke.points[0];
+				ctx.moveTo(firstPt.x + centerX, firstPt.y + centerY);
+				for (let i = 1; i < stroke.points.length; i++) {
+					const pt = stroke.points[i];
+					ctx.lineTo(pt.x + centerX, pt.y + centerY);
+				}
+				ctx.stroke();
+			});
+		}
+
+		function toggleDrawingMode(forceState) {
+			isDrawingMode = forceState !== undefined ? forceState : !isDrawingMode;
+			if (isDrawingMode) {
+				canvas.classList.add('active');
+				presentationArea.style.cursor = 'crosshair';
+				activateDrawingBtn.style.backgroundColor = '#F1CF0F';
+				drawingSidebar.style.display = 'flex';
+				currentMode = 'pen';
+				toolPenBtn.classList.add('active-tool');
+				toolEraserBtn.classList.remove('active-tool');
+			} else {
+				canvas.classList.remove('active');
+				presentationArea.style.cursor = 'grab';
+				activateDrawingBtn.style.backgroundColor = '';
+				drawingSidebar.style.display = 'none';
+			}
+		}
+
+		activateDrawingBtn.addEventListener('click', () => toggleDrawingMode());
+		toolDoneBtn.addEventListener('click', () => toggleDrawingMode(false));
+
+		toolPenBtn.addEventListener('click', () => {
+			currentMode = 'pen';
+			toolPenBtn.classList.add('active-tool');
+			toolEraserBtn.classList.remove('active-tool');
+		});
+
+		toolEraserBtn.addEventListener('click', () => {
+			currentMode = 'eraser';
+			toolEraserBtn.classList.add('active-tool');
+			toolPenBtn.classList.remove('active-tool');
+		});
+
+		toolThickMd.addEventListener('click', () => {
+			currentThickness = 3;
+			toolThickMd.classList.add('active-tool');
+			toolThickLg.classList.remove('active-tool');
+		});
+
+		toolThickLg.addEventListener('click', () => {
+			currentThickness = 8;
+			toolThickLg.classList.add('active-tool');
+			toolThickMd.classList.remove('active-tool');
+		});
+
+		toolClearBtn.addEventListener('click', () => {
+			drawingHistory = [];
+			redrawCanvas();
+		});
+
+		function getMousePos(evt) {
+			const rect = canvas.getBoundingClientRect();
+			return {
+				x: (evt.clientX - rect.left) / currentZoom,
+				y: (evt.clientY - rect.top) / currentZoom
+			};
+		}
+
+		// 描画座標の記録（キャンバスの中央からの相対位置として保存）
+		canvas.addEventListener('mousedown', (e) => {
+			if (!isDrawingMode) return;
+			isDrawing = true;
+			const pos = getMousePos(e);
+			const centerX = canvas.width / 2;
+			const centerY = canvas.height / 2;
+
+			currentStroke = {
+				mode: currentMode,
+				thickness: currentThickness,
+				points: [{ x: pos.x - centerX, y: pos.y - centerY }]
+			};
+			drawingHistory.push(currentStroke);
+
+			ctx.beginPath();
+			applyCurrentMode();
+			ctx.moveTo(pos.x, pos.y);
+		});
+
+		canvas.addEventListener('mousemove', (e) => {
+			if (!isDrawing || !isDrawingMode) return;
+			const pos = getMousePos(e);
+			const centerX = canvas.width / 2;
+			const centerY = canvas.height / 2;
+
+			currentStroke.points.push({ x: pos.x - centerX, y: pos.y - centerY });
+			ctx.lineTo(pos.x, pos.y);
+			ctx.stroke();
+		});
+
+		canvas.addEventListener('mouseup', () => {
+			if (isDrawing) {
+				ctx.closePath();
+				isDrawing = false;
+			}
+		});
+
+		canvas.addEventListener('mouseout', () => {
+			if (isDrawing) {
+				ctx.closePath();
+				isDrawing = false;
+			}
+		});
+
 		function applyVolume() {
 			const vol = parseFloat(volumeSlider.value);
-			const video = presentationArea.querySelector('video');
+			const video = contentLayer.querySelector('video');
 			if (video) {
 				video.volume = vol;
 			}
@@ -836,7 +1306,7 @@
 		});
 
 		rewindBtn.addEventListener('click', () => {
-			const video = presentationArea.querySelector('video');
+			const video = contentLayer.querySelector('video');
 			if (video) video.currentTime = Math.max(0, video.currentTime - 5);
 			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
 				ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 5), true);
@@ -844,7 +1314,7 @@
 		});
 
 		forwardBtn.addEventListener('click', () => {
-			const video = presentationArea.querySelector('video');
+			const video = contentLayer.querySelector('video');
 			if (video) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 5);
 			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function') {
 				ytPlayer.seekTo(Math.min(ytPlayer.getDuration(), ytPlayer.getCurrentTime() + 5), true);
@@ -852,13 +1322,13 @@
 		});
 
 		playBtn.addEventListener('click', () => {
-			const video = presentationArea.querySelector('video');
+			const video = contentLayer.querySelector('video');
 			if (video) video.play();
 			if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
 		});
 
 		pauseBtn.addEventListener('click', () => {
-			const video = presentationArea.querySelector('video');
+			const video = contentLayer.querySelector('video');
 			if (video) video.pause();
 			if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
 		});
@@ -919,14 +1389,12 @@
 			else if (presentationArea.webkitRequestFullscreen) presentationArea.webkitRequestFullscreen();
 		});
 
-		fhdSizeBtn.addEventListener('click', () => {
-			presentationArea.style.width = '1920px';
-			presentationArea.style.height = '1080px';
-		});
-
-		resetSizeBtn.addEventListener('click', () => {
-			presentationArea.style.width = '1280px';
-			presentationArea.style.height = '720px';
+		sizeSelector.addEventListener('change', (e) => {
+			const [w, h] = e.target.value.split('x');
+			presentationArea.style.width = w + 'px';
+			presentationArea.style.height = h + 'px';
+			inputWidth.value = w;
+			inputHeight.value = h;
 		});
 
 		function navigateList(direction) {
@@ -958,11 +1426,18 @@
 
 		const resizeObserver = new ResizeObserver(entries => {
 			for (let entry of entries) {
-				const width = Math.round(entry.contentRect.width);
-				const height = Math.round(entry.contentRect.height);
-				inputWidth.value = width;
-				inputHeight.value = height;
+				const width = presentationArea.offsetWidth; // ★変更: 外側の幅でコントロール幅を固定
 				presentationControls.style.width = `${width}px`;
+
+				const contentWidth = Math.round(entry.contentRect.width);
+				const contentHeight = Math.round(entry.contentRect.height);
+
+				const matchingOption = Array.from(sizeSelector.options).find(opt => opt.value === `${contentWidth}x${contentHeight}`);
+				if (matchingOption) sizeSelector.value = matchingOption.value;
+
+				canvas.width = contentWidth;
+				canvas.height = contentHeight;
+				redrawCanvas();
 			}
 		});
 		resizeObserver.observe(presentationArea);
@@ -989,7 +1464,6 @@
 			secondsElapsed = 0;
 			updateTimerDisplay();
 
-			// ★変更: 隠しファイル以外の全ファイルを読み込めるようにフィルタを変更
 			const validFiles = Array.from(files).filter(file => {
 				return !file.name.startsWith('.');
 			});
@@ -1079,7 +1553,7 @@
 			let iconStr = "draft";
 			if (fileName.endsWith('.mp4')) iconStr = "movie";
 			else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) iconStr = "image";
-			else if (fileName.endsWith('.txt')) iconStr = "language";
+			else if (fileName.endsWith('.txt')) iconStr = "text_snippet";
 			else if (fileName.endsWith('.pdf')) iconStr = "picture_as_pdf";
 			else if (fileName.match(/\.(html|htm)$/)) iconStr = "public";
 
@@ -1127,7 +1601,13 @@
 		}
 
 		function showContent(file) {
-			presentationArea.innerHTML = '';
+			contentLayer.innerHTML = '';
+
+			drawingHistory = [];
+			redrawCanvas();
+
+			applyZoom(currentZoom, 1.0);
+			currentZoom = 1.0;
 
 			if (ytPlayer) {
 				ytPlayer.destroy();
@@ -1142,7 +1622,7 @@
 				video.src = fileURL;
 				video.controls = true;
 				video.volume = volumeSlider.value;
-				presentationArea.appendChild(video);
+				contentLayer.appendChild(video);
 
 			} else if (fileName.match(/\.(pdf|html|htm)$/)) {
 				const iframe = document.createElement('iframe');
@@ -1150,7 +1630,7 @@
 				iframe.style.width = '100%';
 				iframe.style.height = '100%';
 				iframe.style.border = 'none';
-				presentationArea.appendChild(iframe);
+				contentLayer.appendChild(iframe);
 
 			} else if (fileName.endsWith('.txt')) {
 				const reader = new FileReader();
@@ -1160,9 +1640,8 @@
 
 					if (ytMatch && isYtApiReady) {
 						const videoId = ytMatch[1];
-						presentationArea.innerHTML = '<div id="yt-player-container"></div>';
+						contentLayer.innerHTML = '<div id="yt-player-container"></div>';
 
-						// ★変更: 自動再生をOFFに設定 (autoplay: 0)
 						ytPlayer = new YT.Player('yt-player-container', {
 							videoId: videoId,
 							playerVars: {
@@ -1180,13 +1659,12 @@
 					}
 
 					if (text.toLowerCase().startsWith('<iframe')) {
-						presentationArea.innerHTML = text;
-						const iframe = presentationArea.querySelector('iframe');
+						contentLayer.innerHTML = text;
+						const iframe = contentLayer.querySelector('iframe');
 						if (iframe) {
 							iframe.style.width = '100%';
 							iframe.style.height = '100%';
 							iframe.style.border = 'none';
-							// ★変更: iframe内の自動再生属性を削除
 							if (iframe.hasAttribute('allow')) {
 								iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, ''));
 							}
@@ -1200,8 +1678,7 @@
 							iframeSrc = `https://docs.google.com/presentation/d/${presentationId}/embed?rm=minimal`;
 						}
 
-						// ★変更: URLによる埋め込みから autoplay を削除
-						presentationArea.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+						contentLayer.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
 					}
 					else {
 						const pre = document.createElement('pre');
@@ -1216,7 +1693,7 @@
 						pre.style.textAlign = 'left';
 						pre.style.color = '#333';
 						pre.textContent = text;
-						presentationArea.appendChild(pre);
+						contentLayer.appendChild(pre);
 					}
 				};
 				reader.readAsText(file);
@@ -1224,11 +1701,10 @@
 			} else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
 				const img = document.createElement('img');
 				img.src = fileURL;
-				presentationArea.appendChild(img);
+				contentLayer.appendChild(img);
 
 			} else {
-				// ★変更: プレビュー非対応ファイルのフォールバック表示
-				presentationArea.innerHTML = `
+				contentLayer.innerHTML = `
 					<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
 						<span class="material-symbols-outlined" style="font-size: 56px; margin-bottom: 12px; opacity: 0.5;">visibility_off</span>
 						<p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p>
