@@ -6,6 +6,8 @@
 	<meta charset="UTF-8">
 	<title>Preview Deck - プレビューデック</title>
 	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+	<!-- Sawarabi Mincho フォントの読み込み -->
+	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Mincho&display=swap" rel="stylesheet">
 	<script src="https://www.youtube.com/iframe_api"></script>
 
 	<style>
@@ -61,6 +63,10 @@
 		#sidebar.collapsed .list-item .item-icon {
 			display: inline;
 			margin-right: 0;
+		}
+
+		#sidebar.collapsed .list-item .item-action {
+			display: none;
 		}
 
 		#sidebar.collapsed .list-item .item-icon .material-symbols-outlined {
@@ -157,7 +163,6 @@
 			background-color: #ffffff;
 		}
 
-		/* ツールチップをボタンの右側に配置 */
 		#chromakey-btn::after {
 			content: attr(data-tooltip);
 			position: absolute;
@@ -178,7 +183,6 @@
 			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 		}
 
-		/* ツールチップの矢印を左向きにして右側配置に対応 */
 		#chromakey-btn::before {
 			content: '';
 			position: absolute;
@@ -213,6 +217,14 @@
 			flex-grow: 1;
 			overflow-y: auto;
 			padding-right: 5px;
+		}
+
+		.sticky-top {
+			position: sticky;
+			top: 0;
+			background-color: #A7E0CF;
+			z-index: 5;
+			padding: 15px 15px 5px 15px;
 		}
 
 		#load-btn {
@@ -377,9 +389,12 @@
 			margin-left: auto;
 		}
 
+		/* ★変更: リストアイテムのホバー効果を目立たせる */
 		.list-item:hover {
-			background-color: #fcfcfc;
-			border-color: #bbb;
+			background-color: #f9f9f9;
+			border-color: #999;
+			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+			transform: translateY(-1px);
 		}
 
 		.list-item.active {
@@ -410,6 +425,27 @@
 			color: #333;
 		}
 
+		.item-text {
+			flex-grow: 1;
+		}
+
+		.item-action {
+			margin-left: 8px;
+			display: flex;
+			align-items: center;
+			color: #888;
+			text-decoration: none;
+			transition: color 0.2s;
+		}
+
+		.item-action:hover {
+			color: #007b5e;
+		}
+
+		.item-action .material-symbols-outlined {
+			font-size: 16px;
+		}
+
 		#main {
 			flex-grow: 1;
 			padding: 20px;
@@ -420,12 +456,10 @@
 			position: relative;
 		}
 
-		/* クロマキーON時、mainの背景色を#00FF00にする */
 		body.chromakey-mode #main {
 			background-color: #00FF00 !important;
 		}
 
-		/* クロマキーON時、各要素の背景・枠線を#00FF00にする */
 		body.chromakey-mode #presentation-area,
 		body.chromakey-mode #presentation-wrapper,
 		body.chromakey-mode #zoom-controls-container,
@@ -433,6 +467,11 @@
 			border-color: #00FF00 !important;
 			box-shadow: none !important;
 			background-color: #00FF00 !important;
+		}
+
+		/* ★追加: クロマキー時は警告文を非表示にする */
+		body.chromakey-mode #url-warning {
+			display: none !important;
 		}
 
 		#presentation-controls {
@@ -907,6 +946,29 @@
 		::-webkit-scrollbar-thumb:hover {
 			background: rgba(0, 0, 0, 0.3);
 		}
+
+		.text-preview-content {
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			word-break: break-word;
+			padding: 40px;
+			width: 100%;
+			height: 100%;
+			box-sizing: border-box;
+			overflow: auto;
+			font-family: 'Sawarabi Mincho', serif;
+			font-size: 20px;
+			line-height: 1.8;
+			margin: 0;
+			text-align: left;
+			color: #333;
+			background-color: #FDFBF7;
+		}
+
+		body.chromakey-mode .text-preview-content {
+			background-color: transparent !important;
+			color: #333;
+		}
 	</style>
 </head>
 
@@ -924,7 +986,7 @@
 		</div>
 
 		<div id="sidebar-scroll-area">
-			<div class="hide-on-collapse" style="padding: 15px 15px 0 15px;">
+			<div class="hide-on-collapse sticky-top">
 				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
 				<button id="load-btn">
 					<span class="material-symbols-outlined">folder_open</span>フォルダを読み込む
@@ -1027,6 +1089,14 @@
 				</div>
 			</div>
 
+			<!-- ★追加: 外部URL表示時の警告文（プレビュー枠の外・左下） -->
+			<div id="url-warning"
+				style="display: none; font-size: 13px; margin-top: 8px; margin-left: 4px; align-items: center;">
+				<span class="material-symbols-outlined"
+					style="font-size: 16px; color: #e74c3c; margin-right: 4px;">error_outline</span>
+				WEBページはサイトによって接続できなかったり、操作できない場合があります
+			</div>
+
 			<div id="drawing-sidebar" style="display: none;">
 				<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン">
 					<span class="material-symbols-outlined">edit</span>
@@ -1105,6 +1175,7 @@
 		const contentLayer = document.getElementById('content-layer');
 		const emptyMessage = document.getElementById('empty-message');
 		const presentationControls = document.getElementById('presentation-controls');
+		const urlWarning = document.getElementById('url-warning'); // ★追加
 
 		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
 		const sidebar = document.getElementById('sidebar');
@@ -1220,7 +1291,6 @@
 			zoomLevelText.innerText = `${Math.round(newZoom * 100)}%`;
 			zoomSlider.value = newZoom;
 
-			// 中心を基準にスクロール位置を調整
 			presentationArea.scrollLeft = centerX * ratio - rect.width / 2;
 			presentationArea.scrollTop = centerY * ratio - rect.height / 2;
 		}
@@ -1580,7 +1650,6 @@
 		inputWidth.addEventListener('change', updateSizeFromInput);
 		inputHeight.addEventListener('change', updateSizeFromInput);
 
-		// サイズ変更時にキャンバスサイズを追従させる処理
 		const resizeObserver = new ResizeObserver(entries => {
 			for (let entry of entries) {
 				const width = presentationArea.offsetWidth;
@@ -1614,45 +1683,65 @@
 		loadBtn.addEventListener('click', () => { folderInput.click(); });
 
 		folderInput.addEventListener('change', (event) => {
-			const files = event.target.files;
-			listContainer.innerHTML = '';
+			const files = Array.from(event.target.files);
 
+			listContainer.innerHTML = '';
 			activeGroupName = "";
 			clearInterval(timerInterval);
 			secondsElapsed = 0;
 			updateTimerDisplay();
 
-			const validFiles = Array.from(files).filter(file => {
+			const validFiles = files.filter(file => {
 				return !file.name.startsWith('.');
 			});
 
-			validFiles.sort((a, b) => a.webkitRelativePath.localeCompare(b.webkitRelativePath));
+			validFiles.sort((a, b) => {
+				const pathA = a.webkitRelativePath || a.name;
+				const pathB = b.webkitRelativePath || b.name;
+
+				const dirA = pathA.includes('/') ? pathA.substring(0, pathA.lastIndexOf('/')) : '';
+				const dirB = pathB.includes('/') ? pathB.substring(0, pathB.lastIndexOf('/')) : '';
+
+				if (dirA !== dirB) {
+					return dirA.localeCompare(dirB);
+				}
+
+				const nameA = a.name;
+				const nameB = b.name;
+
+				const isReadmeTxtA = /^README\d{3}/i.test(nameA) && nameA.toLowerCase().endsWith('.txt');
+				const isReadmeTxtB = /^README\d{3}/i.test(nameB) && nameB.toLowerCase().endsWith('.txt');
+
+				if (isReadmeTxtA && !isReadmeTxtB) return -1;
+				if (!isReadmeTxtA && isReadmeTxtB) return 1;
+
+				return nameA.localeCompare(nameB);
+			});
 
 			let currentMainGroupName = "";
 			let currentSubGroupName = "";
 			let currentGroupContainer = null;
 
 			validFiles.forEach(file => {
-				const pathParts = file.webkitRelativePath.split('/');
+				const pathStr = file.webkitRelativePath || file.name;
+				const pathParts = pathStr.split('/');
 				let mainGroupName = "その他";
 				let subGroupName = "";
-				let isStandaloneFile = false; // 親フォルダ直下にある独立したファイルかどうかの判定用フラグ
+				let isStandaloneFile = false;
 
-				// フォルダ階層によるグループ分け処理
 				if (pathParts.length === 2) {
-					// 親フォルダ直下にあるファイルの場合（ファイル名自体をグループ名にする）
 					mainGroupName = file.name;
 					isStandaloneFile = true;
 				} else if (pathParts.length > 2) {
-					// 子フォルダの中にあるファイルの場合（子フォルダ名をグループ名にする）
 					mainGroupName = pathParts[1];
-					// 孫フォルダ以降がある場合はサブグループとして表示
 					if (pathParts.length > 3) {
 						subGroupName = pathParts.slice(2, -1).join(' / ');
 					}
+				} else if (pathParts.length === 1) {
+					mainGroupName = file.name;
+					isStandaloneFile = true;
 				}
 
-				// 各ファイルのアイコン決定処理
 				const fileName = file.name.toLowerCase();
 				let fileIcon = "draft";
 				let iconColorStyle = "";
@@ -1664,13 +1753,11 @@
 				else if (fileName.endsWith('.pdf')) fileIcon = "picture_as_pdf";
 				else if (fileName.match(/\.(html|htm)$/)) fileIcon = "public";
 				else {
-					// Officeファイルやプレビュー非対応形式の場合はerror_outlineにする
 					fileIcon = "error_outline";
 					iconColorStyle = "color: #e74c3c;";
 					isSupported = false;
 				}
 
-				// 新しいグループ枠を作成する条件
 				if (mainGroupName !== currentMainGroupName || isStandaloneFile) {
 					currentMainGroupName = mainGroupName;
 					currentSubGroupName = "";
@@ -1683,7 +1770,6 @@
 					const groupTitle = document.createElement('h4');
 					groupTitle.className = 'group-title';
 
-					// 直下のファイルの場合はフォルダアイコンではなく、ファイル固有のアイコンに変更
 					let groupIcon = isStandaloneFile ? fileIcon : "folder";
 					let groupIconStyle = isStandaloneFile ? iconColorStyle : "";
 
@@ -1717,11 +1803,11 @@
 					currentGroupContainer.appendChild(subGroupTitle);
 				}
 
-				// スタイルとアイコン情報を渡してリストボタンを作成
 				createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "", fileIcon, iconColorStyle);
 			});
 
 			updateGroupNumbers();
+			folderInput.value = "";
 		});
 
 		// グループのドラッグ&ドロップ処理
@@ -1761,9 +1847,39 @@
 				button.classList.add('is-sub-item');
 			}
 
-			// プレビュー非対応ファイルには赤色スタイルを適用して表示
-			button.innerHTML = `<span class="item-icon"><span class="material-symbols-outlined" style="${iconColorStyle}">${fileIcon}</span></span><span class="item-text">${file.name}</span>`;
+			button.innerHTML = `<span class="item-icon"><span class="material-symbols-outlined" style="${iconColorStyle}">${fileIcon}</span></span><span class="item-text">${file.name}</span>
+				<a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();">
+					<span class="material-symbols-outlined">open_in_new</span>
+				</a>`;
 			button.title = file.name;
+
+			if (file.name.toLowerCase().endsWith('.txt')) {
+				const reader = new FileReader();
+				reader.onload = function (e) {
+					const text = e.target.result.trim();
+					if (/^https?:\/\/\S+$/.test(text)) {
+						const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|drive\.google\.com|(youtube\.com|youtu\.be)\//i.test(text);
+						const iconSpan = button.querySelector('.item-icon .material-symbols-outlined');
+						const actionBtn = button.querySelector('.item-action');
+
+						if (actionBtn) {
+							actionBtn.href = text;
+							actionBtn.style.display = 'flex';
+						}
+
+						if (iconSpan) {
+							if (isKnownEmbeddable) {
+								iconSpan.innerText = 'link';
+								iconSpan.style.color = '#333';
+							} else {
+								iconSpan.innerText = 'error_outline';
+								iconSpan.style.color = '#e74c3c';
+							}
+						}
+					}
+				};
+				reader.readAsText(file);
+			}
 
 			// リストをクリックした時の処理（表示の切り替えなど）
 			button.onclick = () => {
@@ -1812,6 +1928,7 @@
 		// ==========================================
 		function showContent(file) {
 			contentLayer.innerHTML = '';
+			urlWarning.style.display = 'none';
 
 			drawingHistory = [];
 			redrawCanvas();
@@ -1882,47 +1999,64 @@
 							}
 						}
 					}
-					else if (text.startsWith('http')) {
+					else if (/^https?:\/\/\S+$/.test(text)) {
 						let iframeSrc = text;
+						let isKnownEmbeddable = false;
 
 						if (iframeSrc.includes('docs.google.com/presentation/d/')) {
 							const presentationId = iframeSrc.split('/d/')[1].split('/')[0];
 							iframeSrc = `https://docs.google.com/presentation/d/${presentationId}/embed?rm=minimal`;
+							isKnownEmbeddable = true;
 						}
-						// SharePointやOneDriveのリンクを埋め込み用に変換
 						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
 							try {
 								const urlObj = new URL(iframeSrc);
 								urlObj.searchParams.set('action', 'embedview');
 								urlObj.searchParams.set('wdAr', '1.7777777777777777');
 								iframeSrc = urlObj.toString();
+								isKnownEmbeddable = true;
 							} catch (e) {
 								console.error('URLの変換に失敗しました:', e);
 							}
 						}
-						// ★追加: Googleドライブの共有リンクをプレビュー表示用に変換
+						else if (iframeSrc.includes('drive.google.com/open?id=')) {
+							try {
+								const urlObj = new URL(iframeSrc);
+								const fileId = urlObj.searchParams.get('id');
+								if (fileId) {
+									iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`;
+									isKnownEmbeddable = true;
+								}
+							} catch (e) { console.error('URLの変換に失敗しました:', e); }
+						}
 						else if (iframeSrc.includes('drive.google.com/file/d/')) {
 							const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/);
 							if (match) {
 								iframeSrc = `${match[1]}/preview`;
+								isKnownEmbeddable = true;
 							}
 						}
 
-						contentLayer.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+						if (isKnownEmbeddable) {
+							contentLayer.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
+						} else {
+							urlWarning.style.display = 'flex';
+
+							contentLayer.innerHTML = `
+								<div style="width:100%; height:100%; position:relative; background-color: #ffffff;">
+									<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+
+									<div style="position:absolute; top: 15px; right: 15px; z-index: 100;">
+										<a href="${text}" target="_blank" style="display:flex; align-items:center; gap:4px; background-color: rgba(255,255,255,0.8); color: #555; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; backdrop-filter: blur(2px); transition: background-color 0.2s;">
+											<span class="material-symbols-outlined" style="font-size: 16px;">open_in_new</span>新規タブで開く
+										</a>
+									</div>
+								</div>`;
+						}
 					}
 					else {
-						// URL以外の場合は単なるテキストとして表示
 						const pre = document.createElement('pre');
-						pre.style.whiteSpace = 'pre-wrap';
-						pre.style.padding = '20px';
-						pre.style.width = '100%';
-						pre.style.height = '100%';
-						pre.style.boxSizing = 'border-box';
-						pre.style.overflow = 'auto';
-						pre.style.fontFamily = 'monospace';
-						pre.style.margin = '0';
-						pre.style.textAlign = 'left';
-						pre.style.color = '#333';
+						pre.className = 'text-preview-content';
 						pre.textContent = text;
 						contentLayer.appendChild(pre);
 					}
@@ -1936,7 +2070,6 @@
 
 				// 直接表示できないOfficeファイルのエラー表示
 			} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
-				// ★変更: 拡張子を抽出して「ファイル形式」として表示
 				const extMatch = file.name.match(/\.[^.]+$/);
 				const fileExt = extMatch ? extMatch[0] : "";
 
@@ -1949,7 +2082,6 @@
 					</div>
 				`;
 			} else {
-				// ★変更: 拡張子を抽出して「ファイル形式」として表示
 				const extMatch = file.name.match(/\.[^.]+$/);
 				const fileExt = extMatch ? extMatch[0] : "不明";
 
