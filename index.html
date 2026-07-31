@@ -157,7 +157,7 @@
 			background-color: #ffffff;
 		}
 
-		/* ★変更: ツールチップをボタンの右側に配置 */
+		/* ツールチップをボタンの右側に配置 */
 		#chromakey-btn::after {
 			content: attr(data-tooltip);
 			position: absolute;
@@ -178,7 +178,7 @@
 			box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
 		}
 
-		/* ★変更: ツールチップの矢印を左向きにして右側配置に対応 */
+		/* ツールチップの矢印を左向きにして右側配置に対応 */
 		#chromakey-btn::before {
 			content: '';
 			position: absolute;
@@ -420,19 +420,19 @@
 			position: relative;
 		}
 
+		/* クロマキーON時、mainの背景色を#00FF00にする */
 		body.chromakey-mode #main {
 			background-color: #00FF00 !important;
 		}
 
-		body.chromakey-mode #presentation-controls,
-		body.chromakey-mode #wrapper-header {
-			visibility: hidden !important;
-		}
-
-		body.chromakey-mode #presentation-area {
-			border-color: transparent !important;
+		/* クロマキーON時、各要素の背景・枠線を#00FF00にする */
+		body.chromakey-mode #presentation-area,
+		body.chromakey-mode #presentation-wrapper,
+		body.chromakey-mode #zoom-controls-container,
+		body.chromakey-mode #timer-display-container {
+			border-color: #00FF00 !important;
 			box-shadow: none !important;
-			background-color: transparent !important;
+			background-color: #00FF00 !important;
 		}
 
 		#presentation-controls {
@@ -1084,6 +1084,9 @@
 	</div>
 
 	<script>
+		// ==========================================
+		// 初期設定・YouTube API読み込み
+		// ==========================================
 		let ytPlayer = null;
 		let isYtApiReady = false;
 
@@ -1091,6 +1094,9 @@
 			isYtApiReady = true;
 		};
 
+		// ==========================================
+		// 変数定義・DOM要素の取得
+		// ==========================================
 		const folderInput = document.getElementById('folder-input');
 		const loadBtn = document.getElementById('load-btn');
 		const listContainer = document.getElementById('list-container');
@@ -1164,6 +1170,9 @@
 		let isMuted = false;
 		let previousVolume = 1;
 
+		// ==========================================
+		// ウィンドウ読み込み時の初期サイズ設定
+		// ==========================================
 		window.addEventListener('DOMContentLoaded', () => {
 			if (window.innerWidth < 1600) {
 				presentationArea.style.width = '720px';
@@ -1180,7 +1189,9 @@
 			}
 		});
 
-		// ★変更: クロマキーボタンの属性切り替え
+		// ==========================================
+		// クロマキー（背景グリーン化）の切り替え処理
+		// ==========================================
 		chromakeyBtn.addEventListener('click', () => {
 			document.body.classList.toggle('chromakey-mode');
 			const icon = chromakeyBtn.querySelector('.material-symbols-outlined');
@@ -1195,6 +1206,9 @@
 			}
 		});
 
+		// ==========================================
+		// ズーム（拡大・縮小）処理
+		// ==========================================
 		function applyZoom(oldZoom, newZoom) {
 			const rect = presentationArea.getBoundingClientRect();
 			const centerX = presentationArea.scrollLeft + rect.width / 2;
@@ -1206,6 +1220,7 @@
 			zoomLevelText.innerText = `${Math.round(newZoom * 100)}%`;
 			zoomSlider.value = newZoom;
 
+			// 中心を基準にスクロール位置を調整
 			presentationArea.scrollLeft = centerX * ratio - rect.width / 2;
 			presentationArea.scrollTop = centerY * ratio - rect.height / 2;
 		}
@@ -1215,24 +1230,24 @@
 			applyZoom(currentZoom, newZoom);
 			currentZoom = newZoom;
 		});
-
 		zoomInBtn.addEventListener('click', () => {
 			const newZoom = Math.min(currentZoom + 0.1, 3.0);
 			applyZoom(currentZoom, newZoom);
 			currentZoom = newZoom;
 		});
-
 		zoomOutBtn.addEventListener('click', () => {
 			const newZoom = Math.max(currentZoom - 0.1, 0.5);
 			applyZoom(currentZoom, newZoom);
 			currentZoom = newZoom;
 		});
-
 		zoomResetBtn.addEventListener('click', () => {
 			applyZoom(currentZoom, 1.0);
 			currentZoom = 1.0;
 		});
 
+		// ==========================================
+		// プレビュー画面のパン（ドラッグでのスクロール）処理
+		// ==========================================
 		presentationArea.addEventListener('mousedown', (e) => {
 			if (isDrawingMode) return;
 			isPanning = true;
@@ -1259,6 +1274,9 @@
 			}
 		});
 
+		// ==========================================
+		// お絵かき（赤ペン）機能に関する処理
+		// ==========================================
 		function applyCurrentMode() {
 			ctx.lineCap = 'round';
 			ctx.lineJoin = 'round';
@@ -1322,31 +1340,26 @@
 
 		activateDrawingBtn.addEventListener('click', () => toggleDrawingMode());
 		toolDoneBtn.addEventListener('click', () => toggleDrawingMode(false));
-
 		toolPenBtn.addEventListener('click', () => {
 			currentMode = 'pen';
 			toolPenBtn.classList.add('active-tool');
 			toolEraserBtn.classList.remove('active-tool');
 		});
-
 		toolEraserBtn.addEventListener('click', () => {
 			currentMode = 'eraser';
 			toolEraserBtn.classList.add('active-tool');
 			toolPenBtn.classList.remove('active-tool');
 		});
-
 		toolThickMd.addEventListener('click', () => {
 			currentThickness = 3;
 			toolThickMd.classList.add('active-tool');
 			toolThickLg.classList.remove('active-tool');
 		});
-
 		toolThickLg.addEventListener('click', () => {
 			currentThickness = 8;
 			toolThickLg.classList.add('active-tool');
 			toolThickMd.classList.remove('active-tool');
 		});
-
 		toolClearBtn.addEventListener('click', () => {
 			drawingHistory = [];
 			redrawCanvas();
@@ -1404,6 +1417,9 @@
 			}
 		});
 
+		// ==========================================
+		// 音量・動画操作（シーク・再生・停止）に関する処理
+		// ==========================================
 		function applyVolume() {
 			const vol = parseFloat(volumeSlider.value);
 			const video = contentLayer.querySelector('video');
@@ -1467,6 +1483,9 @@
 			if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
 		});
 
+		// ==========================================
+		// 発表タイマーに関する処理
+		// ==========================================
 		function startTimer() {
 			clearInterval(timerInterval);
 			secondsElapsed = 0;
@@ -1496,6 +1515,9 @@
 			}
 		});
 
+		// ==========================================
+		// サイドバー開閉、全画面などのUI操作
+		// ==========================================
 		helpBtn.addEventListener('click', () => { helpModalOverlay.style.display = 'flex'; });
 		closeModalBtn.addEventListener('click', () => { helpModalOverlay.style.display = 'none'; });
 		helpModalOverlay.addEventListener('click', (e) => {
@@ -1531,6 +1553,7 @@
 			inputHeight.value = h;
 		});
 
+		// リストの「前へ」「次へ」操作
 		function navigateList(direction) {
 			const items = Array.from(document.querySelectorAll('.list-item'));
 			if (items.length === 0) return;
@@ -1547,7 +1570,6 @@
 			items[targetIndex].click();
 			items[targetIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 		}
-
 		prevBtn.addEventListener('click', () => navigateList(-1));
 		nextBtn.addEventListener('click', () => navigateList(1));
 
@@ -1558,6 +1580,7 @@
 		inputWidth.addEventListener('change', updateSizeFromInput);
 		inputHeight.addEventListener('change', updateSizeFromInput);
 
+		// サイズ変更時にキャンバスサイズを追従させる処理
 		const resizeObserver = new ResizeObserver(entries => {
 			for (let entry of entries) {
 				const width = presentationArea.offsetWidth;
@@ -1576,6 +1599,9 @@
 		});
 		resizeObserver.observe(presentationArea);
 
+		// ==========================================
+		// フォルダ読み込み・ドラッグ&ドロップ・リスト作成
+		// ==========================================
 		function updateGroupNumbers() {
 			const groups = Array.from(listContainer.querySelectorAll('.group-container'));
 			groups.forEach((group, index) => {
@@ -1608,14 +1634,44 @@
 
 			validFiles.forEach(file => {
 				const pathParts = file.webkitRelativePath.split('/');
-				let mainGroupName = pathParts.length > 1 ? pathParts[1] : "その他";
+				let mainGroupName = "その他";
 				let subGroupName = "";
+				let isStandaloneFile = false; // 親フォルダ直下にある独立したファイルかどうかの判定用フラグ
 
-				if (pathParts.length > 3) {
-					subGroupName = pathParts.slice(2, -1).join(' / ');
+				// フォルダ階層によるグループ分け処理
+				if (pathParts.length === 2) {
+					// 親フォルダ直下にあるファイルの場合（ファイル名自体をグループ名にする）
+					mainGroupName = file.name;
+					isStandaloneFile = true;
+				} else if (pathParts.length > 2) {
+					// 子フォルダの中にあるファイルの場合（子フォルダ名をグループ名にする）
+					mainGroupName = pathParts[1];
+					// 孫フォルダ以降がある場合はサブグループとして表示
+					if (pathParts.length > 3) {
+						subGroupName = pathParts.slice(2, -1).join(' / ');
+					}
 				}
 
-				if (mainGroupName !== currentMainGroupName) {
+				// 各ファイルのアイコン決定処理
+				const fileName = file.name.toLowerCase();
+				let fileIcon = "draft";
+				let iconColorStyle = "";
+				let isSupported = true;
+
+				if (fileName.endsWith('.mp4')) fileIcon = "movie";
+				else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) fileIcon = "image";
+				else if (fileName.endsWith('.txt')) fileIcon = "text_snippet";
+				else if (fileName.endsWith('.pdf')) fileIcon = "picture_as_pdf";
+				else if (fileName.match(/\.(html|htm)$/)) fileIcon = "public";
+				else {
+					// Officeファイルやプレビュー非対応形式の場合はerror_outlineにする
+					fileIcon = "error_outline";
+					iconColorStyle = "color: #e74c3c;";
+					isSupported = false;
+				}
+
+				// 新しいグループ枠を作成する条件
+				if (mainGroupName !== currentMainGroupName || isStandaloneFile) {
 					currentMainGroupName = mainGroupName;
 					currentSubGroupName = "";
 
@@ -1627,7 +1683,11 @@
 					const groupTitle = document.createElement('h4');
 					groupTitle.className = 'group-title';
 
-					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><span class="material-symbols-outlined" style="font-size:18px;">folder</span> ${mainGroupName}</span><span class="group-title-short">${shortName}</span><button class="group-toggle-btn"><span class="material-symbols-outlined">unfold_less</span></button>`;
+					// 直下のファイルの場合はフォルダアイコンではなく、ファイル固有のアイコンに変更
+					let groupIcon = isStandaloneFile ? fileIcon : "folder";
+					let groupIconStyle = isStandaloneFile ? iconColorStyle : "";
+
+					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><span class="material-symbols-outlined" style="font-size:18px; ${groupIconStyle}">${groupIcon}</span> ${mainGroupName}</span><span class="group-title-short">${shortName}</span><button class="group-toggle-btn"><span class="material-symbols-outlined">unfold_less</span></button>`;
 
 					const toggleBtn = groupTitle.querySelector('.group-toggle-btn');
 					toggleBtn.addEventListener('click', (e) => {
@@ -1651,19 +1711,20 @@
 
 				if (subGroupName !== "" && subGroupName !== currentSubGroupName) {
 					currentSubGroupName = subGroupName;
-
 					const subGroupTitle = document.createElement('div');
 					subGroupTitle.className = 'sub-group-title';
 					subGroupTitle.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">subdirectory_arrow_right</span> ${subGroupName}`;
 					currentGroupContainer.appendChild(subGroupTitle);
 				}
 
-				createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "");
+				// スタイルとアイコン情報を渡してリストボタンを作成
+				createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "", fileIcon, iconColorStyle);
 			});
 
 			updateGroupNumbers();
 		});
 
+		// グループのドラッグ&ドロップ処理
 		function setupGroupDragAndDrop(group) {
 			group.addEventListener('dragstart', (e) => {
 				if (e.target.classList.contains('list-item') || e.target.closest('.group-toggle-btn')) {
@@ -1692,24 +1753,19 @@
 			});
 		}
 
-		function createListButton(file, container, folderName, isSubItem = false) {
+		// ファイルボタン（リストの1項目）の作成処理
+		function createListButton(file, container, folderName, isSubItem = false, fileIcon = "draft", iconColorStyle = "") {
 			const button = document.createElement('button');
 			button.className = 'list-item';
 			if (isSubItem) {
 				button.classList.add('is-sub-item');
 			}
 
-			const fileName = file.name.toLowerCase();
-			let iconStr = "draft";
-			if (fileName.endsWith('.mp4')) iconStr = "movie";
-			else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) iconStr = "image";
-			else if (fileName.endsWith('.txt')) iconStr = "text_snippet";
-			else if (fileName.endsWith('.pdf')) iconStr = "picture_as_pdf";
-			else if (fileName.match(/\.(html|htm)$/)) iconStr = "public";
-
-			button.innerHTML = `<span class="item-icon"><span class="material-symbols-outlined">${iconStr}</span></span><span class="item-text">${file.name}</span>`;
+			// プレビュー非対応ファイルには赤色スタイルを適用して表示
+			button.innerHTML = `<span class="item-icon"><span class="material-symbols-outlined" style="${iconColorStyle}">${fileIcon}</span></span><span class="item-text">${file.name}</span>`;
 			button.title = file.name;
 
+			// リストをクリックした時の処理（表示の切り替えなど）
 			button.onclick = () => {
 				document.querySelectorAll('.list-item').forEach(btn => btn.classList.remove('active'));
 				button.classList.add('active');
@@ -1722,6 +1778,7 @@
 				}
 			};
 
+			// リストアイテムのドラッグ&ドロップ処理
 			button.draggable = true;
 			button.addEventListener('dragstart', (e) => {
 				e.stopPropagation();
@@ -1750,6 +1807,9 @@
 			container.appendChild(button);
 		}
 
+		// ==========================================
+		// プレビュー枠にコンテンツを表示する処理
+		// ==========================================
 		function showContent(file) {
 			contentLayer.innerHTML = '';
 
@@ -1767,6 +1827,7 @@
 			const fileURL = URL.createObjectURL(file);
 			const fileName = file.name.toLowerCase();
 
+			// ファイル形式に応じた表示処理の分岐
 			if (fileName.endsWith('.mp4')) {
 				const video = document.createElement('video');
 				video.src = fileURL;
@@ -1783,6 +1844,7 @@
 				contentLayer.appendChild(iframe);
 
 			} else if (fileName.endsWith('.txt')) {
+				// テキストファイル内にURLやiframeが含まれていた場合の埋め込み処理
 				const reader = new FileReader();
 				reader.onload = function (e) {
 					let text = e.target.result.trim();
@@ -1827,10 +1889,29 @@
 							const presentationId = iframeSrc.split('/d/')[1].split('/')[0];
 							iframeSrc = `https://docs.google.com/presentation/d/${presentationId}/embed?rm=minimal`;
 						}
+						// SharePointやOneDriveのリンクを埋め込み用に変換
+						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
+							try {
+								const urlObj = new URL(iframeSrc);
+								urlObj.searchParams.set('action', 'embedview');
+								urlObj.searchParams.set('wdAr', '1.7777777777777777');
+								iframeSrc = urlObj.toString();
+							} catch (e) {
+								console.error('URLの変換に失敗しました:', e);
+							}
+						}
+						// ★追加: Googleドライブの共有リンクをプレビュー表示用に変換
+						else if (iframeSrc.includes('drive.google.com/file/d/')) {
+							const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/);
+							if (match) {
+								iframeSrc = `${match[1]}/preview`;
+							}
+						}
 
 						contentLayer.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
 					}
 					else {
+						// URL以外の場合は単なるテキストとして表示
 						const pre = document.createElement('pre');
 						pre.style.whiteSpace = 'pre-wrap';
 						pre.style.padding = '20px';
@@ -1853,12 +1934,31 @@
 				img.src = fileURL;
 				contentLayer.appendChild(img);
 
-			} else {
+				// 直接表示できないOfficeファイルのエラー表示
+			} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
+				// ★変更: 拡張子を抽出して「ファイル形式」として表示
+				const extMatch = file.name.match(/\.[^.]+$/);
+				const fileExt = extMatch ? extMatch[0] : "";
+
 				contentLayer.innerHTML = `
 					<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-						<span class="material-symbols-outlined" style="font-size: 56px; margin-bottom: 12px; opacity: 0.5;">visibility_off</span>
+						<span class="material-symbols-outlined" style="font-size: 56px; margin-bottom: 12px; color: #e74c3c;">error_outline</span>
+						<p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p>
+						<p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ブラウザの仕様により、パソコン内のPowerPoint、Excel、Wordファイルは表示できません。<br><strong>PDF形式に変換する</strong>か、GoogleドライブやSharePointで共有リンクを発行し、<br><strong>テキストファイル（.txt）にURLを貼り付けて読み込んでください。</strong></p>
+						<p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p>
+					</div>
+				`;
+			} else {
+				// ★変更: 拡張子を抽出して「ファイル形式」として表示
+				const extMatch = file.name.match(/\.[^.]+$/);
+				const fileExt = extMatch ? extMatch[0] : "不明";
+
+				contentLayer.innerHTML = `
+					<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
+						<span class="material-symbols-outlined" style="font-size: 56px; margin-bottom: 12px; color: #e74c3c;">error_outline</span>
 						<p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p>
-						<p style="font-size: 14px; margin-top: 8px; word-break: break-all; padding: 0 20px;">${file.name}</p>
+						<p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">実行ファイル（.exe）などは表示できません。<br>編集データの場合、Googleドライブに保存して共有リンクを発行し、<br>テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p>
+						<p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p>
 					</div>
 				`;
 			}
