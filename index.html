@@ -6,7 +6,6 @@
 	<meta charset="UTF-8">
 	<title>Preview Deck - プレビューデック</title>
 	<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-	<!-- Sawarabi Gothic フォントの読み込み -->
 	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
 	<script src="https://www.youtube.com/iframe_api"></script>
 
@@ -38,7 +37,7 @@
 		}
 
 		#sidebar.collapsed {
-			width: 90px;
+			width: 115px;
 		}
 
 		#sidebar.collapsed .hide-on-collapse {
@@ -62,11 +61,11 @@
 
 		#sidebar.collapsed .list-item .item-icon {
 			display: inline;
-			margin-right: 0;
+			margin-right: 2px;
 		}
 
 		#sidebar.collapsed .list-item .item-action {
-			display: none;
+			margin-left: 2px;
 		}
 
 		#sidebar.collapsed .list-item .item-icon .material-symbols-outlined {
@@ -389,7 +388,6 @@
 			margin-left: auto;
 		}
 
-		/* ★変更: リストアイテムのホバー効果を目立たせる */
 		.list-item:hover {
 			background-color: #f9f9f9;
 			border-color: #999;
@@ -469,7 +467,6 @@
 			background-color: #00FF00 !important;
 		}
 
-		/* ★追加: クロマキー時は警告文を非表示にする */
 		body.chromakey-mode #url-warning {
 			display: none !important;
 		}
@@ -532,9 +529,9 @@
 		}
 
 		.control-btn:hover {
-			background-color: #F1CF0F;
-			color: #333;
-			border-color: #e2c00a;
+			background-color: #e74c3c;
+			color: #fff;
+			border-color: #e74c3c;
 		}
 
 		.nav-btn {
@@ -621,7 +618,7 @@
 		}
 
 		#zoom-controls-container .control-btn {
-			padding: 4px 8px;
+			padding: 4px 4px;
 			border: none;
 			box-shadow: none;
 			background: transparent;
@@ -636,7 +633,7 @@
 			font-size: 12px;
 			font-weight: bold;
 			color: #007b5e;
-			padding: 4px 12px;
+			padding: 4px 4px;
 		}
 
 		#zoom-controls-container #zoom-reset-btn:hover {
@@ -748,10 +745,13 @@
 			text-align: center;
 			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 			position: relative;
+		}
+
+		#presentation-area.can-pan {
 			cursor: grab;
 		}
 
-		#presentation-area:active {
+		#presentation-area.can-pan:active {
 			cursor: grabbing;
 		}
 
@@ -956,7 +956,7 @@
 			height: 100%;
 			box-sizing: border-box;
 			overflow: auto;
-			font-family: 'Sawarabi Gothic', serif;
+			font-family: 'Sawarabi Gothic', sans-serif;
 			font-size: 20px;
 			line-height: 1.8;
 			margin: 0;
@@ -968,6 +968,93 @@
 		body.chromakey-mode .text-preview-content {
 			background-color: transparent !important;
 			color: #333;
+		}
+
+		#external-link-btn {
+			position: absolute;
+			top: 60px;
+			right: -36px;
+			width: 36px;
+			background-color: #ffffff;
+			border: 2px solid #A7E0CF;
+			border-left: none;
+			border-radius: 0 8px 8px 0;
+			padding: 12px 0;
+			color: #555;
+			text-decoration: none;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 8px;
+			font-weight: bold;
+			z-index: 60;
+			box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+			transition: all 0.2s;
+		}
+
+		#external-link-btn:hover {
+			background-color: #F1CF0F;
+			color: #333;
+			border-color: #dcb800;
+		}
+
+		#external-link-btn .btn-text {
+			writing-mode: vertical-rl;
+			text-orientation: upright;
+			font-size: 12px;
+			letter-spacing: 2px;
+		}
+
+		/* ★変更: 外部URL表示時の警告文スタイルを伸びるボタン風に変更 */
+		#url-warning {
+			position: absolute;
+			top: 220px;
+			right: -36px;
+			width: 36px;
+			background-color: #ffffff;
+			border: 2px solid #A7E0CF;
+			border-left: none;
+			border-radius: 0 8px 8px 0;
+			padding: 10px 0;
+			color: #333;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 8px;
+
+			z-index: 60;
+			box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+			cursor: pointer;
+			transition: max-height 0.3s ease, padding 0.3s ease;
+			overflow: hidden;
+			max-height: 42px;
+			/* アイコンのみが見える高さ */
+			box-sizing: border-box;
+		}
+
+		#url-warning:hover {
+			background-color: #fdf5f5;
+		}
+
+		#url-warning.expanded {
+			max-height: 500px;
+			/* テキスト全体が見える高さ */
+			padding: 10px 0 16px 0;
+		}
+
+		#url-warning .warning-text {
+			writing-mode: vertical-rl;
+			text-orientation: upright;
+			font-size: 11px;
+			letter-spacing: 1px;
+			opacity: 0;
+			transition: opacity 0.2s ease;
+			pointer-events: none;
+		}
+
+		#url-warning.expanded .warning-text {
+			opacity: 1;
+			transition-delay: 0.1s;
 		}
 	</style>
 </head>
@@ -988,10 +1075,22 @@
 		<div id="sidebar-scroll-area">
 			<div class="hide-on-collapse sticky-top">
 				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+
+				<a href="https://m0yabn.github.io/csv-converter/" target="_blank"
+					style="display: flex; align-items: center; justify-content: center; font-size: 12px; color: #007b5e; margin-bottom: 10px; text-decoration: none; font-weight: bold; gap: 4px;">
+					CSV変換ツールでファイルを作成する<span class="material-symbols-outlined"
+						style="font-size: 16px;">open_in_new</span>
+				</a>
+
 				<button id="load-btn">
 					<span class="material-symbols-outlined">folder_open</span>フォルダを読み込む
 				</button>
-				<h3>発表リスト</h3>
+
+				<h3 style="margin-bottom: 4px;">発表リスト</h3>
+				<!-- ★変更: idを追加し初期非表示に変更 -->
+				<p id="drag-hint-text"
+					style="display: none; font-size: 11px; color: #666; margin: 0 0 10px 0; text-align: left;">
+					ドラッグで順番を変更できます</p>
 			</div>
 
 			<div id="list-container" style="padding: 0 15px 15px 15px;">
@@ -1065,7 +1164,7 @@
 						<span class="material-symbols-outlined">add</span>
 					</button>
 					<button id="zoom-reset-btn" class="control-btn" title="リセット">
-						リセット
+						<span class="material-symbols-outlined">zoom_in</span>リセット
 					</button>
 				</div>
 
@@ -1089,12 +1188,16 @@
 				</div>
 			</div>
 
-			<!-- ★追加: 外部URL表示時の警告文（プレビュー枠の外・左下） -->
-			<div id="url-warning"
-				style="display: none; font-size: 13px; margin-top: 8px; margin-left: 4px; align-items: center;">
+			<a id="external-link-btn" href="#" target="_blank" style="display: none;" title="新規タブで開く">
+				<span class="material-symbols-outlined" style="font-size: 18px;">open_in_new</span>
+				<span class="btn-text">新規タブで開く</span>
+			</a>
+
+			<!-- ★変更: 外部URL表示時の警告文（ボタン化・クリック展開用） -->
+			<div id="url-warning" style="display: none;" title="警告（クリックで詳細を表示）">
 				<span class="material-symbols-outlined"
-					style="font-size: 16px; color: #e74c3c; margin-right: 4px;">error_outline</span>
-				WEBページはサイトによって接続できなかったり、操作できない場合があります
+					style="font-size: 18px; color: #e74c3c; margin: 0;">error_outline</span>
+				<span class="warning-text">正常に表示・操作できない場合、新規タブで開いてください</span>
 			</div>
 
 			<div id="drawing-sidebar" style="display: none;">
@@ -1175,7 +1278,14 @@
 		const contentLayer = document.getElementById('content-layer');
 		const emptyMessage = document.getElementById('empty-message');
 		const presentationControls = document.getElementById('presentation-controls');
-		const urlWarning = document.getElementById('url-warning'); // ★追加
+
+		const urlWarning = document.getElementById('url-warning');
+		// ★追加: 警告ボタンの開閉イベント
+		urlWarning.addEventListener('click', () => {
+			urlWarning.classList.toggle('expanded');
+		});
+
+		const externalLinkBtn = document.getElementById('external-link-btn');
 
 		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
 		const sidebar = document.getElementById('sidebar');
@@ -1293,6 +1403,12 @@
 
 			presentationArea.scrollLeft = centerX * ratio - rect.width / 2;
 			presentationArea.scrollTop = centerY * ratio - rect.height / 2;
+
+			if (newZoom <= 1.0) {
+				presentationArea.classList.remove('can-pan');
+			} else {
+				presentationArea.classList.add('can-pan');
+			}
 		}
 
 		zoomSlider.addEventListener('input', (e) => {
@@ -1319,13 +1435,12 @@
 		// プレビュー画面のパン（ドラッグでのスクロール）処理
 		// ==========================================
 		presentationArea.addEventListener('mousedown', (e) => {
-			if (isDrawingMode) return;
+			if (isDrawingMode || currentZoom <= 1.0) return;
 			isPanning = true;
 			startPanX = e.clientX;
 			startPanY = e.clientY;
 			startScrollLeft = presentationArea.scrollLeft;
 			startScrollTop = presentationArea.scrollTop;
-			presentationArea.style.cursor = 'grabbing';
 		});
 
 		window.addEventListener('mousemove', (e) => {
@@ -1340,7 +1455,6 @@
 		window.addEventListener('mouseup', () => {
 			if (isPanning) {
 				isPanning = false;
-				presentationArea.style.cursor = isDrawingMode ? 'crosshair' : 'grab';
 			}
 		});
 
@@ -1395,15 +1509,21 @@
 			if (isDrawingMode) {
 				canvas.classList.add('active');
 				presentationArea.style.cursor = 'crosshair';
-				activateDrawingBtn.style.backgroundColor = '#F1CF0F';
+				// ★変更: アクティブ時のボタンのスタイルを変更
+				activateDrawingBtn.style.backgroundColor = '#e74c3c';
+				activateDrawingBtn.style.color = '#fff';
+				activateDrawingBtn.style.borderColor = '#e74c3c';
 				drawingSidebar.style.display = 'flex';
 				currentMode = 'pen';
 				toolPenBtn.classList.add('active-tool');
 				toolEraserBtn.classList.remove('active-tool');
 			} else {
 				canvas.classList.remove('active');
-				presentationArea.style.cursor = 'grab';
+				presentationArea.style.cursor = '';
+				// ★変更: スタイルをリセット
 				activateDrawingBtn.style.backgroundColor = '';
+				activateDrawingBtn.style.color = '';
+				activateDrawingBtn.style.borderColor = '';
 				drawingSidebar.style.display = 'none';
 			}
 		}
@@ -1695,6 +1815,13 @@
 				return !file.name.startsWith('.');
 			});
 
+			// ★変更: フォルダ読み込み時にドラッグヒントを表示
+			if (validFiles.length > 0) {
+				document.getElementById('drag-hint-text').style.display = 'block';
+			} else {
+				document.getElementById('drag-hint-text').style.display = 'none';
+			}
+
 			validFiles.sort((a, b) => {
 				const pathA = a.webkitRelativePath || a.name;
 				const pathB = b.webkitRelativePath || b.name;
@@ -1928,7 +2055,11 @@
 		// ==========================================
 		function showContent(file) {
 			contentLayer.innerHTML = '';
+
+			// ★変更: 初期化時に非表示およびクラス削除
 			urlWarning.style.display = 'none';
+			urlWarning.classList.remove('expanded');
+			externalLinkBtn.style.display = 'none';
 
 			drawingHistory = [];
 			redrawCanvas();
@@ -1968,6 +2099,10 @@
 					const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
 
 					if (ytMatch && isYtApiReady) {
+						// ★追加: YouTubeでも externalLinkBtn を表示する
+						externalLinkBtn.href = text;
+						externalLinkBtn.style.display = 'flex';
+
 						const videoId = ytMatch[1];
 						contentLayer.innerHTML = '<div id="yt-player-container"></div>';
 
@@ -2004,8 +2139,14 @@
 						let isKnownEmbeddable = false;
 
 						if (iframeSrc.includes('docs.google.com/presentation/d/')) {
-							const presentationId = iframeSrc.split('/d/')[1].split('/')[0];
-							iframeSrc = `https://docs.google.com/presentation/d/${presentationId}/embed?rm=minimal`;
+							if (iframeSrc.includes('/pub')) {
+								iframeSrc = iframeSrc.replace(/\/pub.*/, '/embed?rm=minimal');
+							} else if (!iframeSrc.includes('/embed')) {
+								const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/);
+								if (match && match[1] !== 'e') {
+									iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`;
+								}
+							}
 							isKnownEmbeddable = true;
 						}
 						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
@@ -2037,22 +2178,17 @@
 							}
 						}
 
-						if (isKnownEmbeddable) {
-							contentLayer.innerHTML = `<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>`;
-						} else {
+						if (!isKnownEmbeddable) {
 							urlWarning.style.display = 'flex';
-
-							contentLayer.innerHTML = `
-								<div style="width:100%; height:100%; position:relative; background-color: #ffffff;">
-									<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-
-									<div style="position:absolute; top: 15px; right: 15px; z-index: 100;">
-										<a href="${text}" target="_blank" style="display:flex; align-items:center; gap:4px; background-color: rgba(255,255,255,0.8); color: #555; padding: 6px 12px; border: 1px solid #ccc; border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: bold; backdrop-filter: blur(2px); transition: background-color 0.2s;">
-											<span class="material-symbols-outlined" style="font-size: 16px;">open_in_new</span>新規タブで開く
-										</a>
-									</div>
-								</div>`;
 						}
+
+						contentLayer.innerHTML = `
+							<div style="width:100%; height:100%; position:relative; background-color: #ffffff;">
+								<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
+							</div>`;
+
+						externalLinkBtn.href = text;
+						externalLinkBtn.style.display = 'flex';
 					}
 					else {
 						const pre = document.createElement('pre');
@@ -2068,7 +2204,6 @@
 				img.src = fileURL;
 				contentLayer.appendChild(img);
 
-				// 直接表示できないOfficeファイルのエラー表示
 			} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
 				const extMatch = file.name.match(/\.[^.]+$/);
 				const fileExt = extMatch ? extMatch[0] : "";
