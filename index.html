@@ -4,16 +4,12 @@
 <head>
 	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>Preview Deck - プレビューデック & CSV変換</title>
+	<title>Preview Deck - プレビューデック</title>
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
 	<script src="https://www.youtube.com/iframe_api"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
 	<style>
-		/* === 全体共通設定 === */
 		* {
 			box-sizing: border-box;
 		}
@@ -38,7 +34,8 @@
 		/* === アクティビティバー === */
 		#activity-bar {
 			width: 60px;
-			background-color: #005642;
+			background-color: #A7E0CF;
+			border-right: 1px solid #8ecbb9;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -55,36 +52,24 @@
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			color: rgba(255, 255, 255, 0.6);
+			color: #444;
 			cursor: pointer;
 			transition: all 0.2s;
+			text-decoration: none;
 		}
 
 		.activity-icon:hover {
-			background-color: rgba(255, 255, 255, 0.1);
-			color: #fff;
+			background-color: rgba(255, 255, 255, 0.4);
+			color: #333;
 		}
 
 		.activity-icon.active {
-			background-color: rgba(255, 255, 255, 0.2);
-			color: #fff;
+			background-color: #ffffff;
+			color: #007b5e;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 		}
 
-		/* === アプリケーションコンテナ === */
-		.app-view {
-			display: none;
-			flex-grow: 1;
-			height: 100%;
-			overflow: hidden;
-		}
-
-		.app-view.active-view {
-			display: flex;
-		}
-
-		/* ========================================================
-		   プレビューデック用スタイル
-		   ======================================================== */
+		/* === サイドバー === */
 		#sidebar {
 			width: 350px;
 			background-color: #A7E0CF;
@@ -1105,553 +1090,180 @@
 			margin-top: 8px;
 			transition-delay: 0.1s;
 		}
-
-		/* ========================================================
-		   CSV変換ツール用スタイル
-		   ======================================================== */
-		#csv-sidebar {
-			width: 350px;
-			background-color: #A7E0CF;
-			border-right: 1px solid #8ecbb9;
-			box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-			z-index: 10;
-			display: flex;
-			flex-direction: column;
-			flex-shrink: 0;
-		}
-
-		#csv-controls {
-			display: flex;
-			flex-direction: column;
-			flex-grow: 1;
-			overflow-y: auto;
-			padding: 20px;
-		}
-
-		.csv-btn {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			gap: 8px;
-			padding: 12px;
-			border-radius: 8px;
-			font-weight: bold;
-			transition: background-color 0.2s, transform 0.1s;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-			cursor: pointer;
-			border: none;
-			font-size: 14px;
-			width: 100%;
-		}
-
-		.csv-btn-yellow {
-			background-color: #F1CF0F;
-			color: #333;
-		}
-
-		.csv-btn-yellow:hover {
-			background-color: #e2c00a;
-			transform: translateY(-1px);
-		}
-
-		.csv-btn-green {
-			background-color: #007b5e;
-			color: #fff;
-		}
-
-		.csv-btn-green:hover {
-			background-color: #00664d;
-			transform: translateY(-1px);
-		}
-
-		.csv-header-area {
-			padding: 15px;
-			border-bottom: 1px solid #8ecbb9;
-			background-color: #e0f2ec;
-			flex-shrink: 0;
-		}
-
-		.csv-label {
-			display: block;
-			font-size: 14px;
-			font-weight: bold;
-			color: #333;
-			margin-bottom: 8px;
-		}
-
-		.csv-note {
-			font-size: 11px;
-			color: #666;
-			margin-bottom: 12px;
-		}
-
-		.csv-box {
-			margin-bottom: 25px;
-		}
-
-		.csv-check-item {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			width: 100%;
-			padding: 10px 12px;
-			border-radius: 6px;
-			border: 1px solid transparent;
-			cursor: pointer;
-			transition: all 0.2s;
-			font-size: 13px;
-			user-select: none;
-			margin-bottom: 6px;
-			box-sizing: border-box;
-		}
-
-		.csv-check-item-default {
-			background-color: #ffffff;
-			color: #444;
-			border-color: #ddd;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-		}
-
-		.csv-check-item-default:hover {
-			background-color: #f9f9f9;
-			border-color: #999;
-		}
-
-		.csv-check-item-hidden {
-			background-color: #eaf8f4;
-			color: #888;
-			border-color: #b0d4c8;
-			box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
-		}
-
-		.csv-check-item-active {
-			background-color: #F1CF0F;
-			color: #333;
-			border-color: #dcb800;
-			font-weight: bold;
-			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
-		}
-
-		.csv-drag-item {
-			cursor: grab;
-		}
-
-		.csv-drag-item:active {
-			cursor: grabbing;
-		}
-
-		.csv-icon-btn {
-			background-color: #fff;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			padding: 4px;
-			cursor: pointer;
-			color: #555;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.csv-icon-btn:hover {
-			background-color: #F1CF0F;
-			border-color: #e2c00a;
-			color: #333;
-		}
-
-		.csv-select {
-			flex: 1;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-			padding: 6px;
-			font-size: 13px;
-			outline: none;
-			background-color: #fff;
-			width: 100%;
-			text-overflow: ellipsis;
-		}
-
-		.csv-select:focus {
-			border-color: #007b5e;
-		}
-
-		.csv-accordion-btn {
-			width: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			font-size: 14px;
-			font-weight: bold;
-			color: #333;
-			outline: none;
-			transition: color 0.2s;
-			background: none;
-			border: none;
-			padding: 0;
-			cursor: pointer;
-			margin-bottom: 8px;
-		}
-
-		.csv-accordion-btn:hover {
-			color: #007b5e;
-		}
-
-		#csv-download-area {
-			padding: 15px;
-			border-top: 1px solid #8ecbb9;
-			background-color: #e0f2ec;
-			flex-shrink: 0;
-		}
-
-		#csv-main-area {
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-			padding: 20px;
-			overflow: hidden;
-			background-color: #f9fdfc;
-		}
-
-		.csv-preview-container {
-			display: flex;
-			gap: 20px;
-			flex: 1;
-			min-height: 0;
-		}
-
-		.csv-card {
-			background-color: #ffffff;
-			border: 2px solid #A7E0CF;
-			border-radius: 8px;
-			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-			display: flex;
-			flex-direction: column;
-			overflow: hidden;
-		}
-
-		.csv-card-header {
-			padding: 12px 15px;
-			background-color: #e0f2ec;
-			border-bottom: 1px solid #b0d4c8;
-			font-weight: bold;
-			color: #333;
-			font-size: 14px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		#csv-preview-content {
-			white-space: pre-wrap;
-			word-wrap: break-word;
-			padding: 20px;
-			overflow: auto;
-			font-family: 'Sawarabi Gothic', sans-serif;
-			font-size: 16px;
-			line-height: 1.8;
-			color: #333;
-			background-color: #FDFBF7;
-			flex: 1;
-		}
-
-		#csv-tree-container {
-			padding: 15px;
-			overflow-y: auto;
-			font-size: 13px;
-			color: #555;
-			flex: 1;
-		}
-
-		.csv-tree-item {
-			cursor: pointer;
-			padding: 6px 10px;
-			border-radius: 4px;
-			transition: background-color 0.2s, color 0.2s;
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			margin-bottom: 4px;
-			border: 1px solid transparent;
-		}
-
-		.csv-tree-item:hover {
-			background-color: #f9f9f9;
-			border-color: #ddd;
-		}
-
-		.csv-tree-item.active {
-			background-color: #F1CF0F;
-			color: #333;
-			font-weight: bold;
-			border-color: #dcb800;
-		}
-
-		.hidden {
-			display: none !important;
-		}
 	</style>
 </head>
 
 <body>
-	<!-- アクティビティバー -->
+	<!-- アクティビティバー（CSV変換 → プレビューデックの順） -->
 	<div id="activity-bar">
-		<div class="activity-icon active" data-target="view-preview" title="プレゼンテーション"><i
-				data-lucide="monitor-play"></i></div>
-		<div class="activity-icon" data-target="view-csv" title="CSV変換ツール"><i data-lucide="file-spreadsheet"></i></div>
+		<a href="csv-converter.html" class="activity-icon" title="CSV変換ツール">
+			<i data-lucide="file-spreadsheet"></i>
+		</a>
+		<a href="index.html" class="activity-icon active" title="プレビューデック">
+			<i data-lucide="monitor-play"></i>
+		</a>
 	</div>
 
-	<!-- ==========================================
-	     ビュー1: プレビューデック
-	     ========================================== -->
-	<div id="view-preview" class="app-view active-view">
-		<div id="sidebar">
-			<div id="sidebar-header">
-				<div class="brand-logo">
-					<div class="brand-icon-box">
-						<i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
-					</div>
-					<span class="brand-title">Preview Deck</span>
+	<!-- サイドバー -->
+	<div id="sidebar">
+		<div id="sidebar-header">
+			<div class="brand-logo">
+				<div class="brand-icon-box">
+					<i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
 				</div>
-				<button id="toggle-sidebar-btn" title="サイドバーを縮小する">
-					<i data-lucide="chevron-left" id="sidebar-chevron"></i>
-					<span class="toggle-text">閉じる</span>
+				<span class="brand-title">Preview Deck</span>
+			</div>
+			<button id="toggle-sidebar-btn" title="サイドバーを縮小する">
+				<i data-lucide="chevron-left" id="sidebar-chevron"></i>
+				<span class="toggle-text">閉じる</span>
+			</button>
+		</div>
+
+		<div id="sidebar-scroll-area">
+			<div class="hide-on-collapse sticky-top">
+				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+
+				<button id="load-btn">
+					<i data-lucide="folder-open"></i>フォルダを読み込む
+				</button>
+
+				<h3 style="margin-bottom: 4px;">発表リスト</h3>
+				<p id="drag-hint-text"
+					style="display: none; font-size: 11px; color: #666; margin: 0 0 10px 0; text-align: left;">
+					ドラッグで順番を変更できます</p>
+			</div>
+
+			<div id="list-container" style="padding: 0 15px 15px 15px;">
+				<p class="hide-on-collapse" style="font-size: 13px; color: #555;">
+					上のボタンからフォルダを読み込むと、ここにリストが並びます。</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- メインプレビューエリア -->
+	<div id="main">
+		<div id="presentation-controls">
+			<div class="controls-group">
+				<button id="prev-btn" class="control-btn nav-btn">
+					<i data-lucide="arrow-left"></i>前へ
+				</button>
+				<button id="next-btn" class="control-btn nav-btn">
+					次へ<i data-lucide="arrow-right"></i>
+				</button>
+
+				<button id="activate-drawing-btn" class="control-btn" title="赤ペンを描画">
+					<i data-lucide="pen"></i>赤ペン
+				</button>
+
+				<button id="chromakey-btn" class="control-btn" title="クロマキー背景で表示する">
+					<i data-lucide="image"></i>クロマキー
+				</button>
+
+				<button id="help-btn" class="control-btn">
+					<i data-lucide="help-circle"></i>操作方法
 				</button>
 			</div>
 
-			<div id="sidebar-scroll-area">
-				<div class="hide-on-collapse sticky-top">
-					<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
-
-					<button id="load-btn">
-						<i data-lucide="folder-open"></i>フォルダを読み込む
+			<div id="size-inputs" class="panel-box">
+				<div class="volume-container">
+					<span id="volume-icon-wrapper" style="cursor: pointer; display: flex; align-items: center;"
+						title="ミュート切替">
+						<i data-lucide="volume-2"></i>
+					</span>
+					<input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" title="音量調節">
+					<button id="rewind-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="5秒戻る">
+						<i data-lucide="rotate-ccw"></i>
 					</button>
-
-					<h3 style="margin-bottom: 4px;">発表リスト</h3>
-					<p id="drag-hint-text"
-						style="display: none; font-size: 11px; color: #666; margin: 0 0 10px 0; text-align: left;">
-						ドラッグで順番を変更できます</p>
-				</div>
-
-				<div id="list-container" style="padding: 0 15px 15px 15px;">
-					<p class="hide-on-collapse" style="font-size: 13px; color: #555;">
-						上のボタンからフォルダを読み込むと、ここにリストが並びます。</p>
-				</div>
-			</div>
-		</div>
-
-		<div id="main">
-			<div id="presentation-controls">
-				<div class="controls-group">
-					<button id="prev-btn" class="control-btn nav-btn">
-						<i data-lucide="arrow-left"></i>前へ
+					<button id="forward-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
+						title="5秒進む">
+						<i data-lucide="rotate-cw"></i>
 					</button>
-					<button id="next-btn" class="control-btn nav-btn">
-						次へ<i data-lucide="arrow-right"></i>
+					<button id="play-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="再生">
+						<i data-lucide="play"></i>
 					</button>
-
-					<button id="activate-drawing-btn" class="control-btn" title="赤ペンを描画">
-						<i data-lucide="pen"></i>赤ペン
-					</button>
-
-					<button id="chromakey-btn" class="control-btn" title="クロマキー背景で表示する">
-						<i data-lucide="image"></i>クロマキー
-					</button>
-
-					<button id="help-btn" class="control-btn">
-						<i data-lucide="help-circle"></i>操作方法
+					<button id="pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="停止">
+						<i data-lucide="pause"></i>
 					</button>
 				</div>
+				<button id="fullscreen-btn" class="control-btn">
+					<i data-lucide="maximize"></i>全画面
+				</button>
+				<select id="size-selector" class="control-btn">
+					<option value="1920x1080">FHD (1920×1080)</option>
+					<option value="1280x720" selected>HD (1280×720)</option>
+					<option value="1024x768">XGA (1024×768)</option>
+					<option value="720x480">SD (720×480)</option>
+					<option value="640x480">VGA (640×480)</option>
+				</select>
+				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
+				<span>H:</span> <input type="number" id="input-height" value="720">
 
-				<div id="size-inputs" class="panel-box">
-					<div class="volume-container">
-						<span id="volume-icon-wrapper" style="cursor: pointer; display: flex; align-items: center;"
-							title="ミュート切替">
-							<i data-lucide="volume-2"></i>
-						</span>
-						<input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" title="音量調節">
-						<button id="rewind-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
-							title="5秒戻る">
-							<i data-lucide="rotate-ccw"></i>
-						</button>
-						<button id="forward-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
-							title="5秒進む">
-							<i data-lucide="rotate-cw"></i>
-						</button>
-						<button id="play-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="再生">
-							<i data-lucide="play"></i>
-						</button>
-						<button id="pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
-							title="停止">
-							<i data-lucide="pause"></i>
-						</button>
-					</div>
-					<button id="fullscreen-btn" class="control-btn">
-						<i data-lucide="maximize"></i>全画面
-					</button>
-					<select id="size-selector" class="control-btn">
-						<option value="1920x1080">FHD (1920×1080)</option>
-						<option value="1280x720" selected>HD (1280×720)</option>
-						<option value="1024x768">XGA (1024×768)</option>
-						<option value="720x480">SD (720×480)</option>
-						<option value="640x480">VGA (640×480)</option>
-					</select>
-					<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
-					<span>H:</span> <input type="number" id="input-height" value="720">
-
-					<label
-						style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; margin-left: 8px; border-left: 1px solid #ddd; padding-left: 12px;">
-						<input type="checkbox" id="auto-xga-switch" checked>
-						READMEでXGA
-					</label>
-				</div>
-			</div>
-
-			<div id="presentation-wrapper">
-				<div id="wrapper-header">
-					<div id="zoom-controls-container">
-						<button id="zoom-out-btn" class="control-btn" title="縮小"><i data-lucide="minus"></i></button>
-						<input type="range" id="zoom-slider" min="0.5" max="3.0" step="0.1" value="1.0"
-							style="width: 70px; accent-color: #A7E0CF; cursor: pointer;">
-						<span id="zoom-level-text">100%</span>
-						<button id="zoom-in-btn" class="control-btn" title="拡大"><i data-lucide="plus"></i></button>
-						<button id="zoom-reset-btn" class="control-btn" title="リセット"><i
-								data-lucide="zoom-in"></i>リセット</button>
-					</div>
-
-					<div id="timer-display-container">
-						<div class="analog-clock">
-							<div class="second-hand" id="second-hand"></div>
-						</div>
-						<span id="timer-text">0分</span>
-						<button id="toggle-timer-inline-btn" title="タイマーを隠す"><i data-lucide="eye"></i></button>
-					</div>
-				</div>
-
-				<div id="presentation-area">
-					<div id="zoom-wrapper">
-						<div id="content-layer">
-							<p id="empty-message" style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
-						</div>
-						<canvas id="drawing-canvas"></canvas>
-					</div>
-				</div>
-
-				<a id="external-link-btn" href="#" target="_blank" style="display: none;" title="新規タブで開く">
-					<i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
-					<span class="btn-text">新規タブで開く</span>
-				</a>
-
-				<div id="url-warning" style="display: none;" title="警告（クリックで詳細を表示）">
-					<i data-lucide="alert-circle" style="width: 18px; height: 18px; color: #e74c3c; margin: 0;"></i>
-					<span class="warning-text">正常に表示・操作できない場合、新規タブで開いてください</span>
-				</div>
-
-				<div id="drawing-sidebar" style="display: none;">
-					<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン"><i
-							data-lucide="pen"></i></button>
-					<button id="tool-eraser-btn" class="tool-btn" title="消しゴム"><i data-lucide="eraser"></i></button>
-					<div class="tool-divider"></div>
-					<button id="tool-thick-md" class="tool-btn active-tool" title="中サイズ">
-						<div style="width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%;"></div>
-					</button>
-					<button id="tool-thick-lg" class="tool-btn" title="大サイズ">
-						<div style="width: 16px; height: 16px; background-color: #e74c3c; border-radius: 50%;"></div>
-					</button>
-					<div class="tool-divider"></div>
-					<button id="tool-clear-btn" class="tool-btn" title="全消し"><i data-lucide="trash-2"></i></button>
-					<button id="tool-done-btn" class="done-btn">完了</button>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- ==========================================
-	     ビュー2: CSV変換ツール
-	     ========================================== -->
-	<div id="view-csv" class="app-view">
-		<!-- CSV用サイドバー -->
-		<div id="csv-sidebar">
-			<div class="csv-header-area">
-				<div class="brand-logo" style="margin-bottom: 15px;">
-					<div class="brand-icon-box">
-						<i data-lucide="file-spreadsheet" style="width: 20px; height: 20px;"></i>
-					</div>
-					<span class="brand-title">CSV変換ツール</span>
-				</div>
-				<label class="csv-btn csv-btn-yellow">
-					<i data-lucide="upload"></i> CSVを読み込む
-					<input type="file" id="csv-file" accept=".csv" class="hidden" />
+				<label
+					style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; margin-left: 8px; border-left: 1px solid #ddd; padding-left: 12px;">
+					<input type="checkbox" id="auto-xga-switch" checked>
+					READMEでXGA
 				</label>
 			</div>
-
-			<div id="csv-controls" class="hidden">
-				<div class="csv-box">
-					<label class="csv-label">参照 (プレビュー)</label>
-					<div style="display: flex; gap: 8px; align-items: center;">
-						<button id="csv-prev-btn" class="csv-icon-btn"><i data-lucide="chevron-left"
-								style="width:16px; height:16px;"></i></button>
-						<select id="csv-row-select" class="csv-select"></select>
-						<button id="csv-next-btn" class="csv-icon-btn"><i data-lucide="chevron-right"
-								style="width:16px; height:16px;"></i></button>
-					</div>
-				</div>
-
-				<div class="csv-box">
-					<label class="csv-label">非表示にする項目</label>
-					<p class="csv-note">配信に映したくない項目を非表示にします</p>
-					<div id="csv-column-checkboxes"></div>
-				</div>
-
-				<div class="csv-box">
-					<button id="csv-filename-accordion-btn" class="csv-accordion-btn">
-						<span>ファイル名に含める項目</span>
-						<i data-lucide="chevron-down" id="csv-filename-accordion-icon"
-							style="transition: transform 0.2s;"></i>
-					</button>
-					<div id="csv-filename-accordion-content" class="hidden">
-						<p class="csv-note">複数選択可能／ドラッグで順序の入れ替え</p>
-						<div id="csv-filename-checkboxes"></div>
-					</div>
-				</div>
-			</div>
-
-			<div id="csv-download-area" class="hidden">
-				<button id="csv-download-btn" class="csv-btn csv-btn-green">
-					<i data-lucide="download"></i> ZIPをダウンロード
-				</button>
-			</div>
 		</div>
 
-		<!-- CSV用メインエリア -->
-		<div id="csv-main-area">
-			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-				<h2 style="margin: 0; font-size: 18px; color: #333; display: flex; align-items: center; gap: 8px;">
-					<i data-lucide="folder" style="color: #007b5e;"></i>
-					<span id="csv-preview-folder-name">未選択</span>
-				</h2>
-				<button id="csv-info-btn" class="csv-icon-btn" style="gap: 4px; padding: 6px 12px; font-size: 13px;"
-					title="ツールについて">
-					<i data-lucide="info" style="width: 16px; height: 16px;"></i> このツールについて
-				</button>
+		<div id="presentation-wrapper">
+			<div id="wrapper-header">
+				<div id="zoom-controls-container">
+					<button id="zoom-out-btn" class="control-btn" title="縮小"><i data-lucide="minus"></i></button>
+					<input type="range" id="zoom-slider" min="0.5" max="3.0" step="0.1" value="1.0"
+						style="width: 70px; accent-color: #A7E0CF; cursor: pointer;">
+					<span id="zoom-level-text">100%</span>
+					<button id="zoom-in-btn" class="control-btn" title="拡大"><i data-lucide="plus"></i></button>
+					<button id="zoom-reset-btn" class="control-btn" title="リセット"><i
+							data-lucide="zoom-in"></i>リセット</button>
+				</div>
+
+				<div id="timer-display-container">
+					<div class="analog-clock">
+						<div class="second-hand" id="second-hand"></div>
+					</div>
+					<span id="timer-text">0分</span>
+					<button id="toggle-timer-inline-btn" title="タイマーを隠す"><i data-lucide="eye"></i></button>
+				</div>
 			</div>
 
-			<div class="csv-preview-container">
-				<!-- テキストプレビュー -->
-				<div class="csv-card" style="flex: 2;">
-					<div class="csv-card-header"><i data-lucide="file-text" style="width:16px; height:16px;"></i> ファイル内容
+			<div id="presentation-area">
+				<div id="zoom-wrapper">
+					<div id="content-layer">
+						<p id="empty-message" style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
 					</div>
-					<div id="csv-preview-content">左側のメニューからCSVファイルをアップロードしてください</div>
+					<canvas id="drawing-canvas"></canvas>
 				</div>
-				<!-- ツリープレビュー -->
-				<div class="csv-card" style="flex: 1; max-width: 300px;">
-					<div class="csv-card-header"><i data-lucide="list-tree" style="width:16px; height:16px;"></i>
-						生成ファイル構成</div>
-					<div id="csv-tree-container">CSVアップロード後に表示されます</div>
-				</div>
+			</div>
+
+			<a id="external-link-btn" href="#" target="_blank" style="display: none;" title="新規タブで開く">
+				<i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
+				<span class="btn-text">新規タブで開く</span>
+			</a>
+
+			<div id="url-warning" style="display: none;" title="警告（クリックで詳細を表示）">
+				<i data-lucide="alert-circle" style="width: 18px; height: 18px; color: #e74c3c; margin: 0;"></i>
+				<span class="warning-text">正常に表示・操作できない場合、新規タブで開いてください</span>
+			</div>
+
+			<div id="drawing-sidebar" style="display: none;">
+				<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン"><i data-lucide="pen"></i></button>
+				<button id="tool-eraser-btn" class="tool-btn" title="消しゴム"><i data-lucide="eraser"></i></button>
+				<div class="tool-divider"></div>
+				<button id="tool-thick-md" class="tool-btn active-tool" title="中サイズ">
+					<div style="width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%;"></div>
+				</button>
+				<button id="tool-thick-lg" class="tool-btn" title="大サイズ">
+					<div style="width: 16px; height: 16px; background-color: #e74c3c; border-radius: 50%;"></div>
+				</button>
+				<div class="tool-divider"></div>
+				<button id="tool-clear-btn" class="tool-btn" title="全消し"><i data-lucide="trash-2"></i></button>
+				<button id="tool-done-btn" class="done-btn">完了</button>
 			</div>
 		</div>
 	</div>
 
-	<!-- モーダル（プレビューデック用） -->
+	<!-- モーダル -->
 	<div id="help-modal-overlay">
 		<div id="help-modal">
 			<button class="close-btn" id="close-modal-btn">×</button>
@@ -1674,48 +1286,7 @@
 		</div>
 	</div>
 
-	<!-- モーダル（CSVツール用） -->
-	<div id="csv-info-modal-overlay"
-		style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 100; justify-content: center; align-items: center;">
-		<div
-			style="background-color: #fff; padding: 30px; border-radius: 12px; width: 500px; max-width: 90%; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2); position: relative;">
-			<button id="csv-close-modal-btn" class="close-btn">×</button>
-			<h2
-				style="margin-top: 0; color: #007b5e; border-bottom: 2px solid #A7E0CF; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-				<i data-lucide="info"></i> ツールについて
-			</h2>
-			<p style="margin-top: 15px; font-size: 14px; color: #555; line-height: 1.6;">
-				CSVを読み込むと、送信者ごとのフォルダが作成され、データ管理がしやすくなります。<br><br>
-				URLが記載されている場合、説明文では伏字になりますが、URLのみを掲載したtxtファイルが別途生成されます。
-			</p>
-		</div>
-	</div>
-
 	<script>
-		// ==========================================
-		// ビュー切り替えロジック
-		// ==========================================
-		document.querySelectorAll('.activity-icon').forEach(icon => {
-			icon.addEventListener('click', () => {
-				// アイコンのアクティブ状態切り替え
-				document.querySelectorAll('.activity-icon').forEach(i => i.classList.remove('active'));
-				icon.classList.add('active');
-
-				// ビューの切り替え
-				const targetId = icon.getAttribute('data-target');
-				document.querySelectorAll('.app-view').forEach(view => {
-					view.classList.remove('active-view');
-				});
-				document.getElementById(targetId).classList.add('active-view');
-
-				// ビュー切り替え時の再描画対応 (ResizeObserverの発火待ち)
-				window.dispatchEvent(new Event('resize'));
-			});
-		});
-
-		// ==========================================
-		// プレビューデックのロジック
-		// ==========================================
 		let ytPlayer = null;
 		let isYtApiReady = false;
 		window.onYouTubeIframeAPIReady = function () { isYtApiReady = true; };
@@ -1740,7 +1311,6 @@
 		const nextBtn = document.getElementById('next-btn');
 		const chromakeyBtn = document.getElementById('chromakey-btn');
 
-		// 手動で設定したサイズを記憶する変数
 		let userSelectedWidth = 1280;
 		let userSelectedHeight = 720;
 		let userSelectedPreset = "1280x720";
@@ -1809,7 +1379,6 @@
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
 		});
 
-		// プログラムからサイズを適用する関数
 		function applySize(w, h, preset) {
 			isProgrammaticResize = true;
 			presentationArea.style.width = w + 'px';
@@ -1823,17 +1392,14 @@
 			setTimeout(() => { isProgrammaticResize = false; }, 100);
 		}
 
-		// サイズ記憶の復元
 		function restoreUserSize() {
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
 		}
 
-		// 「READMEでXGA」スイッチの切り替え時
 		autoXgaSwitch.addEventListener('change', (e) => {
 			if (!e.target.checked) {
-				restoreUserSize(); // OFFにしたら元の記憶サイズに戻す
+				restoreUserSize();
 			} else {
-				// ONにしたとき、現在選択中がREADMEならXGAにする
 				const activeItem = document.querySelector('.list-item.active');
 				if (activeItem) {
 					const fileName = activeItem.querySelector('.item-text').textContent.toLowerCase();
@@ -1847,7 +1413,6 @@
 		sizeSelector.addEventListener('change', (e) => {
 			const [w, h] = e.target.value.split('x');
 			applySize(w, h, e.target.value);
-			// 手動変更として記憶
 			userSelectedWidth = w;
 			userSelectedHeight = h;
 			userSelectedPreset = e.target.value;
@@ -1857,7 +1422,6 @@
 			const w = inputWidth.value;
 			const h = inputHeight.value;
 			applySize(w, h, null);
-			// 手動変更として記憶
 			userSelectedWidth = w;
 			userSelectedHeight = h;
 			const matchingOption = Array.from(sizeSelector.options).find(opt => opt.value === `${w}x${h}`);
@@ -1878,7 +1442,6 @@
 				canvas.height = contentHeight;
 				redrawCanvas();
 
-				// プログラムによる変更でない（ユーザーが枠をドラッグしてリサイズした）場合は記憶する
 				if (!isProgrammaticResize && width > 0 && contentHeight > 0) {
 					const matchingOption = Array.from(sizeSelector.options).find(opt => opt.value === `${contentWidth}x${contentHeight}`);
 					if (matchingOption) sizeSelector.value = matchingOption.value;
@@ -1887,7 +1450,6 @@
 					userSelectedHeight = contentHeight;
 					userSelectedPreset = matchingOption ? matchingOption.value : "custom";
 
-					// 入力欄も更新
 					inputWidth.value = contentWidth;
 					inputHeight.value = contentHeight;
 				}
@@ -2295,10 +1857,8 @@
 				const isReadme = file.name.toLowerCase().startsWith('readme');
 
 				if (isReadme && autoXgaSwitch && autoXgaSwitch.checked) {
-					// README ＆ スイッチON：XGAに変更
 					applySize(1024, 768, "1024x768");
 				} else {
-					// それ以外：手動記憶していた元のサイズに戻す
 					restoreUserSize();
 				}
 
@@ -2393,262 +1953,6 @@
 			}
 		}
 
-		// ==========================================
-		// CSV変換ツールのロジック
-		// ==========================================
-		const csvState = { csvData: [], headers: [], hiddenColumns: new Set(), filenameColumns: [], filenameOrder: [], currentIndex: 0, generatedFiles: [] };
-
-		const csvFileInput = document.getElementById('csv-file');
-		const csvControls = document.getElementById('csv-controls');
-		const csvDownloadArea = document.getElementById('csv-download-area');
-		const csvRowSelect = document.getElementById('csv-row-select');
-		const csvPrevBtn = document.getElementById('csv-prev-btn');
-		const csvNextBtn = document.getElementById('csv-next-btn');
-		const csvColumnCheckboxes = document.getElementById('csv-column-checkboxes');
-		const csvFilenameCheckboxes = document.getElementById('csv-filename-checkboxes');
-		const csvPreviewContent = document.getElementById('csv-preview-content');
-		const csvPreviewFolderName = document.getElementById('csv-preview-folder-name');
-		const csvTreeContainer = document.getElementById('csv-tree-container');
-		const csvDownloadBtn = document.getElementById('csv-download-btn');
-		const csvAccordionBtn = document.getElementById('csv-filename-accordion-btn');
-		const csvAccordionContent = document.getElementById('csv-filename-accordion-content');
-		const csvAccordionIcon = document.getElementById('csv-filename-accordion-icon');
-
-		const csvInfoBtn = document.getElementById('csv-info-btn');
-		const csvInfoModalOverlay = document.getElementById('csv-info-modal-overlay');
-		const csvCloseModalBtn = document.getElementById('csv-close-modal-btn');
-
-		csvInfoBtn.addEventListener('click', () => { csvInfoModalOverlay.style.display = 'flex'; });
-		csvCloseModalBtn.addEventListener('click', () => { csvInfoModalOverlay.style.display = 'none'; });
-		csvInfoModalOverlay.addEventListener('click', (e) => { if (e.target === csvInfoModalOverlay) csvInfoModalOverlay.style.display = 'none'; });
-
-		csvAccordionBtn.addEventListener('click', () => {
-			csvAccordionContent.classList.toggle('hidden');
-			if (csvAccordionContent.classList.contains('hidden')) csvAccordionIcon.style.transform = 'rotate(0deg)';
-			else csvAccordionIcon.style.transform = 'rotate(180deg)';
-		});
-
-		csvFileInput.addEventListener('change', (e) => {
-			const file = e.target.files[0];
-			if (!file) return;
-			Papa.parse(file, {
-				header: true, skipEmptyLines: true,
-				complete: (results) => {
-					csvState.csvData = results.data;
-					csvState.headers = results.meta.fields || [];
-					csvState.filenameOrder = [...csvState.headers];
-					csvState.hiddenColumns.clear();
-					csvState.headers.forEach(h => {
-						if (h.includes('タイムスタンプ') || h.includes('連絡先')) csvState.hiddenColumns.add(h);
-					});
-					const titleCol = csvState.headers.find(h => h.includes('タイトル'));
-					if (titleCol) csvState.filenameColumns = [titleCol];
-					else if (csvState.headers.length > 0) csvState.filenameColumns = [csvState.headers[0]];
-					else csvState.filenameColumns = [];
-					csvState.currentIndex = 0;
-					if (csvState.csvData.length > 0) {
-						csvControls.classList.remove('hidden'); csvDownloadArea.classList.remove('hidden');
-						renderCsvCheckboxes(); updateCsvRowSelect(); updateCsvPreview();
-					}
-				}
-			});
-		});
-
-		csvPrevBtn.addEventListener('click', () => {
-			if (csvState.currentIndex > 0) { csvState.currentIndex--; csvRowSelect.value = csvState.currentIndex; updateCsvPreview(); }
-		});
-		csvNextBtn.addEventListener('click', () => {
-			if (csvState.currentIndex < csvState.csvData.length - 1) { csvState.currentIndex++; csvRowSelect.value = csvState.currentIndex; updateCsvPreview(); }
-		});
-
-		function renderCsvCheckboxes() {
-			csvColumnCheckboxes.innerHTML = csvState.headers.map(col => {
-				const isHidden = csvState.hiddenColumns.has(col);
-				const btnClass = isHidden ? 'csv-check-item-hidden' : 'csv-check-item-default';
-				const icon = isHidden ? 'eye-off' : 'eye';
-				const textStyle = isHidden ? 'text-decoration: line-through;' : '';
-				return `
-					<label class="csv-check-item ${btnClass}">
-						<span style="${textStyle}">${col}</span>
-						<i data-lucide="${icon}" style="width:16px; height:16px;"></i>
-						<input type="checkbox" value="${col}" class="csv-hidden-cb hidden" ${isHidden ? 'checked' : ''}>
-					</label>
-				`;
-			}).join('');
-
-			csvFilenameCheckboxes.innerHTML = csvState.filenameOrder.map((col, index) => {
-				const isChecked = csvState.filenameColumns.includes(col);
-				const btnClass = isChecked ? 'csv-check-item-active' : 'csv-check-item-default';
-				const icon = isChecked ? 'check-circle-2' : 'circle';
-				return `
-					<label draggable="true" data-index="${index}" class="csv-check-item csv-drag-item ${btnClass}">
-						<div style="display:flex; align-items:center; gap:8px;">
-							<i data-lucide="grip-vertical" style="width:14px; height:14px; color:#999;"></i>
-							<span>${col}</span>
-						</div>
-						<i data-lucide="${icon}" style="width:16px; height:16px;"></i>
-						<input type="checkbox" value="${col}" class="csv-filename-cb hidden" ${isChecked ? 'checked' : ''}>
-					</label>
-				`;
-			}).join('');
-
-			lucide.createIcons({ root: csvColumnCheckboxes });
-			lucide.createIcons({ root: csvFilenameCheckboxes });
-			attachCsvCheckboxEvents(); attachCsvDragAndDropEvents();
-		}
-
-		function attachCsvCheckboxEvents() {
-			document.querySelectorAll('.csv-hidden-cb').forEach(cb => {
-				cb.addEventListener('change', (e) => {
-					if (e.target.checked) csvState.hiddenColumns.add(e.target.value);
-					else csvState.hiddenColumns.delete(e.target.value);
-					renderCsvCheckboxes(); updateCsvPreview();
-				});
-			});
-			document.querySelectorAll('.csv-filename-cb').forEach(cb => {
-				cb.addEventListener('change', (e) => {
-					const val = e.target.value;
-					if (e.target.checked) csvState.filenameColumns.push(val);
-					else csvState.filenameColumns = csvState.filenameColumns.filter(c => c !== val);
-					csvState.filenameColumns.sort((a, b) => csvState.filenameOrder.indexOf(a) - csvState.filenameOrder.indexOf(b));
-					renderCsvCheckboxes(); updateCsvRowSelect(); updateCsvPreview();
-				});
-			});
-		}
-
-		function attachCsvDragAndDropEvents() {
-			let dragStartIndex = null;
-			const items = document.querySelectorAll('.csv-drag-item');
-			items.forEach(item => {
-				item.addEventListener('dragstart', (e) => {
-					dragStartIndex = parseInt(item.getAttribute('data-index'));
-					e.dataTransfer.effectAllowed = 'move';
-					setTimeout(() => item.style.opacity = '0.5', 0);
-				});
-				item.addEventListener('dragend', () => { item.style.opacity = '1'; dragStartIndex = null; });
-				item.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-				item.addEventListener('drop', (e) => {
-					e.preventDefault(); const dropElement = e.target.closest('.csv-drag-item');
-					if (!dropElement) return;
-					const dragEndIndex = parseInt(dropElement.getAttribute('data-index'));
-					if (dragStartIndex !== null && dragStartIndex !== dragEndIndex) {
-						const movedItem = csvState.filenameOrder.splice(dragStartIndex, 1)[0];
-						csvState.filenameOrder.splice(dragEndIndex, 0, movedItem);
-						csvState.filenameColumns.sort((a, b) => csvState.filenameOrder.indexOf(a) - csvState.filenameOrder.indexOf(b));
-						renderCsvCheckboxes(); updateCsvRowSelect(); updateCsvPreview();
-					}
-				});
-			});
-		}
-
-		function updateCsvRowSelect() {
-			csvRowSelect.innerHTML = csvState.csvData.map((row, i) => {
-				let title = generateCsvFolderName(row);
-				if (title.length > 5) title = title.substring(0, 5) + '...';
-				return `<option value="${i}">${String(i + 1).padStart(3, '0')} - ${title}</option>`;
-			}).join('');
-			csvRowSelect.value = csvState.currentIndex;
-			csvRowSelect.onchange = (e) => { csvState.currentIndex = Number(e.target.value); updateCsvPreview(); };
-		}
-
-		function generateCsvFolderName(row) {
-			const parts = csvState.filenameColumns.map(col => row[col]).filter(Boolean);
-			return parts.length > 0 ? parts.join('-') : 'データ';
-		}
-
-		function processCsvTextAndExtractUrls(text, startIndex) {
-			if (typeof text !== 'string') return { text, urls: [], nextIndex: startIndex };
-			const urlRegex = /(https?:\/\/[^\s]+)/g;
-			const urls = []; let currentCount = startIndex;
-			const replacedText = text.replace(urlRegex, (match) => {
-				const cleanUrl = match.replace(/,+$/, ''); const trailing = match.substring(cleanUrl.length);
-				let domainStr = 'unknown';
-				try { const urlObj = new URL(cleanUrl); domainStr = urlObj.hostname.replace(/\./g, '-'); } catch (e) { }
-				const urlId = `URL-${String(currentCount).padStart(2, '0')}__${domainStr}`;
-				urls.push({ id: urlId, url: cleanUrl }); currentCount++;
-				return `[${urlId}]${trailing}`;
-			});
-			return { text: replacedText, urls, nextIndex: currentCount };
-		}
-
-		function formatCsvRowData(row) {
-			let infoText = ""; let extractedUrls = []; let globalUrlCount = 1;
-			csvState.headers.forEach(header => {
-				const { text, urls, nextIndex } = processCsvTextAndExtractUrls(row[header], globalUrlCount);
-				extractedUrls = [...extractedUrls, ...urls]; globalUrlCount = nextIndex;
-				if (!csvState.hiddenColumns.has(header)) infoText += `# ${header}\n${text}\n\n`;
-			});
-			return { infoText, extractedUrls };
-		}
-
-		function attachCsvTreeClickEvents(folderPath) {
-			const treeItems = csvTreeContainer.querySelectorAll('.csv-tree-item');
-			treeItems.forEach(item => {
-				item.addEventListener('click', () => {
-					treeItems.forEach(el => el.classList.remove('active')); item.classList.add('active');
-					const fileIndex = parseInt(item.getAttribute('data-index'));
-					const fileData = csvState.generatedFiles[fileIndex];
-					updateCsvPreviewContent(fileData);
-				});
-			});
-		}
-
-		function updateCsvPreviewContent(fileData) {
-			if (fileData.isUrl) {
-				csvPreviewContent.innerHTML = `<a href="${fileData.content}" target="_blank" rel="noopener noreferrer" style="color: #007b5e; text-decoration: underline; word-break: break-all;">${fileData.content}</a>`;
-			} else {
-				csvPreviewContent.textContent = fileData.content;
-			}
-		}
-
-		function updateCsvPreview() {
-			if (csvState.csvData.length === 0) return;
-			const row = csvState.csvData[csvState.currentIndex];
-			const { infoText, extractedUrls } = formatCsvRowData(row);
-			const formattedRowNum = String(csvState.currentIndex + 1).padStart(3, '0');
-			const folderTitle = generateCsvFolderName(row);
-			const safeTitle = folderTitle.replace(/[\\/:*?"<>|]/g, '_');
-			const folderPath = `${formattedRowNum}-${safeTitle}`;
-
-			csvState.generatedFiles = [];
-			csvState.generatedFiles.push({ name: `README-${safeTitle}.txt`, content: infoText.trim(), isUrl: false });
-			extractedUrls.forEach(urlObj => { csvState.generatedFiles.push({ name: `${urlObj.id}.txt`, content: urlObj.url, isUrl: true }); });
-
-			updateCsvPreviewContent(csvState.generatedFiles[0]);
-			csvPreviewFolderName.textContent = `${folderPath}`;
-
-			let treeHtml = `<div style="font-weight:bold; color:#333; margin-bottom:8px; display:flex; align-items:center; gap:6px;"><i data-lucide="folder" style="width:16px; height:16px; color:#007b5e;"></i> ${folderPath}</div><div style="padding-left:12px;">`;
-			csvState.generatedFiles.forEach((file, index) => {
-				const activeClass = index === 0 ? 'active' : '';
-				treeHtml += `<div class="csv-tree-item ${activeClass}" data-index="${index}"><i data-lucide="file-text" style="width:14px; height:14px;"></i> ${file.name}</div>`;
-			});
-			treeHtml += `</div>`;
-			csvTreeContainer.innerHTML = treeHtml;
-			lucide.createIcons({ root: csvTreeContainer });
-			attachCsvTreeClickEvents(folderPath);
-		}
-
-		csvDownloadBtn.addEventListener('click', async () => {
-			if (csvState.csvData.length === 0) return;
-			const zip = new JSZip();
-			csvState.csvData.forEach((row, index) => {
-				const { infoText, extractedUrls } = formatCsvRowData(row);
-				const formattedRowNum = String(index + 1).padStart(3, '0');
-				const folderTitle = generateCsvFolderName(row);
-				const safeTitle = folderTitle.replace(/[\\/:*?"<>|]/g, '_');
-				const folderName = `${formattedRowNum}-${safeTitle}`;
-				const folder = zip.folder(folderName);
-				folder.file(`README-${safeTitle}.txt`, infoText.trim());
-				extractedUrls.forEach(urlObj => { folder.file(`${urlObj.id}.txt`, urlObj.url); });
-			});
-			const now = new Date();
-			const yy = String(now.getFullYear()).slice(-2); const mm = String(now.getMonth() + 1).padStart(2, '0'); const dd = String(now.getDate()).padStart(2, '0');
-			const zipFileName = `発表内容まとめ-${yy}${mm}${dd}.zip`;
-			const content = await zip.generateAsync({ type: 'blob' });
-			saveAs(content, zipFileName);
-		});
-
-		// ページロード時のアイコン初期化
 		lucide.createIcons();
 	</script>
 </body>
