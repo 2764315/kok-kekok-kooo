@@ -186,7 +186,8 @@
 		body.chromakey-mode #presentation-area,
 		body.chromakey-mode #presentation-wrapper,
 		body.chromakey-mode #zoom-controls-container,
-		body.chromakey-mode #timer-display-container {
+		body.chromakey-mode #timer-display-container,
+		body.chromakey-mode #presentation-controls {
 			border-color: #00FF00 !important;
 			box-shadow: none !important;
 			background-color: #00FF00 !important;
@@ -440,7 +441,7 @@
 
 		#main {
 			flex-grow: 1;
-			padding: 20px;
+			padding: 0 20px 20px 20px;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -455,10 +456,15 @@
 			width: 1280px;
 			max-width: 100%;
 			margin-bottom: 10px;
-			padding: 0 5px;
+			padding: 20px 5px 10px 5px;
 			box-sizing: border-box;
 			gap: 10px;
-			flex-wrap: wrap;
+			flex-wrap: nowrap;
+			position: sticky;
+			top: 0;
+			background-color: #f9fdfc;
+			z-index: 90;
+			min-width: max-content;
 		}
 
 		.controls-group {
@@ -517,9 +523,9 @@
 		}
 
 		#activate-drawing-btn:hover {
-			background-color: #ef4444;
+			background-color: #e74c3c;
 			color: #ffffff;
-			border-color: #ef4444;
+			border-color: #e74c3c;
 		}
 
 		#chromakey-btn:hover {
@@ -725,9 +731,8 @@
 		}
 
 		#presentation-area {
-			width: 1280px;
-			height: 720px;
-			aspect-ratio: 16 / 9;
+			width: 1024px;
+			height: 768px;
 			max-width: 1920px;
 			max-height: 1080px;
 			min-width: 320px;
@@ -1141,12 +1146,14 @@
 					<i data-lucide="maximize"></i>全画面
 				</button>
 				<select id="size-selector" class="control-btn">
-					<option value="1920x1080">フルHD (1080p)</option>
-					<option value="1280x720" selected>HD (720p)</option>
-					<option value="720x480">SD (480p)</option>
+					<option value="1920x1080">FHD (1920×1080)</option>
+					<option value="1280x720">HD (1280×720)</option>
+					<option value="1024x768" selected>XGA (1024×768)</option>
+					<option value="720x480">SD (720×480)</option>
+					<option value="640x480">VGA (640×480)</option>
 				</select>
-				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
-				<span>H:</span> <input type="number" id="input-height" value="720">
+				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1024"> x
+				<span>H:</span> <input type="number" id="input-height" value="768">
 			</div>
 		</div>
 
@@ -1342,18 +1349,18 @@
 		let previousVolume = 1;
 
 		window.addEventListener('DOMContentLoaded', () => {
-			if (window.innerWidth < 1600) {
-				presentationArea.style.width = '720px';
+			if (window.innerWidth < 1400) {
+				presentationArea.style.width = '640px';
 				presentationArea.style.height = '480px';
-				inputWidth.value = 720;
+				inputWidth.value = 640;
 				inputHeight.value = 480;
-				sizeSelector.value = "720x480";
+				sizeSelector.value = "640x480";
 			} else {
-				presentationArea.style.width = '1280px';
-				presentationArea.style.height = '720px';
-				inputWidth.value = 1280;
-				inputHeight.value = 720;
-				sizeSelector.value = "1280x720";
+				presentationArea.style.width = '1024px';
+				presentationArea.style.height = '768px';
+				inputWidth.value = 1024;
+				inputHeight.value = 768;
+				sizeSelector.value = "1024x768";
 			}
 		});
 
