@@ -26,6 +26,40 @@
 			stroke-width: 2;
 		}
 
+		#activity-bar {
+			width: 60px;
+			background-color: #005642;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			padding-top: 15px;
+			gap: 15px;
+			z-index: 20;
+			flex-shrink: 0;
+		}
+
+		.activity-icon {
+			width: 40px;
+			height: 40px;
+			border-radius: 8px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			color: rgba(255, 255, 255, 0.6);
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+
+		.activity-icon:hover {
+			background-color: rgba(255, 255, 255, 0.1);
+			color: #fff;
+		}
+
+		.activity-icon.active {
+			background-color: rgba(255, 255, 255, 0.2);
+			color: #fff;
+		}
+
 		#sidebar {
 			width: 350px;
 			background-color: #A7E0CF;
@@ -731,8 +765,8 @@
 		}
 
 		#presentation-area {
-			width: 1024px;
-			height: 768px;
+			width: 1280px;
+			height: 720px;
 			max-width: 1920px;
 			max-height: 1080px;
 			min-width: 320px;
@@ -1058,6 +1092,12 @@
 
 <body>
 
+	<div id="activity-bar">
+		<div class="activity-icon active" title="プレゼンテーション"><i data-lucide="monitor-play"></i></div>
+		<div class="activity-icon" title="設定"><i data-lucide="settings"></i></div>
+		<div class="activity-icon" title="ユーザー情報"><i data-lucide="user"></i></div>
+	</div>
+
 	<div id="sidebar">
 		<div id="sidebar-header">
 			<div class="brand-logo">
@@ -1147,13 +1187,19 @@
 				</button>
 				<select id="size-selector" class="control-btn">
 					<option value="1920x1080">FHD (1920×1080)</option>
-					<option value="1280x720">HD (1280×720)</option>
-					<option value="1024x768" selected>XGA (1024×768)</option>
+					<option value="1280x720" selected>HD (1280×720)</option>
+					<option value="1024x768">XGA (1024×768)</option>
 					<option value="720x480">SD (720×480)</option>
 					<option value="640x480">VGA (640×480)</option>
 				</select>
-				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1024"> x
-				<span>H:</span> <input type="number" id="input-height" value="768">
+				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
+				<span>H:</span> <input type="number" id="input-height" value="720">
+
+				<label
+					style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; margin-left: 8px; border-left: 1px solid #ddd; padding-left: 12px;">
+					<input type="checkbox" id="auto-xga-switch" checked>
+					READMEでXGA
+				</label>
 			</div>
 		</div>
 
@@ -1356,11 +1402,11 @@
 				inputHeight.value = 480;
 				sizeSelector.value = "640x480";
 			} else {
-				presentationArea.style.width = '1024px';
-				presentationArea.style.height = '768px';
-				inputWidth.value = 1024;
-				inputHeight.value = 768;
-				sizeSelector.value = "1024x768";
+				presentationArea.style.width = '1280px';
+				presentationArea.style.height = '720px';
+				inputWidth.value = 1280;
+				inputHeight.value = 720;
+				sizeSelector.value = "1280x720";
 			}
 		});
 
@@ -1982,6 +2028,17 @@
 			button.onclick = () => {
 				document.querySelectorAll('.list-item').forEach(btn => btn.classList.remove('active'));
 				button.classList.add('active');
+
+				const isReadme = file.name.toLowerCase().startsWith('readme');
+				const autoXgaSwitch = document.getElementById('auto-xga-switch');
+
+				if (isReadme && autoXgaSwitch && autoXgaSwitch.checked) {
+					presentationArea.style.width = '1024px';
+					presentationArea.style.height = '768px';
+					inputWidth.value = 1024;
+					inputHeight.value = 768;
+					sizeSelector.value = "1024x768";
+				}
 
 				showContent(file);
 
