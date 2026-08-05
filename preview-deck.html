@@ -1072,11 +1072,8 @@
 				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
 				<span>H:</span> <input type="number" id="input-height" value="720">
 
-				<label
-					style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; margin-left: 8px; border-left: 1px solid #ddd; padding-left: 12px;">
-					<input type="checkbox" id="auto-xga-switch" checked>
-					READMEでXGA
-				</label>
+				<button id="readme-settings-btn" class="control-btn"
+					style="margin-left:8px; border-left:1px solid #ddd; padding-left:12px;">READMEサイズ設定</button>
 			</div>
 		</div>
 
@@ -1198,7 +1195,22 @@
 
 		const inputWidth = document.getElementById('input-width');
 		const inputHeight = document.getElementById('input-height');
-		const autoXgaSwitch = document.getElementById('auto-xga-switch');
+		// README サイズ設定（モーダル操作）
+		const readmeSettingsBtn = document.getElementById('readme-settings-btn');
+
+		const globalSettings = {
+			readmeAuto: true,
+			readmeWidth: 1024,
+			readmeHeight: 768,
+			readmeFontSize: 20
+		};
+
+		// モーダル要素は後で DOM に追加するため、参照は変数で扱う
+		let globalSettingsModal = null;
+		let readmeAutoCheckbox = null;
+		let readmeWidthInput = null;
+		let readmeHeightInput = null;
+		let readmeFontSizeInput = null;
 
 		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
 		const volumeSlider = document.getElementById('volume-slider');
@@ -1219,12 +1231,71 @@
 		let previousVolume = 1;
 
 		window.addEventListener('DOMContentLoaded', () => {
-			if (window.innerWidth < 1400) {
-				userSelectedWidth = 640; userSelectedHeight = 480; userSelectedPreset = "640x480";
-			} else {
-				userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
-			}
+			// フォルダ読み込み前はプレビュー枠をHDに固定
+			userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
+
+			// モーダルの DOM をここで作成しておく
+			const modalHtml = `
+			<div id="global-settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center;">
+				<div style="background:#fff; border-radius:10px; width:420px; max-width:90%; padding:18px; box-sizing:border-box;">
+					<h3 style="margin:0 0 10px 0; color:#007b5e;">README サイズ設定</h3>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+						<label style="flex:1; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="readme-auto-switch"> READMEサイズを自動適用（ONでREADME選択時に自動適用）</label>
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+						<label style="width:80px;">幅 (px)</label><input id="readme-width-input" type="number" value="1024" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+						<label style="width:80px;">高さ (px)</label><input id="readme-height-input" type="number" value="768" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+						<label style="width:80px;">フォント (px)</label><input id="readme-fontsize-input" type="number" value="20" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+					</div>
+					<div style="display:flex; justify-content:flex-end; gap:8px;">
+						<button id="global-settings-cancel" class="control-btn">キャンセル</button>
+						<button id="global-settings-save" class="control-btn done-btn">保存</button>
+					</div>
+				</div>
+			</div>`;
+
+			document.body.insertAdjacentHTML('beforeend', modalHtml);
+			globalSettingsModal = document.getElementById('global-settings-modal');
+			readmeAutoCheckbox = document.getElementById('readme-auto-switch');
+			readmeWidthInput = document.getElementById('readme-width-input');
+			readmeHeightInput = document.getElementById('readme-height-input');
+			readmeFontSizeInput = document.getElementById('readme-fontsize-input');
+
+			// 初期値を設定
+			readmeAutoCheckbox.checked = globalSettings.readmeAuto;
+			readmeWidthInput.value = globalSettings.readmeWidth;
+			readmeHeightInput.value = globalSettings.readmeHeight;
+			readmeFontSizeInput.value = globalSettings.readmeFontSize;
+
+			// ボタン制御
+			readmeSettingsBtn.addEventListener('click', () => {
+				if (!globalSettingsModal) return;
+				readmeAutoCheckbox.checked = globalSettings.readmeAuto;
+				readmeWidthInput.value = globalSettings.readmeWidth;
+				readmeHeightInput.value = globalSettings.readmeHeight;
+				readmeFontSizeInput.value = globalSettings.readmeFontSize;
+				globalSettingsModal.style.display = 'flex';
+			});
+
+			document.getElementById('global-settings-cancel').addEventListener('click', () => { globalSettingsModal.style.display = 'none'; });
+			document.getElementById('global-settings-save').addEventListener('click', () => {
+				globalSettings.readmeAuto = !!readmeAutoCheckbox.checked;
+				globalSettings.readmeWidth = parseInt(readmeWidthInput.value) || 1024;
+				globalSettings.readmeHeight = parseInt(readmeHeightInput.value) || 768;
+				globalSettings.readmeFontSize = parseInt(readmeFontSizeInput.value) || 20;
+				globalSettingsModal.style.display = 'none';
+				// 現在選択中が README なら設定を即時反映
+				const activeItem = document.querySelector('.list-item.active');
+				if (activeItem) activeItem.click();
+			});
+
+			// モーダル外クリックで閉じる
+			globalSettingsModal.addEventListener('click', (e) => { if (e.target === globalSettingsModal) globalSettingsModal.style.display = 'none'; });
 		});
 
 		function applySize(w, h, preset) {
@@ -1244,19 +1315,7 @@
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
 		}
 
-		autoXgaSwitch.addEventListener('change', (e) => {
-			if (!e.target.checked) {
-				restoreUserSize();
-			} else {
-				const activeItem = document.querySelector('.list-item.active');
-				if (activeItem) {
-					const fileName = activeItem.querySelector('.item-text').textContent.toLowerCase();
-					if (fileName.startsWith('readme')) {
-						applySize(1024, 768, "1024x768");
-					}
-				}
-			}
-		});
+		// README 自動サイズは globalSettings.readmeAuto を使用
 
 		sizeSelector.addEventListener('change', (e) => {
 			const [w, h] = e.target.value.split('x');
@@ -1705,8 +1764,8 @@
 
 				const isReadme = file.name.toLowerCase().startsWith('readme');
 
-				if (isReadme && autoXgaSwitch && autoXgaSwitch.checked) {
-					applySize(1024, 768, "1024x768");
+				if (isReadme && globalSettings.readmeAuto) {
+					applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
 				} else {
 					restoreUserSize();
 				}
@@ -1786,6 +1845,13 @@
 						externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 					} else {
 						const pre = document.createElement('pre'); pre.className = 'text-preview-content'; pre.textContent = text; contentLayer.appendChild(pre);
+						// README の場合はフォントサイズを適用
+						if (fileName.startsWith('readme')) {
+							pre.style.fontSize = (globalSettings.readmeFontSize || 20) + 'px';
+							if (globalSettings.readmeAuto) {
+								applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
+							}
+						}
 					}
 				};
 				reader.readAsText(file);
