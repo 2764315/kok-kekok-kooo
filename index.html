@@ -4,12 +4,14 @@
 <head>
 	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>Preview Deck - プレビューデック</title>
+	<title>統合ツールランチャー</title>
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
-	<script src="https://www.youtube.com/iframe_api"></script>
-
 	<style>
+		* {
+			box-sizing: border-box;
+		}
+
 		body {
 			display: flex;
 			font-family: "Segoe UI", "Meiryo", sans-serif;
@@ -17,6 +19,7 @@
 			height: 100vh;
 			background-color: #f9fdfc;
 			color: #333333;
+			overflow: hidden;
 		}
 
 		.lucide {
@@ -26,854 +29,71 @@
 			stroke-width: 2;
 		}
 
-		#sidebar {
-			width: 350px;
+		/* === アクティビティバー === */
+		#activity-bar {
+			width: 60px;
 			background-color: #A7E0CF;
 			border-right: 1px solid #8ecbb9;
 			display: flex;
 			flex-direction: column;
-			box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-			z-index: 10;
-			transition: width 0.3s ease;
-			position: relative;
-		}
-
-		#sidebar.collapsed {
-			width: 115px;
-		}
-
-		#sidebar.collapsed .hide-on-collapse {
-			display: none;
-		}
-
-		#sidebar.collapsed .group-container {
-			padding: 0 0 5px 0;
-		}
-
-		#sidebar.collapsed .list-item {
-			justify-content: center;
-			padding: 10px 0;
-			width: calc(100% - 10px);
-			margin: 0 auto 8px auto;
-		}
-
-		#sidebar.collapsed .list-item .item-text {
-			display: none;
-		}
-
-		#sidebar.collapsed .list-item .item-icon {
-			display: inline;
-			margin-right: 2px;
-		}
-
-		#sidebar.collapsed .list-item .item-action {
-			margin-left: 2px;
-		}
-
-		#sidebar.collapsed .list-item .item-icon .lucide {
-			width: 24px;
-			height: 24px;
-		}
-
-		.group-title-short {
-			display: none;
-		}
-
-		#sidebar.collapsed .group-title-full {
-			display: none;
-		}
-
-		#sidebar.collapsed .group-title-short {
-			display: block;
-			font-size: 11px;
-			text-align: center;
-			color: #333;
-			background-color: transparent;
-			padding: 0;
-			word-break: break-all;
-			width: 100%;
-		}
-
-		#sidebar.collapsed .group-title {
-			margin-bottom: 8px;
-			padding: 6px 0;
-			justify-content: center;
-		}
-
-		#sidebar.collapsed .group-toggle-btn {
-			display: none;
-		}
-
-		#sidebar-header {
-			display: flex;
-			justify-content: space-between;
 			align-items: center;
-			padding: 10px 15px;
-			background-color: #e0f2ec;
-			border-bottom: 1px solid #8ecbb9;
-		}
-
-		.brand-logo {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.brand-icon-box {
-			width: 32px;
-			height: 32px;
-			background-color: #007b5e;
-			border-radius: 8px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			color: #ffffff;
+			padding-top: 15px;
+			z-index: 20;
 			flex-shrink: 0;
 		}
 
-		.brand-title {
-			font-weight: bold;
-			font-size: 16px;
-			color: #333;
-			white-space: nowrap;
-		}
-
-		#sidebar.collapsed #sidebar-header {
-			flex-direction: row;
-			padding: 10px 15px;
-			gap: 0;
-		}
-
-		#sidebar.collapsed .brand-title {
-			display: none;
-		}
-
-		#toggle-sidebar-btn {
-			background: none;
-			border: none;
-			color: #444;
-			cursor: pointer;
-			font-size: 13px;
-			padding: 6px 10px;
-			font-weight: bold;
-			border-radius: 4px;
-			display: flex;
-			align-items: center;
-			gap: 4px;
-			transition: background-color 0.2s;
-		}
-
-		#toggle-sidebar-btn:hover {
-			background-color: rgba(0, 0, 0, 0.05);
-		}
-
-		#sidebar.collapsed #toggle-sidebar-btn {
-			width: auto;
-			padding: 6px;
-			justify-content: center;
-			margin: 0 auto;
-		}
-
-		#toggle-sidebar-btn .lucide {
-			width: 16px;
-			height: 16px;
-		}
-
-		body.chromakey-mode #main {
-			background-color: #00FF00 !important;
-		}
-
-		body.chromakey-mode #presentation-area,
-		body.chromakey-mode #presentation-wrapper,
-		body.chromakey-mode #zoom-controls-container,
-		body.chromakey-mode #timer-display-container,
-		body.chromakey-mode #presentation-controls {
-			border-color: #00FF00 !important;
-			box-shadow: none !important;
-			background-color: #00FF00 !important;
-		}
-
-		body.chromakey-mode #url-warning {
-			display: none !important;
-		}
-
-		#sidebar-content {
-			padding: 15px;
-			display: flex;
-			flex-direction: column;
-			flex-grow: 1;
-			overflow: hidden;
-		}
-
-		#sidebar-scroll-area {
-			flex-grow: 1;
-			overflow-y: auto;
-			padding-right: 5px;
-		}
-
-		.sticky-top {
-			position: sticky;
-			top: 0;
-			background-color: #A7E0CF;
-			z-index: 5;
-			padding: 15px 15px 5px 15px;
-		}
-
-		#load-btn {
-			padding: 12px;
-			background-color: #F1CF0F;
-			color: #333;
-			border: none;
-			border-radius: 8px;
-			cursor: pointer;
-			font-size: 14px;
-			font-weight: bold;
-			margin-bottom: 20px;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-			transition: background-color 0.2s, transform 0.1s;
-			width: 100%;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 8px;
-		}
-
-		#load-btn:hover {
-			background-color: #e2c00a;
-			transform: translateY(-1px);
-		}
-
-		#sidebar h3 {
-			margin-top: 0;
-			font-size: 15px;
-			color: #333;
-			border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-			padding-bottom: 8px;
-		}
-
-		.group-container {
-			border: 1px solid #b0d4c8;
-			border-radius: 8px;
-			padding: 0 0 10px 0;
-			margin-bottom: 15px;
-			background-color: #ffffff;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-			overflow: hidden;
-			cursor: grab;
-		}
-
-		.group-container.dragging {
-			opacity: 0.5;
-			background-color: rgba(255, 255, 255, 0.8);
-		}
-
-		.group-container.collapsed-group .list-item,
-		.group-container.collapsed-group .sub-group-title {
-			display: none !important;
-		}
-
-		.group-title {
-			margin-top: 0;
-			margin-bottom: 10px;
-			font-size: 13px;
-			color: #444;
-			background-color: #e0f2ec;
-			padding: 8px 10px;
-			border-bottom: 1px solid #b0d4c8;
-			font-weight: bold;
-			display: flex;
-			align-items: center;
-			gap: 4px;
-		}
-
-		.group-title-full {
-			pointer-events: none;
-			display: flex;
-			align-items: center;
-			gap: 4px;
-		}
-
-		.group-number {
-			display: inline-block;
-			background-color: #007b5e;
-			color: #ffffff;
-			font-size: 12px;
-			padding: 2px 8px;
-			border-radius: 12px;
-			margin-right: 4px;
-			font-weight: 900;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-		}
-
-		.group-number-short {
-			display: inline-block;
-			background-color: #007b5e;
-			color: #ffffff;
-			font-size: 10px;
-			padding: 2px 6px;
-			border-radius: 10px;
-			margin-bottom: 4px;
-			font-weight: 900;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-		}
-
-		.group-toggle-btn {
-			margin-left: auto;
-			background: none;
-			border: none;
-			color: #666;
-			cursor: pointer;
-			padding: 2px;
-			border-radius: 4px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			pointer-events: auto;
-		}
-
-		.group-toggle-btn:hover {
-			background-color: rgba(0, 0, 0, 0.05);
-			color: #333;
-		}
-
-		.sub-group-title {
-			font-size: 11px;
-			color: #666;
-			margin: 4px 10px 6px 20px;
-			padding-bottom: 3px;
-			border-bottom: 1px dashed #d1e8e0;
-			display: flex;
-			align-items: center;
-			gap: 4px;
-			pointer-events: none;
-		}
-
-		#sidebar.collapsed .sub-group-title {
-			display: none;
-		}
-
-		.list-item {
-			display: flex;
-			align-items: center;
-			width: calc(100% - 20px);
-			padding: 10px;
-			margin: 0 auto 8px auto;
-			background-color: #ffffff;
-			color: #444;
-			border: 1px solid #ddd;
-			border-radius: 6px;
-			cursor: grab;
-			text-align: left;
-			font-size: 13px;
-			word-wrap: break-word;
-			box-sizing: border-box;
-			transition: all 0.2s;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-		}
-
-		.list-item.is-sub-item {
-			width: calc(100% - 35px);
-			margin-left: 25px;
-		}
-
-		#sidebar.collapsed .list-item.is-sub-item {
-			width: calc(100% - 10px);
-			margin-left: auto;
-		}
-
-		.list-item:hover {
-			background-color: #f9f9f9;
-			border-color: #999;
-			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-			transform: translateY(-1px);
-		}
-
-		.list-item.active {
-			background-color: #F1CF0F;
-			color: #333;
-			border-color: #dcb800;
-			font-weight: normal;
-			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
-		}
-
-		.list-item.dragging {
-			opacity: 0.5;
-			background-color: #eee;
-		}
-
-		.item-icon {
-			margin-right: 8px;
-			display: flex;
-			align-items: center;
-		}
-
-		.item-icon .lucide {
-			color: #666;
-			width: 18px;
-			height: 18px;
-		}
-
-		.list-item.active .item-icon .lucide {
-			color: #333;
-		}
-
-		.item-text {
-			flex-grow: 1;
-		}
-
-		.item-action {
-			margin-left: 8px;
-			display: flex;
-			align-items: center;
-			color: #888;
-			text-decoration: none;
-			transition: color 0.2s;
-		}
-
-		.item-action:hover {
-			color: #007b5e;
-		}
-
-		.item-action .lucide {
-			width: 16px;
-			height: 16px;
-		}
-
-		#main {
-			flex-grow: 1;
-			padding: 0 20px 20px 20px;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			overflow: auto;
-			position: relative;
-		}
-
-		#presentation-controls {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			width: 1280px;
-			max-width: 100%;
-			margin-bottom: 10px;
-			padding: 20px 5px 10px 5px;
-			box-sizing: border-box;
-			gap: 10px;
-			flex-wrap: nowrap;
-			position: sticky;
-			top: 0;
-			background-color: #f9fdfc;
-			z-index: 90;
-			min-width: max-content;
-		}
-
-		.controls-group {
-			display: flex;
-			gap: 8px;
-			align-items: center;
-			flex-wrap: wrap;
-		}
-
-		.panel-box {
-			display: flex;
-			align-items: center;
-			background-color: #ffffff;
-			padding: 6px 12px;
-			border-radius: 20px;
-			border: 1px solid #ccc;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-			font-size: 13px;
-			font-weight: bold;
-			color: #555;
-			gap: 8px;
-			flex-wrap: wrap;
-		}
-
-		.control-btn {
-			background-color: #ffffff;
-			color: #555;
-			border: 1px solid #ccc;
-			padding: 6px 12px;
-			border-radius: 20px;
-			cursor: pointer;
-			font-size: 13px;
-			font-weight: bold;
-			transition: all 0.2s;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-			white-space: nowrap;
-			display: flex;
-			align-items: center;
-			gap: 4px;
-		}
-
-		.control-btn .lucide {
-			width: 16px;
-			height: 16px;
-		}
-
-		select.control-btn {
-			cursor: pointer;
-			padding-right: 8px;
-		}
-
-		.control-btn:hover {
-			background-color: #F1CF0F;
-			color: #333;
-			border-color: #e2c00a;
-		}
-
-		#activate-drawing-btn:hover {
-			background-color: #e74c3c;
-			color: #ffffff;
-			border-color: #e74c3c;
-		}
-
-		#chromakey-btn:hover {
-			background-color: #00FF00;
-			color: #333333;
-			border-color: #00FF00;
-		}
-
-		.nav-btn {
-			background-color: #333;
-			color: #fff;
-			border-color: #222;
-		}
-
-		.nav-btn:hover {
-			background-color: #555;
-			color: #fff;
-			border-color: #444;
-		}
-
-		#help-btn {
-			background-color: #eaf8f4;
-			color: #007b5e;
-			border-color: #A7E0CF;
-		}
-
-		#help-btn:hover {
-			background-color: #A7E0CF;
-			color: #fff;
-		}
-
-		#wrapper-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: flex-end;
-			width: 100%;
-			margin-bottom: -2px;
-			z-index: 20;
-		}
-
-		.panel-box input[type="number"] {
+		.activity-icon {
 			width: 50px;
-			border: 1px solid #eee;
-			border-radius: 4px;
-			padding: 2px 4px;
-			text-align: center;
-			font-family: monospace;
-			font-size: 13px;
-		}
-
-		.volume-container {
-			display: flex;
-			align-items: center;
-			gap: 5px;
-			margin-right: 8px;
-			padding-right: 12px;
-			border-right: 1px solid #ddd;
-		}
-
-		.volume-container .lucide {
-			width: 18px;
-			height: 18px;
-			color: #666;
-		}
-
-		#volume-slider {
-			width: 70px;
-			cursor: pointer;
-			accent-color: #A7E0CF;
-		}
-
-		#presentation-wrapper {
-			position: relative;
+			height: 50px;
+			border-radius: 8px;
 			display: flex;
 			flex-direction: column;
-			align-items: flex-start;
-		}
-
-		#zoom-controls-container {
-			display: flex;
-			align-items: center;
-			background-color: #ffffff;
-			padding: 4px 12px;
-			border-radius: 20px 20px 0 0;
-			border: 2px solid #A7E0CF;
-			border-bottom: none;
-			box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.03);
-			margin-left: 20px;
-			gap: 4px;
-			z-index: 70;
-		}
-
-		#zoom-controls-container .control-btn {
-			padding: 4px 4px;
-			border: none;
-			box-shadow: none;
-			background: transparent;
-			color: #666;
-		}
-
-		#zoom-controls-container .control-btn:hover {
-			color: #333;
-		}
-
-		#zoom-controls-container #zoom-reset-btn {
-			font-size: 12px;
-			font-weight: bold;
-			color: #007b5e;
-			padding: 4px 4px;
-		}
-
-		#zoom-controls-container #zoom-reset-btn:hover {
-			color: #005642;
-		}
-
-		#zoom-level-text {
-			width: 45px;
-			text-align: center;
-			font-size: 13px;
-			font-weight: bold;
-			color: #333;
-		}
-
-		#timer-display-container {
-			display: flex;
-			align-items: center;
-			background-color: #ffffff;
-			padding: 4px 12px;
-			border-radius: 20px 20px 0 0;
-			border: 2px solid #A7E0CF;
-			border-bottom: none;
-			box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.03);
-			font-size: 14px;
-			font-weight: bold;
-			color: #333;
-			margin-right: 20px;
-			transition: padding 0.2s;
-			z-index: 70;
-		}
-
-		#timer-text {
-			line-height: 1;
-			height: 14px;
-			display: flex;
-			align-items: center;
-		}
-
-		#toggle-timer-inline-btn {
-			background: none;
-			border: none;
-			cursor: pointer;
-			padding: 0;
-			margin-left: 10px;
-			display: flex;
-			align-items: center;
 			justify-content: center;
-			color: #666;
-			opacity: 0.15;
-			transition: opacity 0.2s, color 0.2s;
+			align-items: center;
+			color: #444;
+			cursor: pointer;
+			transition: all 0.2s;
+			border: none;
+			background: transparent;
+			padding: 0;
+			text-decoration: none;
 		}
 
-		#timer-display-container:hover #toggle-timer-inline-btn {
-			opacity: 1;
-		}
-
-		#toggle-timer-inline-btn:hover {
+		.activity-icon:hover {
+			background-color: rgba(255, 255, 255, 0.4);
 			color: #333;
 		}
 
-		.timer-hidden .analog-clock,
-		.timer-hidden #timer-text {
-			display: none;
+		.activity-icon.active {
+			background-color: #ffffff;
+			color: #007b5e;
+			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 		}
 
-		.timer-hidden #toggle-timer-inline-btn {
-			margin-left: 0;
+		.activity-icon span {
+			font-size: 10px;
+			margin-top: 4px;
+			font-weight: bold;
 		}
 
-		#timer-display-container.timer-hidden {
-			padding: 4px 8px;
-		}
-
-		.analog-clock {
-			width: 14px;
-			height: 14px;
-			border: 2px solid #666;
-			border-radius: 50%;
+		/* === メインエリア (iframeコンテナ) === */
+		#content-area {
+			flex: 1;
 			position: relative;
-			margin-right: 8px;
 			background-color: #f9fdfc;
 		}
 
-		.second-hand {
-			width: 1.5px;
-			height: 7px;
-			background-color: #e74c3c;
-			position: absolute;
-			bottom: 50%;
-			left: 50%;
-			transform-origin: bottom;
-			transform: translateX(-50%) rotate(0deg);
-			border-radius: 2px;
-		}
-
-		#presentation-area {
-			width: 1024px;
-			height: 768px;
-			max-width: 1920px;
-			max-height: 1080px;
-			min-width: 320px;
-			background-color: #ffffff;
-			border: 4px solid #A7E0CF;
-			border-radius: 8px;
-			display: block;
-			resize: both;
-			overflow: auto;
-			text-align: center;
-			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-			position: relative;
-		}
-
-		#presentation-area.can-pan {
-			cursor: grab;
-		}
-
-		#presentation-area.can-pan:active {
-			cursor: grabbing;
-		}
-
-		#presentation-area:fullscreen {
-			background-color: #000;
+		iframe {
+			width: 100%;
+			height: 100%;
 			border: none;
-			padding: 0;
-		}
-
-		#zoom-wrapper {
-			width: 100%;
-			height: 100%;
-			transform-origin: top left;
-			transition: transform 0.2s ease;
-			position: relative;
-		}
-
-		#content-layer {
-			width: 100%;
-			height: 100%;
-			display: flex;
-			justify-content: center;
-			align-items: center;
 			position: absolute;
 			top: 0;
 			left: 0;
 		}
 
-		#content-layer img,
-		#content-layer video,
-		#content-layer iframe {
-			width: 100%;
-			height: 100%;
-			object-fit: contain;
-			border: none;
-		}
-
-		#drawing-canvas {
-			position: absolute;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			z-index: 50;
-			pointer-events: none;
-		}
-
-		#drawing-canvas.active {
-			pointer-events: auto;
-			cursor: crosshair;
-		}
-
-		#drawing-sidebar {
-			position: absolute;
-			top: 50px;
-			right: 20px;
-			z-index: 80;
-			display: flex;
-			flex-direction: column;
-			gap: 8px;
-			background-color: rgba(255, 255, 255, 0.95);
-			padding: 10px;
-			border-radius: 12px;
-			box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-			border: 1px solid #ccc;
-		}
-
-		.tool-btn {
-			background: none;
-			border: none;
-			cursor: pointer;
-			color: #555;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			padding: 10px;
-			border-radius: 8px;
-			transition: all 0.2s;
-		}
-
-		.tool-btn .lucide {
-			width: 20px;
-			height: 20px;
-		}
-
-		.tool-btn:hover {
-			background-color: rgba(0, 0, 0, 0.05);
-		}
-
-		.tool-btn.active-tool {
-			background-color: #F1CF0F;
-			color: #333;
-			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-		}
-
-		.tool-divider {
-			height: 1px;
-			background-color: #ddd;
-			margin: 4px 0;
-		}
-
-		.done-btn {
-			background-color: #007b5e;
-			color: #fff;
-			font-weight: bold;
-			padding: 8px 12px;
-			border-radius: 8px;
-			border: none;
-			cursor: pointer;
-			margin-top: 4px;
-		}
-
-		.done-btn:hover {
-			background-color: #00664d;
-		}
-
-		#yt-player-container {
-			width: 100%;
-			height: 100%;
-		}
-
-		#help-modal-overlay {
+		/* === 共通ヘルプモーダル === */
+		#global-help-modal-overlay {
 			display: none;
 			position: fixed;
 			top: 0;
@@ -886,17 +106,77 @@
 			align-items: center;
 		}
 
-		#help-modal {
+		.help-modal-content {
 			background-color: #fff;
-			padding: 30px;
 			border-radius: 12px;
 			width: 600px;
 			max-width: 90%;
 			box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 			position: relative;
+			display: flex;
+			flex-direction: column;
+			max-height: 90vh;
 		}
 
-		#help-modal h2 {
+		.help-modal-close {
+			position: absolute;
+			top: 15px;
+			right: 20px;
+			background: none;
+			border: none;
+			font-size: 24px;
+			color: #999;
+			cursor: pointer;
+			z-index: 10;
+		}
+
+		.help-modal-close:hover {
+			color: #333;
+		}
+
+		.help-tab-container {
+			display: flex;
+			border-bottom: 1px solid #ddd;
+			background-color: #f9f9f9;
+			border-radius: 12px 12px 0 0;
+		}
+
+		.help-tab-btn {
+			flex: 1;
+			padding: 15px;
+			border: none;
+			background: none;
+			font-size: 15px;
+			font-weight: bold;
+			color: #666;
+			cursor: pointer;
+			border-bottom: 3px solid transparent;
+			transition: all 0.2s;
+		}
+
+		.help-tab-btn.active {
+			color: #007b5e;
+			border-bottom-color: #007b5e;
+		}
+
+		.help-tab-btn:hover:not(.active) {
+			background-color: #eee;
+		}
+
+		.help-tab-body {
+			padding: 30px;
+			overflow-y: auto;
+		}
+
+		.help-tab-content {
+			display: none;
+		}
+
+		.help-tab-content.active {
+			display: block;
+		}
+
+		.help-tab-content h2 {
 			margin-top: 0;
 			color: #007b5e;
 			border-bottom: 2px solid #A7E0CF;
@@ -906,1294 +186,181 @@
 			gap: 8px;
 		}
 
-		#help-modal h4 {
+		.help-tab-content h4 {
 			color: #333;
 			margin-bottom: 5px;
 			margin-top: 15px;
 		}
 
-		#help-modal p {
+		.help-tab-content p {
 			margin-top: 0;
 			font-size: 14px;
 			color: #555;
 			line-height: 1.6;
 		}
 
-		.close-btn {
-			position: absolute;
-			top: 15px;
-			right: 20px;
-			background: none;
-			border: none;
-			font-size: 24px;
-			color: #999;
-			cursor: pointer;
-		}
-
-		.close-btn:hover {
-			color: #333;
-		}
-
-		::-webkit-scrollbar {
-			width: 10px;
-			height: 10px;
-		}
-
-		::-webkit-scrollbar-track {
-			background: transparent;
-		}
-
-		::-webkit-scrollbar-thumb {
-			background: rgba(0, 0, 0, 0.2);
-			border-radius: 5px;
-		}
-
-		::-webkit-scrollbar-thumb:hover {
-			background: rgba(0, 0, 0, 0.3);
-		}
-
-		.text-preview-content {
-			white-space: pre-wrap;
-			word-wrap: break-word;
-			word-break: break-word;
-			padding: 40px;
+		/* === 共通設定モーダル === */
+		#global-settings-modal-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
 			width: 100%;
 			height: 100%;
-			box-sizing: border-box;
-			overflow: auto;
-			font-family: 'Sawarabi Gothic', sans-serif;
-			font-size: 20px;
-			line-height: 1.8;
-			margin: 0;
-			text-align: left;
-			color: #333;
-			background-color: #FDFBF7;
-		}
-
-		body.chromakey-mode .text-preview-content {
-			background-color: transparent !important;
-			color: #333;
-		}
-
-		#external-link-btn {
-			position: absolute;
-			top: 60px;
-			right: -36px;
-			width: 36px;
-			background-color: #ffffff;
-			border: 2px solid #A7E0CF;
-			border-left: none;
-			border-radius: 0 8px 8px 0;
-			padding: 12px 0;
-			color: #555;
-			text-decoration: none;
-			display: flex;
-			flex-direction: column;
+			background-color: rgba(0, 0, 0, 0.5);
+			z-index: 100;
+			justify-content: center;
 			align-items: center;
-			gap: 8px;
-			font-weight: bold;
-			z-index: 60;
-			box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
-			transition: all 0.2s;
 		}
 
-		#external-link-btn:hover {
-			background-color: #F1CF0F;
-			color: #333;
-			border-color: #dcb800;
-		}
-
-		#external-link-btn .btn-text {
-			writing-mode: vertical-rl;
-			text-orientation: upright;
-			font-size: 12px;
-			letter-spacing: 2px;
-		}
-
-		#url-warning {
-			position: absolute;
-			top: 220px;
-			right: -36px;
-			width: 36px;
-			background-color: #ffffff;
-			border: 2px solid #A7E0CF;
-			border-left: none;
-			border-radius: 0 8px 8px 0;
-			padding: 10px 0;
-			color: #333;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			z-index: 60;
-			box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
-			cursor: pointer;
-			box-sizing: border-box;
-			transition: background-color 0.2s;
-		}
-
-		#url-warning:hover {
-			background-color: #fdf5f5;
-		}
-
-		#url-warning .warning-text {
-			writing-mode: vertical-rl;
-			text-orientation: upright;
-			font-size: 11px;
-			letter-spacing: 1px;
-			opacity: 0;
-			max-height: 0;
-			overflow: hidden;
-			transition: opacity 0.2s ease, max-height 0.3s ease, margin-top 0.3s ease;
-			pointer-events: none;
-		}
-
-		#url-warning.expanded .warning-text {
-			opacity: 1;
-			max-height: 400px;
-			margin-top: 8px;
-			transition-delay: 0.1s;
+		.settings-modal-content {
+			background-color: #fff;
+			border-radius: 12px;
+			width: 400px;
+			padding: 20px;
+			position: relative;
+			box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
 		}
 	</style>
 </head>
 
 <body>
-
-	<div id="sidebar">
-		<div id="sidebar-header">
-			<div class="brand-logo">
-				<div class="brand-icon-box">
-					<i data-lucide="layout-dashboard" style="width: 20px; height: 20px;"></i>
-				</div>
-				<span class="brand-title">Preview Deck</span>
-			</div>
-			<button id="toggle-sidebar-btn" title="サイドバーを縮小する">
-				<i data-lucide="chevron-left" id="sidebar-chevron"></i>
-				<span class="toggle-text">閉じる</span>
+	<!-- アクティビティバー -->
+	<div id="activity-bar">
+		<div style="margin-top: 15px; margin-bottom: 15px; width: 100%; display: flex; justify-content: center;">
+			<button id="global-info-btn" class="activity-icon" title="使い方">
+				<i data-lucide="help-circle"></i>
+				<span>使い方</span>
 			</button>
 		</div>
+		<div style="display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center;">
+			<button id="nav-csv-btn" class="activity-icon active" title="フォルダ生成">
+				<i data-lucide="folder-plus"></i>
+				<span>フォルダ</span>
+			</button>
+			<button id="nav-preview-btn" class="activity-icon" title="データプレビュー">
+				<i data-lucide="monitor-play"></i>
+				<span>プレビュー</span>
+			</button>
+		</div>
+		<div style="margin-top: auto; margin-bottom: 15px; width: 100%; display: flex; justify-content: center;">
+			<button id="global-settings-btn" class="activity-icon" title="初期設定">
+				<i data-lucide="settings"></i>
+				<span>設定</span>
+			</button>
+		</div>
+	</div>
 
-		<div id="sidebar-scroll-area">
-			<div class="hide-on-collapse sticky-top">
-				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+	<!-- iframeコンテナ -->
+	<div id="content-area">
+		<iframe id="frame-csv" src="csv-converter.html" style="display: block;"></iframe>
+		<iframe id="frame-preview" src="preview-deck.html" style="display: none;"></iframe>
+	</div>
 
-				<a href="https://m0yabn.github.io/csv-converter/" target="_blank"
-					style="display: flex; align-items: center; justify-content: center; font-size: 12px; color: #007b5e; margin-bottom: 10px; text-decoration: none; font-weight: bold; gap: 4px;">
-					CSV変換ツールでファイルを作成する<i data-lucide="external-link" style="width: 16px; height: 16px;"></i>
-				</a>
-
-				<button id="load-btn">
-					<i data-lucide="folder-open"></i>フォルダを読み込む
-				</button>
-
-				<h3 style="margin-bottom: 4px;">発表リスト</h3>
-				<p id="drag-hint-text"
-					style="display: none; font-size: 11px; color: #666; margin: 0 0 10px 0; text-align: left;">
-					ドラッグで順番を変更できます</p>
+	<!-- 共通ヘルプモーダル -->
+	<div id="global-help-modal-overlay">
+		<div class="help-modal-content">
+			<button id="global-close-modal-btn" class="help-modal-close">×</button>
+			<div class="help-tab-container">
+				<button class="help-tab-btn active" data-tab="help-csv">フォルダ生成</button>
+				<button class="help-tab-btn" data-tab="help-preview">データプレビュー</button>
 			</div>
-
-			<div id="list-container" style="padding: 0 15px 15px 15px;">
-				<p class="hide-on-collapse" style="font-size: 13px; color: #555;">
-					上のボタンからフォルダを読み込むと、ここにリストが並びます。</p>
+			<div class="help-tab-body">
+				<div id="help-csv" class="help-tab-content active">
+					<h2><i data-lucide="folder-plus"></i> ツールについて</h2>
+					<p style="margin-top: 15px;">
+						CSVを読み込むと、送信者ごとのフォルダが作成され、データ管理がしやすくなります。<br><br>
+						URLが記載されている場合、説明文では伏字になりますが、URLのみを掲載したtxtファイルが別途生成されます。
+					</p>
+				</div>
+				<div id="help-preview" class="help-tab-content">
+					<h2><i data-lucide="monitor-play"></i> 自由研究発表ツールの使い方</h2>
+					<h4>① フォルダを読み込む</h4>
+					<p>左側の「フォルダを読み込む」ボタンを押し、研究データがまとまったフォルダを選択します。</p>
+					<h4>② リストを選ぶ・移動する</h4>
+					<p>リストの項目やグループ枠は、マウスでドラッグ＆ドロップして順番を入れ替えられます。<br>
+						プレビュー上部の「前へ」「次へ」ボタンを使えば、スムーズに次のファイルへ切り替えが可能です。</p>
+					<h4>③ プレビューのサイズを調節する</h4>
+					<p>枠の右下をマウスで引っ張るか、上部の入力欄（WとH）に数値を打ち込んで配信画面に合わせてください。</p>
+					<h4>💡 音量の調節について</h4>
+					<p>上部のスライダーでMP4動画やYouTube（リンク・埋め込み）の音量を手元で調整できます。</p>
+					<h4>💡 Googleスライドを操作するコツ</h4>
+					<p>セキュリティの都合上、マウスホイールでスライドをめくることはできません。<br>
+						<strong>プレビュー画面（スライド）を一度クリックして選択し、キーボードの「右・左矢印キー」や「スペースキー」を押す</strong>ことで、綺麗にページをめくることができます。
+					</p>
+					<h4>④ OBSに取り込む</h4>
+					<p>OBS Studioで「ウィンドウキャプチャ」を追加し、緑色のプレビュー枠だけが映るように「Altキー(Windows) / Optionキー(Mac)」を押しながら端をクロップしてください。
+					</p>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<div id="main">
-		<div id="presentation-controls">
-			<div class="controls-group">
-				<button id="prev-btn" class="control-btn nav-btn">
-					<i data-lucide="arrow-left"></i>前へ
-				</button>
-				<button id="next-btn" class="control-btn nav-btn">
-					次へ<i data-lucide="arrow-right"></i>
-				</button>
-
-				<button id="activate-drawing-btn" class="control-btn" title="赤ペンを描画">
-					<i data-lucide="pen"></i>赤ペン
-				</button>
-
-				<button id="chromakey-btn" class="control-btn" title="クロマキー背景で表示する">
-					<i data-lucide="image"></i>クロマキー
-				</button>
-
-				<button id="help-btn" class="control-btn">
-					<i data-lucide="help-circle"></i>操作方法
-				</button>
-			</div>
-
-			<div id="size-inputs" class="panel-box">
-				<div class="volume-container">
-					<span id="volume-icon-wrapper" style="cursor: pointer; display: flex; align-items: center;"
-						title="ミュート切替">
-						<i data-lucide="volume-2"></i>
-					</span>
-					<input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" title="音量調節">
-					<button id="rewind-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="5秒戻る">
-						<i data-lucide="rotate-ccw"></i>
-					</button>
-					<button id="forward-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
-						title="5秒進む">
-						<i data-lucide="rotate-cw"></i>
-					</button>
-					<button id="play-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="再生">
-						<i data-lucide="play"></i>
-					</button>
-					<button id="pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="停止">
-						<i data-lucide="pause"></i>
-					</button>
-				</div>
-				<button id="fullscreen-btn" class="control-btn">
-					<i data-lucide="maximize"></i>全画面
-				</button>
-				<select id="size-selector" class="control-btn">
-					<option value="1920x1080">FHD (1920×1080)</option>
-					<option value="1280x720">HD (1280×720)</option>
-					<option value="1024x768" selected>XGA (1024×768)</option>
-					<option value="720x480">SD (720×480)</option>
-					<option value="640x480">VGA (640×480)</option>
-				</select>
-				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1024"> x
-				<span>H:</span> <input type="number" id="input-height" value="768">
-			</div>
-		</div>
-
-		<div id="presentation-wrapper">
-			<div id="wrapper-header">
-				<div id="zoom-controls-container">
-					<button id="zoom-out-btn" class="control-btn" title="縮小">
-						<i data-lucide="minus"></i>
-					</button>
-					<input type="range" id="zoom-slider" min="0.5" max="3.0" step="0.1" value="1.0"
-						style="width: 70px; accent-color: #A7E0CF; cursor: pointer;">
-					<span id="zoom-level-text">100%</span>
-					<button id="zoom-in-btn" class="control-btn" title="拡大">
-						<i data-lucide="plus"></i>
-					</button>
-					<button id="zoom-reset-btn" class="control-btn" title="リセット">
-						<i data-lucide="zoom-in"></i>リセット
-					</button>
-				</div>
-
-				<div id="timer-display-container">
-					<div class="analog-clock">
-						<div class="second-hand" id="second-hand"></div>
-					</div>
-					<span id="timer-text">0分</span>
-					<button id="toggle-timer-inline-btn" title="タイマーを隠す">
-						<i data-lucide="eye"></i>
-					</button>
-				</div>
-			</div>
-
-			<div id="presentation-area">
-				<div id="zoom-wrapper">
-					<div id="content-layer">
-						<p id="empty-message" style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
-					</div>
-					<canvas id="drawing-canvas"></canvas>
-				</div>
-			</div>
-
-			<a id="external-link-btn" href="#" target="_blank" style="display: none;" title="新規タブで開く">
-				<i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
-				<span class="btn-text">新規タブで開く</span>
-			</a>
-
-			<div id="url-warning" style="display: none;" title="警告（クリックで詳細を表示）">
-				<i data-lucide="alert-circle" style="width: 18px; height: 18px; color: #e74c3c; margin: 0;"></i>
-				<span class="warning-text">正常に表示・操作できない場合、新規タブで開いてください</span>
-			</div>
-
-			<div id="drawing-sidebar" style="display: none;">
-				<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン">
-					<i data-lucide="pen"></i>
-				</button>
-				<button id="tool-eraser-btn" class="tool-btn" title="消しゴム">
-					<i data-lucide="eraser"></i>
-				</button>
-
-				<div class="tool-divider"></div>
-
-				<button id="tool-thick-md" class="tool-btn active-tool" title="中サイズ">
-					<div style="width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%;"></div>
-				</button>
-				<button id="tool-thick-lg" class="tool-btn" title="大サイズ">
-					<div style="width: 16px; height: 16px; background-color: #e74c3c; border-radius: 50%;"></div>
-				</button>
-
-				<div class="tool-divider"></div>
-
-				<button id="tool-clear-btn" class="tool-btn" title="全消し">
-					<i data-lucide="trash-2"></i>
-				</button>
-
-				<button id="tool-done-btn" class="done-btn">完了</button>
-			</div>
-		</div>
-	</div>
-
-	<div id="help-modal-overlay">
-		<div id="help-modal">
-			<button class="close-btn" id="close-modal-btn">×</button>
-			<h2><i data-lucide="book"></i> 自由研究発表ツールの使い方</h2>
-
-			<h4>① フォルダを読み込む</h4>
-			<p>左側の「フォルダを読み込む」ボタンを押し、研究データがまとまったフォルダを選択します。</p>
-
-			<h4>② リストを選ぶ・移動する</h4>
-			<p>リストの項目やグループ枠は、マウスでドラッグ＆ドロップして順番を入れ替えられます。<br>
-				プレビュー上部の「前へ」「次へ」ボタンを使えば、スムーズに次のファイルへ切り替えが可能です。</p>
-
-			<h4>③ プレビューのサイズを調節する</h4>
-			<p>枠の右下をマウスで引っ張るか、上部の入力欄（WとH）に数値を打ち込んで配信画面に合わせてください。</p>
-
-			<h4>💡 音量の調節について</h4>
-			<p>上部のスライダーでMP4動画やYouTube（リンク・埋め込み）の音量を手元で調整できます。</p>
-
-			<h4>💡 Googleスライドを操作するコツ</h4>
-			<p>セキュリティの都合上、マウスホイールでスライドをめくることはできません。<br>
-				<strong>プレビュー画面（スライド）を一度クリックして選択し、キーボードの「右・左矢印キー」や「スペースキー」を押す</strong>ことで、綺麗にページをめくることができます。
-			</p>
-
-			<h4>④ OBSに取り込む</h4>
-			<p>OBS Studioで「ウィンドウキャプチャ」を追加し、緑色のプレビュー枠だけが映るように「Altキー(Windows) / Optionキー(Mac)」を押しながら端をクロップしてください。</p>
+	<!-- 共通設定モーダル -->
+	<div id="global-settings-modal-overlay">
+		<div class="settings-modal-content">
+			<button id="global-close-settings-btn"
+				style="position: absolute; top: 15px; right: 20px; background: none; border: none; font-size: 24px; color: #999; cursor: pointer;">×</button>
+			<h2
+				style="margin-top: 0; color: #007b5e; font-size: 18px; border-bottom: 2px solid #A7E0CF; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+				<i data-lucide="settings"></i> 初期設定
+			</h2>
+			<p style="color: #666; font-size: 14px; margin-top: 15px;">ここに設定項目を追加できます。（枠組みのみ）</p>
 		</div>
 	</div>
 
 	<script>
-		let ytPlayer = null;
-		let isYtApiReady = false;
+		// --- 画面切り替え制御 ---
+		const navCsvBtn = document.getElementById('nav-csv-btn');
+		const navPreviewBtn = document.getElementById('nav-preview-btn');
+		const frameCsv = document.getElementById('frame-csv');
+		const framePreview = document.getElementById('frame-preview');
 
-		window.onYouTubeIframeAPIReady = function () {
-			isYtApiReady = true;
-		};
-
-		const folderInput = document.getElementById('folder-input');
-		const loadBtn = document.getElementById('load-btn');
-		const listContainer = document.getElementById('list-container');
-		const presentationArea = document.getElementById('presentation-area');
-		const zoomWrapper = document.getElementById('zoom-wrapper');
-		const contentLayer = document.getElementById('content-layer');
-		const emptyMessage = document.getElementById('empty-message');
-		const presentationControls = document.getElementById('presentation-controls');
-
-		const urlWarning = document.getElementById('url-warning');
-		urlWarning.addEventListener('click', () => {
-			urlWarning.classList.toggle('expanded');
+		navCsvBtn.addEventListener('click', () => {
+			navCsvBtn.classList.add('active');
+			navPreviewBtn.classList.remove('active');
+			frameCsv.style.display = 'block';
+			framePreview.style.display = 'none';
 		});
 
-		const externalLinkBtn = document.getElementById('external-link-btn');
-
-		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
-		const sidebar = document.getElementById('sidebar');
-		const sizeSelector = document.getElementById('size-selector');
-		const fullscreenBtn = document.getElementById('fullscreen-btn');
-
-		const prevBtn = document.getElementById('prev-btn');
-		const nextBtn = document.getElementById('next-btn');
-
-		const chromakeyBtn = document.getElementById('chromakey-btn');
-
-		const canvas = document.getElementById('drawing-canvas');
-		const ctx = canvas.getContext('2d');
-		const activateDrawingBtn = document.getElementById('activate-drawing-btn');
-		const drawingSidebar = document.getElementById('drawing-sidebar');
-		const toolPenBtn = document.getElementById('tool-pen-btn');
-		const toolEraserBtn = document.getElementById('tool-eraser-btn');
-		const toolClearBtn = document.getElementById('tool-clear-btn');
-		const toolThickMd = document.getElementById('tool-thick-md');
-		const toolThickLg = document.getElementById('tool-thick-lg');
-		const toolDoneBtn = document.getElementById('tool-done-btn');
-
-		let isDrawingMode = false;
-		let isDrawing = false;
-		let currentMode = 'pen';
-		let currentThickness = 3;
-		let drawingHistory = [];
-		let currentStroke = null;
-
-		let isPanning = false;
-		let startPanX, startPanY, startScrollLeft, startScrollTop;
-
-		let currentZoom = 1.0;
-		const zoomSlider = document.getElementById('zoom-slider');
-		const zoomInBtn = document.getElementById('zoom-in-btn');
-		const zoomOutBtn = document.getElementById('zoom-out-btn');
-		const zoomResetBtn = document.getElementById('zoom-reset-btn');
-		const zoomLevelText = document.getElementById('zoom-level-text');
-
-		const inputWidth = document.getElementById('input-width');
-		const inputHeight = document.getElementById('input-height');
-
-		const helpBtn = document.getElementById('help-btn');
-		const helpModalOverlay = document.getElementById('help-modal-overlay');
-		const closeModalBtn = document.getElementById('close-modal-btn');
-
-		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
-		const volumeSlider = document.getElementById('volume-slider');
-		const rewindBtn = document.getElementById('rewind-btn');
-		const forwardBtn = document.getElementById('forward-btn');
-		const playBtn = document.getElementById('play-btn');
-		const pauseBtn = document.getElementById('pause-btn');
-
-		const timerDisplayContainer = document.getElementById('timer-display-container');
-		const toggleTimerInlineBtn = document.getElementById('toggle-timer-inline-btn');
-		const timerText = document.getElementById('timer-text');
-		const secondHand = document.getElementById('second-hand');
-
-		let timerInterval = null;
-		let secondsElapsed = 0;
-		let activeGroupName = "";
-
-		let isMuted = false;
-		let previousVolume = 1;
-
-		window.addEventListener('DOMContentLoaded', () => {
-			if (window.innerWidth < 1400) {
-				presentationArea.style.width = '640px';
-				presentationArea.style.height = '480px';
-				inputWidth.value = 640;
-				inputHeight.value = 480;
-				sizeSelector.value = "640x480";
-			} else {
-				presentationArea.style.width = '1024px';
-				presentationArea.style.height = '768px';
-				inputWidth.value = 1024;
-				inputHeight.value = 768;
-				sizeSelector.value = "1024x768";
-			}
+		navPreviewBtn.addEventListener('click', () => {
+			navPreviewBtn.classList.add('active');
+			navCsvBtn.classList.remove('active');
+			frameCsv.style.display = 'none';
+			framePreview.style.display = 'block';
 		});
 
-		chromakeyBtn.addEventListener('click', () => {
-			document.body.classList.toggle('chromakey-mode');
-			if (document.body.classList.contains('chromakey-mode')) {
-				if (emptyMessage) emptyMessage.style.display = 'none';
-				chromakeyBtn.innerHTML = '<i data-lucide="user"></i>解除';
-				chromakeyBtn.setAttribute('title', 'クロマキー背景を解除する');
-				chromakeyBtn.style.backgroundColor = '#00FF00';
-				chromakeyBtn.style.color = '#333';
-				chromakeyBtn.style.borderColor = '#00FF00';
-			} else {
-				if (emptyMessage) emptyMessage.style.display = 'block';
-				chromakeyBtn.innerHTML = '<i data-lucide="image"></i>クロマキー';
-				chromakeyBtn.setAttribute('title', 'クロマキー背景で表示する');
-				chromakeyBtn.style.backgroundColor = '';
-				chromakeyBtn.style.color = '';
-				chromakeyBtn.style.borderColor = '';
-			}
-			lucide.createIcons({ root: chromakeyBtn });
-		});
+		// --- モーダル制御 ---
+		const globalInfoBtn = document.getElementById('global-info-btn');
+		const globalHelpModalOverlay = document.getElementById('global-help-modal-overlay');
+		const globalCloseModalBtn = document.getElementById('global-close-modal-btn');
+		const helpTabBtns = document.querySelectorAll('.help-tab-btn');
+		const helpTabContents = document.querySelectorAll('.help-tab-content');
 
-		function applyZoom(oldZoom, newZoom) {
-			const rect = presentationArea.getBoundingClientRect();
-			const centerX = presentationArea.scrollLeft + rect.width / 2;
-			const centerY = presentationArea.scrollTop + rect.height / 2;
+		globalInfoBtn.addEventListener('click', () => { globalHelpModalOverlay.style.display = 'flex'; });
+		globalCloseModalBtn.addEventListener('click', () => { globalHelpModalOverlay.style.display = 'none'; });
+		globalHelpModalOverlay.addEventListener('click', (e) => { if (e.target === globalHelpModalOverlay) globalHelpModalOverlay.style.display = 'none'; });
 
-			const ratio = newZoom / oldZoom;
-
-			zoomWrapper.style.transform = `scale(${newZoom})`;
-			zoomLevelText.innerText = `${Math.round(newZoom * 100)}%`;
-			zoomSlider.value = newZoom;
-
-			presentationArea.scrollLeft = centerX * ratio - rect.width / 2;
-			presentationArea.scrollTop = centerY * ratio - rect.height / 2;
-
-			if (newZoom <= 1.0) {
-				presentationArea.classList.remove('can-pan');
-			} else {
-				presentationArea.classList.add('can-pan');
-			}
-		}
-
-		zoomSlider.addEventListener('input', (e) => {
-			const newZoom = parseFloat(e.target.value);
-			applyZoom(currentZoom, newZoom);
-			currentZoom = newZoom;
-		});
-		zoomInBtn.addEventListener('click', () => {
-			const newZoom = Math.min(currentZoom + 0.1, 3.0);
-			applyZoom(currentZoom, newZoom);
-			currentZoom = newZoom;
-		});
-		zoomOutBtn.addEventListener('click', () => {
-			const newZoom = Math.max(currentZoom - 0.1, 0.5);
-			applyZoom(currentZoom, newZoom);
-			currentZoom = newZoom;
-		});
-		zoomResetBtn.addEventListener('click', () => {
-			applyZoom(currentZoom, 1.0);
-			currentZoom = 1.0;
-		});
-
-		presentationArea.addEventListener('mousedown', (e) => {
-			if (isDrawingMode || currentZoom <= 1.0) return;
-			isPanning = true;
-			startPanX = e.clientX;
-			startPanY = e.clientY;
-			startScrollLeft = presentationArea.scrollLeft;
-			startScrollTop = presentationArea.scrollTop;
-		});
-
-		window.addEventListener('mousemove', (e) => {
-			if (!isPanning || isDrawingMode) return;
-			e.preventDefault();
-			const walkX = e.clientX - startPanX;
-			const walkY = e.clientY - startPanY;
-			presentationArea.scrollLeft = startScrollLeft - walkX;
-			presentationArea.scrollTop = startScrollTop - walkY;
-		});
-
-		window.addEventListener('mouseup', () => {
-			if (isPanning) {
-				isPanning = false;
-			}
-		});
-
-		function applyCurrentMode() {
-			ctx.lineCap = 'round';
-			ctx.lineJoin = 'round';
-			if (currentMode === 'eraser') {
-				ctx.globalCompositeOperation = 'destination-out';
-				ctx.lineWidth = 20;
-			} else {
-				ctx.globalCompositeOperation = 'source-over';
-				ctx.strokeStyle = '#e74c3c';
-				ctx.lineWidth = currentThickness;
-			}
-		}
-
-		function redrawCanvas() {
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-			const centerX = canvas.width / 2;
-			const centerY = canvas.height / 2;
-
-			drawingHistory.forEach(stroke => {
-				if (stroke.points.length === 0) return;
-
-				ctx.beginPath();
-				ctx.lineCap = 'round';
-				ctx.lineJoin = 'round';
-				if (stroke.mode === 'eraser') {
-					ctx.globalCompositeOperation = 'destination-out';
-					ctx.lineWidth = 20;
-				} else {
-					ctx.globalCompositeOperation = 'source-over';
-					ctx.strokeStyle = '#e74c3c';
-					ctx.lineWidth = stroke.thickness || 3;
-				}
-
-				const firstPt = stroke.points[0];
-				ctx.moveTo(firstPt.x + centerX, firstPt.y + centerY);
-				for (let i = 1; i < stroke.points.length; i++) {
-					const pt = stroke.points[i];
-					ctx.lineTo(pt.x + centerX, pt.y + centerY);
-				}
-				ctx.stroke();
+		helpTabBtns.forEach(btn => {
+			btn.addEventListener('click', () => {
+				helpTabBtns.forEach(b => b.classList.remove('active'));
+				btn.classList.add('active');
+				const targetId = btn.getAttribute('data-tab');
+				helpTabContents.forEach(content => {
+					if (content.id === targetId) content.classList.add('active');
+					else content.classList.remove('active');
+				});
 			});
-		}
-
-		function toggleDrawingMode(forceState) {
-			isDrawingMode = forceState !== undefined ? forceState : !isDrawingMode;
-			if (isDrawingMode) {
-				canvas.classList.add('active');
-				presentationArea.style.cursor = 'crosshair';
-				activateDrawingBtn.style.backgroundColor = '#e74c3c';
-				activateDrawingBtn.style.color = '#fff';
-				activateDrawingBtn.style.borderColor = '#e74c3c';
-				drawingSidebar.style.display = 'flex';
-				currentMode = 'pen';
-				toolPenBtn.classList.add('active-tool');
-				toolEraserBtn.classList.remove('active-tool');
-			} else {
-				canvas.classList.remove('active');
-				presentationArea.style.cursor = '';
-				activateDrawingBtn.style.backgroundColor = '';
-				activateDrawingBtn.style.color = '';
-				activateDrawingBtn.style.borderColor = '';
-				drawingSidebar.style.display = 'none';
-			}
-		}
-
-		activateDrawingBtn.addEventListener('click', () => toggleDrawingMode());
-		toolDoneBtn.addEventListener('click', () => toggleDrawingMode(false));
-		toolPenBtn.addEventListener('click', () => {
-			currentMode = 'pen';
-			toolPenBtn.classList.add('active-tool');
-			toolEraserBtn.classList.remove('active-tool');
-		});
-		toolEraserBtn.addEventListener('click', () => {
-			currentMode = 'eraser';
-			toolEraserBtn.classList.add('active-tool');
-			toolPenBtn.classList.remove('active-tool');
-		});
-		toolThickMd.addEventListener('click', () => {
-			currentThickness = 3;
-			toolThickMd.classList.add('active-tool');
-			toolThickLg.classList.remove('active-tool');
-		});
-		toolThickLg.addEventListener('click', () => {
-			currentThickness = 8;
-			toolThickLg.classList.add('active-tool');
-			toolThickMd.classList.remove('active-tool');
-		});
-		toolClearBtn.addEventListener('click', () => {
-			drawingHistory = [];
-			redrawCanvas();
 		});
 
-		function getMousePos(evt) {
-			const rect = canvas.getBoundingClientRect();
-			return {
-				x: (evt.clientX - rect.left) / currentZoom,
-				y: (evt.clientY - rect.top) / currentZoom
-			};
-		}
-
-		canvas.addEventListener('mousedown', (e) => {
-			if (!isDrawingMode) return;
-			isDrawing = true;
-			const pos = getMousePos(e);
-			const centerX = canvas.width / 2;
-			const centerY = canvas.height / 2;
-
-			currentStroke = {
-				mode: currentMode,
-				thickness: currentThickness,
-				points: [{ x: pos.x - centerX, y: pos.y - centerY }]
-			};
-			drawingHistory.push(currentStroke);
-
-			ctx.beginPath();
-			applyCurrentMode();
-			ctx.moveTo(pos.x, pos.y);
-		});
-
-		canvas.addEventListener('mousemove', (e) => {
-			if (!isDrawing || !isDrawingMode) return;
-			const pos = getMousePos(e);
-			const centerX = canvas.width / 2;
-			const centerY = canvas.height / 2;
-
-			currentStroke.points.push({ x: pos.x - centerX, y: pos.y - centerY });
-			ctx.lineTo(pos.x, pos.y);
-			ctx.stroke();
-		});
-
-		canvas.addEventListener('mouseup', () => {
-			if (isDrawing) {
-				ctx.closePath();
-				isDrawing = false;
-			}
-		});
-
-		canvas.addEventListener('mouseout', () => {
-			if (isDrawing) {
-				ctx.closePath();
-				isDrawing = false;
-			}
-		});
-
-		function applyVolume() {
-			const vol = parseFloat(volumeSlider.value);
-			const video = contentLayer.querySelector('video');
-			if (video) {
-				video.volume = vol;
-			}
-			if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
-				ytPlayer.setVolume(vol * 100);
-			}
-		}
-
-		function updateVolumeIcon(vol) {
-			let iconName = 'volume-2';
-			if (vol === 0) iconName = 'volume-x';
-			else if (vol <= 0.5) iconName = 'volume-1';
-
-			volumeIconWrapper.innerHTML = `<i data-lucide="${iconName}"></i>`;
-			lucide.createIcons({ root: volumeIconWrapper });
-		}
-
-		volumeIconWrapper.addEventListener('click', () => {
-			isMuted = !isMuted;
-			if (isMuted) {
-				previousVolume = volumeSlider.value;
-				volumeSlider.value = 0;
-			} else {
-				volumeSlider.value = previousVolume > 0 ? previousVolume : 0.5;
-			}
-			applyVolume();
-			updateVolumeIcon(parseFloat(volumeSlider.value));
-		});
-
-		volumeSlider.addEventListener('input', () => {
-			isMuted = volumeSlider.value == 0;
-			applyVolume();
-			updateVolumeIcon(parseFloat(volumeSlider.value));
-		});
-
-		rewindBtn.addEventListener('click', () => {
-			const video = contentLayer.querySelector('video');
-			if (video) video.currentTime = Math.max(0, video.currentTime - 5);
-			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') {
-				ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 5), true);
-			}
-		});
-
-		forwardBtn.addEventListener('click', () => {
-			const video = contentLayer.querySelector('video');
-			if (video) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 5);
-			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function') {
-				ytPlayer.seekTo(Math.min(ytPlayer.getDuration(), ytPlayer.getCurrentTime() + 5), true);
-			}
-		});
-
-		playBtn.addEventListener('click', () => {
-			const video = contentLayer.querySelector('video');
-			if (video) video.play();
-			if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
-		});
-
-		pauseBtn.addEventListener('click', () => {
-			const video = contentLayer.querySelector('video');
-			if (video) video.pause();
-			if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
-		});
-
-		function startTimer() {
-			clearInterval(timerInterval);
-			secondsElapsed = 0;
-			updateTimerDisplay();
-
-			timerInterval = setInterval(() => {
-				secondsElapsed++;
-				updateTimerDisplay();
-			}, 1000);
-		}
-
-		function updateTimerDisplay() {
-			const minutes = Math.floor(secondsElapsed / 60);
-			timerText.innerText = `${minutes}分`;
-			const degrees = secondsElapsed * 6;
-			secondHand.style.transform = `translateX(-50%) rotate(${degrees}deg)`;
-		}
-
-		toggleTimerInlineBtn.addEventListener('click', () => {
-			timerDisplayContainer.classList.toggle('timer-hidden');
-			if (timerDisplayContainer.classList.contains('timer-hidden')) {
-				toggleTimerInlineBtn.innerHTML = '<i data-lucide="eye-off"></i>';
-				toggleTimerInlineBtn.title = 'タイマーを表示';
-			} else {
-				toggleTimerInlineBtn.innerHTML = '<i data-lucide="eye"></i>';
-				toggleTimerInlineBtn.title = 'タイマーを隠す';
-			}
-			lucide.createIcons({ root: toggleTimerInlineBtn });
-		});
-
-		helpBtn.addEventListener('click', () => { helpModalOverlay.style.display = 'flex'; });
-		closeModalBtn.addEventListener('click', () => { helpModalOverlay.style.display = 'none'; });
-		helpModalOverlay.addEventListener('click', (e) => {
-			if (e.target === helpModalOverlay) helpModalOverlay.style.display = 'none';
-		});
-
-		toggleSidebarBtn.addEventListener('click', () => {
-			sidebar.classList.toggle('collapsed');
-			if (sidebar.classList.contains('collapsed')) {
-				toggleSidebarBtn.innerHTML = '<i data-lucide="chevron-right" id="sidebar-chevron"></i><span class="toggle-text" style="display:none;">閉じる</span>';
-				toggleSidebarBtn.title = 'サイドバーを展開する';
-			} else {
-				toggleSidebarBtn.innerHTML = '<i data-lucide="chevron-left" id="sidebar-chevron"></i><span class="toggle-text">閉じる</span>';
-				toggleSidebarBtn.title = 'サイドバーを縮小する';
-			}
-			lucide.createIcons({ root: toggleSidebarBtn });
-		});
-
-		fullscreenBtn.addEventListener('click', () => {
-			if (presentationArea.requestFullscreen) presentationArea.requestFullscreen();
-			else if (presentationArea.webkitRequestFullscreen) presentationArea.webkitRequestFullscreen();
-		});
-
-		sizeSelector.addEventListener('change', (e) => {
-			const [w, h] = e.target.value.split('x');
-			presentationArea.style.width = w + 'px';
-			presentationArea.style.height = h + 'px';
-			inputWidth.value = w;
-			inputHeight.value = h;
-		});
-
-		function navigateList(direction) {
-			const items = Array.from(document.querySelectorAll('.list-item'));
-			if (items.length === 0) return;
-
-			const activeIndex = items.findIndex(btn => btn.classList.contains('active'));
-			let targetIndex = 0;
-
-			if (activeIndex !== -1) {
-				targetIndex = activeIndex + direction;
-				if (targetIndex < 0) targetIndex = items.length - 1;
-				if (targetIndex >= items.length) targetIndex = 0;
-			}
-
-			items[targetIndex].click();
-			items[targetIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-		}
-		prevBtn.addEventListener('click', () => navigateList(-1));
-		nextBtn.addEventListener('click', () => navigateList(1));
-
-		function updateSizeFromInput() {
-			presentationArea.style.width = inputWidth.value + 'px';
-			presentationArea.style.height = inputHeight.value + 'px';
-		}
-		inputWidth.addEventListener('change', updateSizeFromInput);
-		inputHeight.addEventListener('change', updateSizeFromInput);
-
-		const resizeObserver = new ResizeObserver(entries => {
-			for (let entry of entries) {
-				const width = presentationArea.offsetWidth;
-				presentationControls.style.width = `${width}px`;
-
-				const contentWidth = Math.round(entry.contentRect.width);
-				const contentHeight = Math.round(entry.contentRect.height);
-
-				const matchingOption = Array.from(sizeSelector.options).find(opt => opt.value === `${contentWidth}x${contentHeight}`);
-				if (matchingOption) sizeSelector.value = matchingOption.value;
-
-				canvas.width = contentWidth;
-				canvas.height = contentHeight;
-				redrawCanvas();
-			}
-		});
-		resizeObserver.observe(presentationArea);
-
-		function updateGroupNumbers() {
-			const groups = Array.from(listContainer.querySelectorAll('.group-container'));
-			groups.forEach((group, index) => {
-				const numStr = `${index + 1}`;
-				const fullNumSpan = group.querySelector('.group-number');
-				if (fullNumSpan) fullNumSpan.innerText = numStr;
-			});
-		}
-
-		loadBtn.addEventListener('click', () => { folderInput.click(); });
-
-		folderInput.addEventListener('change', (event) => {
-			const files = Array.from(event.target.files);
-
-			listContainer.innerHTML = '';
-			activeGroupName = "";
-			clearInterval(timerInterval);
-			secondsElapsed = 0;
-			updateTimerDisplay();
-
-			const validFiles = files.filter(file => {
-				return !file.name.startsWith('.');
-			});
-
-			if (validFiles.length > 0) {
-				document.getElementById('drag-hint-text').style.display = 'block';
-			} else {
-				document.getElementById('drag-hint-text').style.display = 'none';
-			}
-
-			validFiles.sort((a, b) => {
-				const pathA = a.webkitRelativePath || a.name;
-				const pathB = b.webkitRelativePath || b.name;
-
-				const dirA = pathA.includes('/') ? pathA.substring(0, pathA.lastIndexOf('/')) : '';
-				const dirB = pathB.includes('/') ? pathB.substring(0, pathB.lastIndexOf('/')) : '';
-
-				if (dirA !== dirB) {
-					return dirA.localeCompare(dirB);
-				}
-
-				const nameA = a.name;
-				const nameB = b.name;
-
-				const isReadmeTxtA = /^README\d{3}/i.test(nameA) && nameA.toLowerCase().endsWith('.txt');
-				const isReadmeTxtB = /^README\d{3}/i.test(nameB) && nameB.toLowerCase().endsWith('.txt');
-
-				if (isReadmeTxtA && !isReadmeTxtB) return -1;
-				if (!isReadmeTxtA && isReadmeTxtB) return 1;
-
-				return nameA.localeCompare(nameB);
-			});
-
-			let currentMainGroupName = "";
-			let currentSubGroupName = "";
-			let currentGroupContainer = null;
-
-			validFiles.forEach(file => {
-				const pathStr = file.webkitRelativePath || file.name;
-				const pathParts = pathStr.split('/');
-				let mainGroupName = "その他";
-				let subGroupName = "";
-				let isStandaloneFile = false;
-
-				if (pathParts.length === 2) {
-					mainGroupName = file.name;
-					isStandaloneFile = true;
-				} else if (pathParts.length > 2) {
-					mainGroupName = pathParts[1];
-					if (pathParts.length > 3) {
-						subGroupName = pathParts.slice(2, -1).join(' / ');
-					}
-				} else if (pathParts.length === 1) {
-					mainGroupName = file.name;
-					isStandaloneFile = true;
-				}
-
-				const fileName = file.name.toLowerCase();
-				let fileIcon = "file";
-				let iconColorStyle = "";
-				let isSupported = true;
-
-				if (fileName.endsWith('.mp4')) fileIcon = "film";
-				else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) fileIcon = "image";
-				else if (fileName.endsWith('.txt')) fileIcon = "file-text";
-				else if (fileName.endsWith('.pdf')) fileIcon = "file-text";
-				else if (fileName.match(/\.(html|htm)$/)) fileIcon = "globe";
-				else {
-					fileIcon = "alert-circle";
-					iconColorStyle = "color: #e74c3c;";
-					isSupported = false;
-				}
-
-				if (mainGroupName !== currentMainGroupName || isStandaloneFile) {
-					currentMainGroupName = mainGroupName;
-					currentSubGroupName = "";
-
-					currentGroupContainer = document.createElement('div');
-					currentGroupContainer.className = 'group-container';
-					currentGroupContainer.draggable = true;
-
-					const shortName = mainGroupName.substring(0, 3);
-					const groupTitle = document.createElement('h4');
-					groupTitle.className = 'group-title';
-
-					let groupIcon = isStandaloneFile ? fileIcon : "folder";
-					let groupIconStyle = isStandaloneFile ? iconColorStyle : "";
-
-					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><i data-lucide="${groupIcon}" style="width:18px;height:18px; ${groupIconStyle}"></i> ${mainGroupName}</span><span class="group-title-short">${shortName}</span><button class="group-toggle-btn"><i data-lucide="chevron-up"></i></button>`;
-
-					const toggleBtn = groupTitle.querySelector('.group-toggle-btn');
-					toggleBtn.addEventListener('click', (e) => {
-						e.stopPropagation();
-						const container = e.target.closest('.group-container');
-						if (container) {
-							container.classList.toggle('collapsed-group');
-							if (container.classList.contains('collapsed-group')) {
-								toggleBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
-							} else {
-								toggleBtn.innerHTML = '<i data-lucide="chevron-up"></i>';
-							}
-							lucide.createIcons({ root: toggleBtn });
-						}
-					});
-
-					currentGroupContainer.appendChild(groupTitle);
-					setupGroupDragAndDrop(currentGroupContainer);
-					listContainer.appendChild(currentGroupContainer);
-				}
-
-				if (subGroupName !== "" && subGroupName !== currentSubGroupName) {
-					currentSubGroupName = subGroupName;
-					const subGroupTitle = document.createElement('div');
-					subGroupTitle.className = 'sub-group-title';
-					subGroupTitle.innerHTML = `<i data-lucide="corner-down-right" style="width:14px;height:14px;"></i> ${subGroupName}`;
-					currentGroupContainer.appendChild(subGroupTitle);
-				}
-
-				createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "", fileIcon, iconColorStyle);
-			});
-
-			updateGroupNumbers();
-			folderInput.value = "";
-
-			lucide.createIcons({ root: listContainer });
-		});
-
-		function setupGroupDragAndDrop(group) {
-			group.addEventListener('dragstart', (e) => {
-				if (e.target.classList.contains('list-item') || e.target.closest('.group-toggle-btn')) {
-					e.preventDefault();
-					return;
-				}
-				group.classList.add('dragging');
-				e.dataTransfer.effectAllowed = 'move';
-			});
-			group.addEventListener('dragend', () => { group.classList.remove('dragging'); });
-			group.addEventListener('dragover', (e) => { e.preventDefault(); });
-			group.addEventListener('drop', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				const draggingGroup = document.querySelector('.group-container.dragging');
-				if (draggingGroup && draggingGroup !== group) {
-					const allGroups = Array.from(listContainer.querySelectorAll('.group-container'));
-					const draggingIndex = allGroups.indexOf(draggingGroup);
-					const dropIndex = allGroups.indexOf(group);
-
-					if (draggingIndex < dropIndex) group.after(draggingGroup);
-					else group.before(draggingGroup);
-
-					updateGroupNumbers();
-				}
-			});
-		}
-
-		function createListButton(file, container, folderName, isSubItem = false, fileIcon = "file", iconColorStyle = "") {
-			const button = document.createElement('button');
-			button.className = 'list-item';
-			if (isSubItem) {
-				button.classList.add('is-sub-item');
-			}
-
-			button.innerHTML = `<span class="item-icon"><i data-lucide="${fileIcon}" style="width:18px;height:18px; ${iconColorStyle}"></i></span><span class="item-text">${file.name}</span>
-				<a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();">
-					<i data-lucide="external-link" style="width:16px;height:16px;"></i>
-				</a>`;
-			button.title = file.name;
-
-			if (file.name.toLowerCase().endsWith('.txt')) {
-				const reader = new FileReader();
-				reader.onload = function (e) {
-					const text = e.target.result.trim();
-					if (/^https?:\/\/\S+$/.test(text)) {
-						const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|drive\.google\.com|(youtube\.com|youtu\.be)\//i.test(text);
-						const iconSpan = button.querySelector('.item-icon');
-						const actionBtn = button.querySelector('.item-action');
-
-						if (actionBtn) {
-							actionBtn.href = text;
-							actionBtn.style.display = 'flex';
-						}
-
-						if (iconSpan) {
-							if (isKnownEmbeddable) {
-								iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#333;"></i>';
-							} else {
-								iconSpan.innerHTML = '<i data-lucide="alert-circle" style="width:18px;height:18px;color:#e74c3c;"></i>';
-							}
-							lucide.createIcons({ root: iconSpan });
-						}
-					}
-				};
-				reader.readAsText(file);
-			}
-
-			button.onclick = () => {
-				document.querySelectorAll('.list-item').forEach(btn => btn.classList.remove('active'));
-				button.classList.add('active');
-
-				showContent(file);
-
-				if (activeGroupName !== folderName) {
-					activeGroupName = folderName;
-					startTimer();
-				}
-			};
-
-			button.draggable = true;
-			button.addEventListener('dragstart', (e) => {
-				e.stopPropagation();
-				button.classList.add('dragging');
-			});
-			button.addEventListener('dragend', () => { button.classList.remove('dragging'); });
-			button.addEventListener('dragover', (e) => { e.preventDefault(); });
-			button.addEventListener('drop', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				const draggingItem = document.querySelector('.list-item.dragging');
-				if (draggingItem && draggingItem !== button) {
-					const groupChildren = Array.from(container.children);
-					const draggingIndex = groupChildren.indexOf(draggingItem);
-					const dropIndex = groupChildren.indexOf(button);
-
-					if (draggingIndex !== -1) {
-						if (draggingIndex < dropIndex) button.after(draggingItem);
-						else button.before(draggingItem);
-					} else {
-						button.before(draggingItem);
-					}
-				}
-			});
-
-			container.appendChild(button);
-		}
-
-		function showContent(file) {
-			contentLayer.innerHTML = '';
-
-			urlWarning.style.display = 'none';
-			urlWarning.classList.remove('expanded');
-			externalLinkBtn.style.display = 'none';
-
-			drawingHistory = [];
-			redrawCanvas();
-
-			applyZoom(currentZoom, 1.0);
-			currentZoom = 1.0;
-
-			if (ytPlayer) {
-				ytPlayer.destroy();
-				ytPlayer = null;
-			}
-
-			const fileURL = URL.createObjectURL(file);
-			const fileName = file.name.toLowerCase();
-
-			if (fileName.endsWith('.mp4')) {
-				const video = document.createElement('video');
-				video.src = fileURL;
-				video.controls = true;
-				video.volume = volumeSlider.value;
-				contentLayer.appendChild(video);
-
-			} else if (fileName.match(/\.(pdf|html|htm)$/)) {
-				const iframe = document.createElement('iframe');
-				iframe.src = fileURL;
-				iframe.style.width = '100%';
-				iframe.style.height = '100%';
-				iframe.style.border = 'none';
-				contentLayer.appendChild(iframe);
-
-			} else if (fileName.endsWith('.txt')) {
-				const reader = new FileReader();
-				reader.onload = function (e) {
-					let text = e.target.result.trim();
-					const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-
-					if (ytMatch && isYtApiReady) {
-						externalLinkBtn.href = text;
-						externalLinkBtn.style.display = 'flex';
-
-						const videoId = ytMatch[1];
-						contentLayer.innerHTML = '<div id="yt-player-container"></div>';
-
-						ytPlayer = new YT.Player('yt-player-container', {
-							videoId: videoId,
-							playerVars: {
-								'autoplay': 0,
-								'rel': 0,
-								'widget_referrer': 'http://localhost/'
-							},
-							events: {
-								'onReady': function (event) {
-									event.target.setVolume(parseFloat(volumeSlider.value) * 100);
-								}
-							}
-						});
-						return;
-					}
-
-					if (text.toLowerCase().startsWith('<iframe')) {
-						contentLayer.innerHTML = text;
-						const iframe = contentLayer.querySelector('iframe');
-						if (iframe) {
-							iframe.style.width = '100%';
-							iframe.style.height = '100%';
-							iframe.style.border = 'none';
-							if (iframe.hasAttribute('allow')) {
-								iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, ''));
-							}
-						}
-					}
-					else if (/^https?:\/\/\S+$/.test(text)) {
-						let iframeSrc = text;
-						let isKnownEmbeddable = false;
-
-						if (iframeSrc.includes('docs.google.com/presentation/d/')) {
-							if (iframeSrc.includes('/pub')) {
-								iframeSrc = iframeSrc.replace(/\/pub.*/, '/embed?rm=minimal');
-							} else if (!iframeSrc.includes('/embed')) {
-								const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/);
-								if (match && match[1] !== 'e') {
-									iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`;
-								}
-							}
-							isKnownEmbeddable = true;
-						}
-						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
-							try {
-								const urlObj = new URL(iframeSrc);
-								urlObj.searchParams.set('action', 'embedview');
-								urlObj.searchParams.set('wdAr', '1.7777777777777777');
-								iframeSrc = urlObj.toString();
-								isKnownEmbeddable = true;
-							} catch (e) {
-								console.error('URLの変換に失敗しました:', e);
-							}
-						}
-						else if (iframeSrc.includes('drive.google.com/open?id=')) {
-							try {
-								const urlObj = new URL(iframeSrc);
-								const fileId = urlObj.searchParams.get('id');
-								if (fileId) {
-									iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`;
-									isKnownEmbeddable = true;
-								}
-							} catch (e) { console.error('URLの変換に失敗しました:', e); }
-						}
-						else if (iframeSrc.includes('drive.google.com/file/d/')) {
-							const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/);
-							if (match) {
-								iframeSrc = `${match[1]}/preview`;
-								isKnownEmbeddable = true;
-							}
-						}
-
-						if (!isKnownEmbeddable) {
-							urlWarning.style.display = 'flex';
-						}
-
-						contentLayer.innerHTML = `
-							<div style="width:100%; height:100%; position:relative; background-color: #ffffff;">
-								<iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe>
-							</div>`;
-
-						externalLinkBtn.href = text;
-						externalLinkBtn.style.display = 'flex';
-					}
-					else {
-						const pre = document.createElement('pre');
-						pre.className = 'text-preview-content';
-						pre.textContent = text;
-						contentLayer.appendChild(pre);
-					}
-				};
-				reader.readAsText(file);
-
-			} else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
-				const img = document.createElement('img');
-				img.src = fileURL;
-				contentLayer.appendChild(img);
-
-			} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
-				const extMatch = file.name.match(/\.[^.]+$/);
-				const fileExt = extMatch ? extMatch[0] : "";
-
-				contentLayer.innerHTML = `
-					<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-						<i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i>
-						<p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p>
-						<p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ブラウザの仕様により、パソコン内のPowerPoint、Excel、Wordファイルは表示できません。<br><strong>PDF形式に変換する</strong>か、GoogleドライブやSharePointで共有リンクを発行し、<br><strong>テキストファイル（.txt）にURLを貼り付けて読み込んでください。</strong></p>
-						<p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p>
-					</div>
-				`;
-				lucide.createIcons({ root: contentLayer });
-			} else {
-				const extMatch = file.name.match(/\.[^.]+$/);
-				const fileExt = extMatch ? extMatch[0] : "不明";
-
-				contentLayer.innerHTML = `
-					<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;">
-						<i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i>
-						<p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p>
-						<p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">実行ファイル（.exe）などは表示できません。<br>編集データの場合、Googleドライブに保存して共有リンクを発行し、<br>テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p>
-						<p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p>
-					</div>
-				`;
-				lucide.createIcons({ root: contentLayer });
-			}
-		}
+		// --- 初期設定モーダル制御 ---
+		const globalSettingsBtn = document.getElementById('global-settings-btn');
+		const globalSettingsModalOverlay = document.getElementById('global-settings-modal-overlay');
+		const globalCloseSettingsBtn = document.getElementById('global-close-settings-btn');
+
+		globalSettingsBtn.addEventListener('click', () => { globalSettingsModalOverlay.style.display = 'flex'; });
+		globalCloseSettingsBtn.addEventListener('click', () => { globalSettingsModalOverlay.style.display = 'none'; });
+		globalSettingsModalOverlay.addEventListener('click', (e) => { if (e.target === globalSettingsModalOverlay) globalSettingsModalOverlay.style.display = 'none'; });
 
 		lucide.createIcons();
 	</script>
