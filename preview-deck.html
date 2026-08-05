@@ -4,7 +4,7 @@
 <head>
 	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>データプレビュー - データプレビュー</title>
+	<title>データプレビュー</title>
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
 	<script src="https://www.youtube.com/iframe_api"></script>
@@ -29,43 +29,6 @@
 			width: 20px;
 			height: 20px;
 			stroke-width: 2;
-		}
-
-		/* === アクティビティバー === */
-		#activity-bar {
-			width: 60px;
-			background-color: #A7E0CF;
-			border-right: 1px solid #8ecbb9;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			padding-top: 15px;
-			z-index: 20;
-			flex-shrink: 0;
-		}
-
-		.activity-icon {
-			width: 40px;
-			height: 40px;
-			border-radius: 8px;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			color: #444;
-			cursor: pointer;
-			transition: all 0.2s;
-			text-decoration: none;
-		}
-
-		.activity-icon:hover {
-			background-color: rgba(255, 255, 255, 0.4);
-			color: #333;
-		}
-
-		.activity-icon.active {
-			background-color: #ffffff;
-			color: #007b5e;
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 		}
 
 		/* === サイドバー === */
@@ -487,20 +450,18 @@
 
 		#presentation-controls {
 			display: flex;
-			justify-content: space-between;
+			justify-content: center;
 			align-items: center;
-			width: 1280px;
-			max-width: 100%;
+			width: 100%;
 			margin-bottom: 10px;
 			padding: 20px 5px 10px 5px;
 			box-sizing: border-box;
-			gap: 10px;
-			flex-wrap: nowrap;
+			gap: 20px;
+			flex-wrap: wrap;
 			position: sticky;
 			top: 0;
 			background-color: #f9fdfc;
 			z-index: 90;
-			min-width: max-content;
 		}
 
 		.controls-group {
@@ -1017,140 +978,14 @@
 			margin-top: 8px;
 			transition-delay: 0.1s;
 		}
-
-		/* === 共通ヘルプモーダル === */
-		#global-help-modal-overlay {
-			display: none;
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.5);
-			z-index: 100;
-			justify-content: center;
-			align-items: center;
-		}
-
-		.help-modal-content {
-			background-color: #fff;
-			border-radius: 12px;
-			width: 600px;
-			max-width: 90%;
-			box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-			position: relative;
-			display: flex;
-			flex-direction: column;
-			max-height: 90vh;
-		}
-
-		.help-modal-close {
-			position: absolute;
-			top: 15px;
-			right: 20px;
-			background: none;
-			border: none;
-			font-size: 24px;
-			color: #999;
-			cursor: pointer;
-			z-index: 10;
-		}
-
-		.help-modal-close:hover {
-			color: #333;
-		}
-
-		.help-tab-container {
-			display: flex;
-			border-bottom: 1px solid #ddd;
-			background-color: #f9f9f9;
-			border-radius: 12px 12px 0 0;
-		}
-
-		.help-tab-btn {
-			flex: 1;
-			padding: 15px;
-			border: none;
-			background: none;
-			font-size: 15px;
-			font-weight: bold;
-			color: #666;
-			cursor: pointer;
-			border-bottom: 3px solid transparent;
-			transition: all 0.2s;
-		}
-
-		.help-tab-btn.active {
-			color: #007b5e;
-			border-bottom-color: #007b5e;
-		}
-
-		.help-tab-btn:hover:not(.active) {
-			background-color: #eee;
-		}
-
-		.help-tab-body {
-			padding: 30px;
-			overflow-y: auto;
-		}
-
-		.help-tab-content {
-			display: none;
-		}
-
-		.help-tab-content.active {
-			display: block;
-		}
-
-		.help-tab-content h2 {
-			margin-top: 0;
-			color: #007b5e;
-			border-bottom: 2px solid #A7E0CF;
-			padding-bottom: 10px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.help-tab-content h4 {
-			color: #333;
-			margin-bottom: 5px;
-			margin-top: 15px;
-		}
-
-		.help-tab-content p {
-			margin-top: 0;
-			font-size: 14px;
-			color: #555;
-			line-height: 1.6;
-		}
 	</style>
 </head>
 
 <body>
-	<!-- アクティビティバー（CSV変換 → データプレビューの順） -->
-	<div id="activity-bar">
-		<div style="display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center;">
-			<a href="csv-converter.html" class="activity-icon" title="フォルダ生成">
-				<i data-lucide="file-spreadsheet"></i>
-			</a>
-			<a href="preview-deck.html" class="activity-icon active" title="データプレビュー">
-				<i data-lucide="monitor-play"></i>
-			</a>
-		</div>
-		<div style="margin-top: auto; margin-bottom: 15px; width: 100%; display: flex; justify-content: center;">
-			<button id="global-info-btn" class="activity-icon" title="使い方"
-				style="border: none; background: transparent; padding: 0;">
-				<i data-lucide="info"></i>
-			</button>
-		</div>
-	</div>
-
 	<!-- サイドバー -->
 	<div id="sidebar">
 		<div id="sidebar-header">
 			<div class="brand-logo">
-				<!-- ★アイコンをmonitor-playに変更 -->
 				<div class="brand-icon-box">
 					<i data-lucide="monitor-play" style="width: 20px; height: 20px;"></i>
 				</div>
@@ -1302,80 +1137,7 @@
 		</div>
 	</div>
 
-	<!-- 共通ヘルプモーダル -->
-	<div id="global-help-modal-overlay">
-		<div class="help-modal-content">
-			<button id="global-close-modal-btn" class="help-modal-close">×</button>
-
-			<div class="help-tab-container">
-				<button class="help-tab-btn" data-tab="help-csv">フォルダ生成</button>
-				<!-- ★ データプレビューではプレビューのタブを初期表示 -->
-				<button class="help-tab-btn active" data-tab="help-preview">データプレビュー</button>
-			</div>
-
-			<div class="help-tab-body">
-				<!-- フォルダ生成の使い方 -->
-				<div id="help-csv" class="help-tab-content">
-					<h2><i data-lucide="file-spreadsheet"></i> ツールについて</h2>
-					<p style="margin-top: 15px;">
-						CSVを読み込むと、送信者ごとのフォルダが作成され、データ管理がしやすくなります。<br><br>
-						URLが記載されている場合、説明文では伏字になりますが、URLのみを掲載したtxtファイルが別途生成されます。
-					</p>
-				</div>
-
-				<!-- データプレビューの使い方 -->
-				<div id="help-preview" class="help-tab-content active">
-					<h2><i data-lucide="monitor-play"></i> 自由研究発表ツールの使い方</h2>
-					<h4>① フォルダを読み込む</h4>
-					<p>左側の「フォルダを読み込む」ボタンを押し、研究データがまとまったフォルダを選択します。</p>
-
-					<h4>② リストを選ぶ・移動する</h4>
-					<p>リストの項目やグループ枠は、マウスでドラッグ＆ドロップして順番を入れ替えられます。<br>
-						プレビュー上部の「前へ」「次へ」ボタンを使えば、スムーズに次のファイルへ切り替えが可能です。</p>
-
-					<h4>③ プレビューのサイズを調節する</h4>
-					<p>枠の右下をマウスで引っ張るか、上部の入力欄（WとH）に数値を打ち込んで配信画面に合わせてください。</p>
-
-					<h4>💡 音量の調節について</h4>
-					<p>上部のスライダーでMP4動画やYouTube（リンク・埋め込み）の音量を手元で調整できます。</p>
-
-					<h4>💡 Googleスライドを操作するコツ</h4>
-					<p>セキュリティの都合上、マウスホイールでスライドをめくることはできません。<br>
-						<strong>プレビュー画面（スライド）を一度クリックして選択し、キーボードの「右・左矢印キー」や「スペースキー」を押す</strong>ことで、綺麗にページをめくることができます。
-					</p>
-
-					<h4>④ OBSに取り込む</h4>
-					<p>OBS Studioで「ウィンドウキャプチャ」を追加し、緑色のプレビュー枠だけが映るように「Altキー(Windows) / Optionキー(Mac)」を押しながら端をクロップしてください。
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<script>
-		// --- モーダル制御 ---
-		const globalInfoBtn = document.getElementById('global-info-btn');
-		const globalHelpModalOverlay = document.getElementById('global-help-modal-overlay');
-		const globalCloseModalBtn = document.getElementById('global-close-modal-btn');
-		const helpTabBtns = document.querySelectorAll('.help-tab-btn');
-		const helpTabContents = document.querySelectorAll('.help-tab-content');
-
-		globalInfoBtn.addEventListener('click', () => { globalHelpModalOverlay.style.display = 'flex'; });
-		globalCloseModalBtn.addEventListener('click', () => { globalHelpModalOverlay.style.display = 'none'; });
-		globalHelpModalOverlay.addEventListener('click', (e) => { if (e.target === globalHelpModalOverlay) globalHelpModalOverlay.style.display = 'none'; });
-
-		helpTabBtns.forEach(btn => {
-			btn.addEventListener('click', () => {
-				helpTabBtns.forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-				const targetId = btn.getAttribute('data-tab');
-				helpTabContents.forEach(content => {
-					if (content.id === targetId) content.classList.add('active');
-					else content.classList.remove('active');
-				});
-			});
-		});
-
 		// --- データプレビュー制御 ---
 		let ytPlayer = null;
 		let isYtApiReady = false;
@@ -1519,7 +1281,8 @@
 		const resizeObserver = new ResizeObserver(entries => {
 			for (let entry of entries) {
 				const width = presentationArea.offsetWidth;
-				presentationControls.style.width = `${width}px`;
+				// CSS側で width: 100% と justify-content: center を指定したため、JSでの固定幅付与は廃止
+				// presentationControls.style.width = `${width}px`;
 
 				const contentWidth = Math.round(entry.contentRect.width);
 				const contentHeight = Math.round(entry.contentRect.height);
@@ -1818,7 +1581,11 @@
 			activeGroupName = "";
 			clearInterval(timerInterval); secondsElapsed = 0; updateTimerDisplay();
 
-			const validFiles = files.filter(file => !file.name.startsWith('.'));
+			// ----------------------------------------------------
+			// ★ LOG.txt をリストから除外するようにフィルターを修正
+			// ----------------------------------------------------
+			const validFiles = files.filter(file => !file.name.startsWith('.') && file.name.toLowerCase() !== 'log.txt');
+
 			if (validFiles.length > 0) document.getElementById('drag-hint-text').style.display = 'block';
 			else document.getElementById('drag-hint-text').style.display = 'none';
 
