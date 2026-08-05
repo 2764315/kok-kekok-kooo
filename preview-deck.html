@@ -1072,11 +1072,8 @@
 				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
 				<span>H:</span> <input type="number" id="input-height" value="720">
 
-				<label
-					style="display: flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; margin-left: 8px; border-left: 1px solid #ddd; padding-left: 12px;">
-					<input type="checkbox" id="auto-xga-switch" checked>
-					READMEでXGA
-				</label>
+				<button id="readme-settings-btn" class="control-btn"
+					style="margin-left:8px; border-left:1px solid #ddd; padding-left:12px;">READMEサイズ設定</button>
 			</div>
 		</div>
 
@@ -1198,7 +1195,22 @@
 
 		const inputWidth = document.getElementById('input-width');
 		const inputHeight = document.getElementById('input-height');
-		const autoXgaSwitch = document.getElementById('auto-xga-switch');
+		// README サイズ設定（モーダル操作）
+		const readmeSettingsBtn = document.getElementById('readme-settings-btn');
+
+		const globalSettings = {
+			readmeAuto: true,
+			readmeWidth: 1024,
+			readmeHeight: 768,
+			readmeFontSize: 20
+		};
+
+		// モーダル要素は後で DOM に追加するため、参照は変数で扱う
+		let globalSettingsModal = null;
+		let readmeAutoCheckbox = null;
+		let readmeWidthInput = null;
+		let readmeHeightInput = null;
+		let readmeFontSizeInput = null;
 
 		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
 		const volumeSlider = document.getElementById('volume-slider');
@@ -1219,12 +1231,71 @@
 		let previousVolume = 1;
 
 		window.addEventListener('DOMContentLoaded', () => {
-			if (window.innerWidth < 1400) {
-				userSelectedWidth = 640; userSelectedHeight = 480; userSelectedPreset = "640x480";
-			} else {
-				userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
-			}
+			// フォルダ読み込み前はプレビュー枠をHDに固定
+			userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
+
+			// モーダルの DOM をここで作成しておく
+			const modalHtml = `
+			<div id="global-settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center;">
+				<div style="background:#fff; border-radius:10px; width:420px; max-width:90%; padding:18px; box-sizing:border-box;">
+					<h3 style="margin:0 0 10px 0; color:#007b5e;">README サイズ設定</h3>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+						<label style="flex:1; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="readme-auto-switch"> READMEサイズを自動適用（ONでREADME選択時に自動適用）</label>
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+						<label style="width:80px;">幅 (px)</label><input id="readme-width-input" type="number" value="1024" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+						<label style="width:80px;">高さ (px)</label><input id="readme-height-input" type="number" value="768" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+						<label style="width:80px;">フォント (px)</label><input id="readme-fontsize-input" type="number" value="20" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+					</div>
+					<div style="display:flex; justify-content:flex-end; gap:8px;">
+						<button id="global-settings-cancel" class="control-btn">キャンセル</button>
+						<button id="global-settings-save" class="control-btn done-btn">保存</button>
+					</div>
+				</div>
+			</div>`;
+
+			document.body.insertAdjacentHTML('beforeend', modalHtml);
+			globalSettingsModal = document.getElementById('global-settings-modal');
+			readmeAutoCheckbox = document.getElementById('readme-auto-switch');
+			readmeWidthInput = document.getElementById('readme-width-input');
+			readmeHeightInput = document.getElementById('readme-height-input');
+			readmeFontSizeInput = document.getElementById('readme-fontsize-input');
+
+			// 初期値を設定
+			readmeAutoCheckbox.checked = globalSettings.readmeAuto;
+			readmeWidthInput.value = globalSettings.readmeWidth;
+			readmeHeightInput.value = globalSettings.readmeHeight;
+			readmeFontSizeInput.value = globalSettings.readmeFontSize;
+
+			// ボタン制御
+			readmeSettingsBtn.addEventListener('click', () => {
+				if (!globalSettingsModal) return;
+				readmeAutoCheckbox.checked = globalSettings.readmeAuto;
+				readmeWidthInput.value = globalSettings.readmeWidth;
+				readmeHeightInput.value = globalSettings.readmeHeight;
+				readmeFontSizeInput.value = globalSettings.readmeFontSize;
+				globalSettingsModal.style.display = 'flex';
+			});
+
+			document.getElementById('global-settings-cancel').addEventListener('click', () => { globalSettingsModal.style.display = 'none'; });
+			document.getElementById('global-settings-save').addEventListener('click', () => {
+				globalSettings.readmeAuto = !!readmeAutoCheckbox.checked;
+				globalSettings.readmeWidth = parseInt(readmeWidthInput.value) || 1024;
+				globalSettings.readmeHeight = parseInt(readmeHeightInput.value) || 768;
+				globalSettings.readmeFontSize = parseInt(readmeFontSizeInput.value) || 20;
+				globalSettingsModal.style.display = 'none';
+				// 現在選択中が README なら設定を即時反映
+				const activeItem = document.querySelector('.list-item.active');
+				if (activeItem) activeItem.click();
+			});
+
+			// モーダル外クリックで閉じる
+			globalSettingsModal.addEventListener('click', (e) => { if (e.target === globalSettingsModal) globalSettingsModal.style.display = 'none'; });
 		});
 
 		function applySize(w, h, preset) {
@@ -1244,19 +1315,7 @@
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
 		}
 
-		autoXgaSwitch.addEventListener('change', (e) => {
-			if (!e.target.checked) {
-				restoreUserSize();
-			} else {
-				const activeItem = document.querySelector('.list-item.active');
-				if (activeItem) {
-					const fileName = activeItem.querySelector('.item-text').textContent.toLowerCase();
-					if (fileName.startsWith('readme')) {
-						applySize(1024, 768, "1024x768");
-					}
-				}
-			}
-		});
+		// README 自動サイズは globalSettings.readmeAuto を使用
 
 		sizeSelector.addEventListener('change', (e) => {
 			const [w, h] = e.target.value.split('x');
@@ -1602,7 +1661,9 @@
 				return nameA.localeCompare(nameB);
 			});
 
-			let currentMainGroupName = ""; let currentSubGroupName = ""; let currentGroupContainer = null;
+			// グループごとにファイルを収集し、グループ内で README を先頭にしてから描画する
+			const groupsMap = new Map();
+			const groupOrder = [];
 			validFiles.forEach(file => {
 				const pathStr = file.webkitRelativePath || file.name;
 				const pathParts = pathStr.split('/');
@@ -1611,44 +1672,65 @@
 				else if (pathParts.length > 2) { mainGroupName = pathParts[1]; if (pathParts.length > 3) subGroupName = pathParts.slice(2, -1).join(' / '); }
 				else if (pathParts.length === 1) { mainGroupName = file.name; isStandaloneFile = true; }
 
-				const fileName = file.name.toLowerCase();
+				const key = mainGroupName + '||' + subGroupName;
+				if (!groupsMap.has(key)) {
+					groupsMap.set(key, { files: [], mainGroupName, subGroupName, isStandaloneFile });
+					groupOrder.push(key);
+				}
 				let fileIcon = "file"; let iconColorStyle = "";
+				const fileName = file.name.toLowerCase();
 				if (fileName.endsWith('.mp4')) fileIcon = "film";
 				else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) fileIcon = "image";
 				else if (fileName.endsWith('.txt') || fileName.endsWith('.pdf')) fileIcon = "file-text";
 				else if (fileName.match(/\.(html|htm)$/)) fileIcon = "globe";
 				else { fileIcon = "alert-circle"; iconColorStyle = "color: #e74c3c;"; }
+				groupsMap.get(key).files.push({ file, fileIcon, iconColorStyle });
+			});
 
-				if (mainGroupName !== currentMainGroupName || isStandaloneFile) {
-					currentMainGroupName = mainGroupName; currentSubGroupName = "";
-					currentGroupContainer = document.createElement('div');
-					currentGroupContainer.className = 'group-container'; currentGroupContainer.draggable = true;
-					const shortName = mainGroupName.substring(0, 3);
-					const groupTitle = document.createElement('h4'); groupTitle.className = 'group-title';
-					let groupIcon = isStandaloneFile ? fileIcon : "folder"; let groupIconStyle = isStandaloneFile ? iconColorStyle : "";
-					groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><i data-lucide="${groupIcon}" style="width:18px;height:18px; ${groupIconStyle}"></i> ${mainGroupName}</span><span class="group-title-short">${shortName}</span><button class="group-toggle-btn"><i data-lucide="chevron-up"></i></button>`;
-					const toggleBtn = groupTitle.querySelector('.group-toggle-btn');
-					toggleBtn.addEventListener('click', (e) => {
-						e.stopPropagation(); const container = e.target.closest('.group-container');
-						if (container) {
-							container.classList.toggle('collapsed-group');
-							if (container.classList.contains('collapsed-group')) toggleBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
-							else toggleBtn.innerHTML = '<i data-lucide="chevron-up"></i>';
-							lucide.createIcons({ root: toggleBtn });
-						}
-					});
-					currentGroupContainer.appendChild(groupTitle);
-					setupGroupDragAndDrop(currentGroupContainer);
-					listContainer.appendChild(currentGroupContainer);
-				}
-
-				if (subGroupName !== "" && subGroupName !== currentSubGroupName) {
-					currentSubGroupName = subGroupName;
+			// グループ順に要素を作成
+			groupOrder.forEach(key => {
+				const groupInfo = groupsMap.get(key);
+				const mainGroupName = groupInfo.mainGroupName;
+				const subGroupName = groupInfo.subGroupName;
+				const isStandaloneFile = groupInfo.isStandaloneFile;
+				const currentGroupContainer = document.createElement('div');
+				currentGroupContainer.className = 'group-container'; currentGroupContainer.draggable = true;
+				const shortName = mainGroupName.substring(0, 3);
+				const groupTitle = document.createElement('h4'); groupTitle.className = 'group-title';
+				let groupIcon = isStandaloneFile ? groupInfo.files[0].fileIcon : "folder";
+				let groupIconStyle = isStandaloneFile ? groupInfo.files[0].iconColorStyle : "";
+				groupTitle.innerHTML = `<span class="group-title-full"><span class="group-number"></span><i data-lucide="${groupIcon}" style="width:18px;height:18px; ${groupIconStyle}"></i> ${mainGroupName}</span><span class="group-title-short">${shortName}</span><button class="group-toggle-btn"><i data-lucide="chevron-up"></i></button>`;
+				const toggleBtn = groupTitle.querySelector('.group-toggle-btn');
+				toggleBtn.addEventListener('click', (e) => {
+					e.stopPropagation(); const container = e.target.closest('.group-container');
+					if (container) {
+						container.classList.toggle('collapsed-group');
+						if (container.classList.contains('collapsed-group')) toggleBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
+						else toggleBtn.innerHTML = '<i data-lucide="chevron-up"></i>';
+						lucide.createIcons({ root: toggleBtn });
+					}
+				});
+				currentGroupContainer.appendChild(groupTitle);
+				setupGroupDragAndDrop(currentGroupContainer);
+				// サブグループタイトル
+				if (subGroupName && subGroupName !== "") {
 					const subGroupTitle = document.createElement('div'); subGroupTitle.className = 'sub-group-title';
 					subGroupTitle.innerHTML = `<i data-lucide="corner-down-right" style="width:14px;height:14px;"></i> ${subGroupName}`;
 					currentGroupContainer.appendChild(subGroupTitle);
 				}
-				createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "", fileIcon, iconColorStyle);
+
+				// グループ内ファイルは README を先頭にソートしてから追加
+				groupInfo.files.sort((a, b) => {
+					const aReadme = a.file.name.toLowerCase().startsWith('readme');
+					const bReadme = b.file.name.toLowerCase().startsWith('readme');
+					if (aReadme && !bReadme) return -1;
+					if (!aReadme && bReadme) return 1;
+					return a.file.name.localeCompare(b.file.name);
+				});
+				groupInfo.files.forEach(({ file, fileIcon, iconColorStyle }) => {
+					createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "", fileIcon, iconColorStyle);
+				});
+				listContainer.appendChild(currentGroupContainer);
 			});
 			updateGroupNumbers(); folderInput.value = "";
 			lucide.createIcons({ root: listContainer });
@@ -1685,15 +1767,39 @@
 				const reader = new FileReader();
 				reader.onload = function (e) {
 					const text = e.target.result.trim();
+					const iconSpan = button.querySelector('.item-icon');
+					const actionBtn = button.querySelector('.item-action');
+					const sharedDomains = ['gigafile.nu', 'gigafile.jp', 'xgf.nu', 'datadeliver.net', 'dtbn.jp', 'firestorage.jp', 'xfs.jp', 'tenpu.me', 'ac-data.info', 'okurin.bitpark.co.jp', 'delifile.link'];
+					const containsDriveFolder = /drive\.google\.com\/drive\/folders\//i.test(text);
+					const containsTransfer = sharedDomains.some(d => text.indexOf(d) !== -1);
+					// If text is a single URL, expose external link button
 					if (/^https?:\/\/\S+$/.test(text)) {
-						const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|drive\.google\.com|(youtube\.com|youtu\.be)\//i.test(text);
-						const iconSpan = button.querySelector('.item-icon'); const actionBtn = button.querySelector('.item-action');
 						if (actionBtn) { actionBtn.href = text; actionBtn.style.display = 'flex'; }
-						if (iconSpan) {
+					}
+					if (iconSpan) {
+						// Drive folder links and transfer services should be highlighted
+						if (containsDriveFolder || containsTransfer) {
+							iconSpan.innerHTML = '<i data-lucide="alert-circle" style="width:18px;height:18px;color:#e74c3c;"></i>';
+						} else {
+							const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
 							if (isKnownEmbeddable) iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#333;"></i>';
-							else iconSpan.innerHTML = '<i data-lucide="alert-circle" style="width:18px;height:18px;color:#e74c3c;"></i>';
-							lucide.createIcons({ root: iconSpan });
+							else iconSpan.innerHTML = '<i data-lucide="file-text" style="width:18px;height:18px;color:#333;"></i>';
 						}
+						lucide.createIcons({ root: iconSpan });
+					}
+
+					// If a file-transfer service URL exists in this group's files, add a small notice under the group
+					if (containsTransfer) {
+						try {
+							const groupEl = container.closest('.group-container') || container;
+							if (groupEl && !groupEl.querySelector('.group-transfer-note')) {
+								const p = document.createElement('p');
+								p.className = 'group-transfer-note';
+								p.style.cssText = 'font-size:11px; color:#e74c3c; margin:6px 12px 0 12px; line-height:1.2;';
+								p.textContent = 'ファイル転送サービスのURLが含まれています。リンク先の確認と、フォルダの反映をおすすめします。';
+								groupEl.appendChild(p);
+							}
+						} catch (err) { console.error(err); }
 					}
 				};
 				reader.readAsText(file);
@@ -1705,8 +1811,8 @@
 
 				const isReadme = file.name.toLowerCase().startsWith('readme');
 
-				if (isReadme && autoXgaSwitch && autoXgaSwitch.checked) {
-					applySize(1024, 768, "1024x768");
+				if (isReadme && globalSettings.readmeAuto) {
+					applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
 				} else {
 					restoreUserSize();
 				}
@@ -1786,6 +1892,13 @@
 						externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 					} else {
 						const pre = document.createElement('pre'); pre.className = 'text-preview-content'; pre.textContent = text; contentLayer.appendChild(pre);
+						// README の場合はフォントサイズを適用
+						if (fileName.startsWith('readme')) {
+							pre.style.fontSize = (globalSettings.readmeFontSize || 20) + 'px';
+							if (globalSettings.readmeAuto) {
+								applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
+							}
+						}
 					}
 				};
 				reader.readAsText(file);
@@ -1797,7 +1910,7 @@
 				lucide.createIcons({ root: contentLayer });
 			} else {
 				const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">実行ファイル（.exe）などは表示できません。<br>編集データの場合、Googleドライブに保存して共有リンクを発行し、<br>テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">Googleドライブに保存して共有リンクを発行し、<br>テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 				lucide.createIcons({ root: contentLayer });
 			}
 		}
