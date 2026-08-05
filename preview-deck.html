@@ -6,8 +6,10 @@
 	<meta charset="UTF-8">
 	<title>データプレビュー</title>
 	<script src="https://unpkg.com/lucide@latest"></script>
-	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
 	<script src="https://www.youtube.com/iframe_api"></script>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Sawarabi+Gothic&family=Sawarabi+Mincho&display=swap"
+		rel="stylesheet">
 
 	<style>
 		* {
@@ -562,6 +564,51 @@
 			font-size: 13px;
 		}
 
+		.toggle-switch {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			cursor: pointer;
+			user-select: none;
+		}
+
+		.toggle-switch input {
+			position: absolute;
+			opacity: 0;
+			width: 0;
+			height: 0;
+		}
+
+		.toggle-switch .toggle-slider {
+			width: 40px;
+			height: 22px;
+			background: #ddd;
+			border-radius: 999px;
+			position: relative;
+			transition: background 0.2s ease;
+		}
+
+		.toggle-switch .toggle-slider::before {
+			content: '';
+			position: absolute;
+			top: 2px;
+			left: 2px;
+			width: 18px;
+			height: 18px;
+			border-radius: 50%;
+			background: #fff;
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+			transition: transform 0.2s ease;
+		}
+
+		.toggle-switch input:checked+.toggle-slider {
+			background: #53a96c;
+		}
+
+		.toggle-switch input:checked+.toggle-slider::before {
+			transform: translateX(18px);
+		}
+
 		.volume-container {
 			display: flex;
 			align-items: center;
@@ -1040,7 +1087,7 @@
 
 			<div id="size-inputs" class="panel-box">
 				<div class="volume-container">
-					<span id="volume-icon-wrapper" style="cursor: pointer; display: flex; align-items: center;"
+					<span id="volume-icon-wrapper" style="cursor: pointer; display: inline-flex; align-items: center;"
 						title="ミュート切替">
 						<i data-lucide="volume-2"></i>
 					</span>
@@ -1072,8 +1119,11 @@
 				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
 				<span>H:</span> <input type="number" id="input-height" value="720">
 
-				<button id="readme-settings-btn" class="control-btn"
-					style="margin-left:8px; border-left:1px solid #ddd; padding-left:12px;">READMEサイズ設定</button>
+				<span id="readme-settings-btn"
+					style="margin-left:8px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border:none; box-shadow:none; background:none; color:#555; padding:0;">
+					<i data-lucide="settings" style="width:16px;height:16px;"></i>
+					<span style="font-weight:600;">README設定</span>
+				</span>
 			</div>
 		</div>
 
@@ -1202,7 +1252,9 @@
 			readmeAuto: true,
 			readmeWidth: 1024,
 			readmeHeight: 768,
-			readmeFontSize: 20
+			readmeFontSize: 20,
+			readmeBgColor: '#FDFBF7',
+			readmeFontFamily: "'Sawarabi Gothic', sans-serif"
 		};
 
 		// モーダル要素は後で DOM に追加するため、参照は変数で扱う
@@ -1211,6 +1263,8 @@
 		let readmeWidthInput = null;
 		let readmeHeightInput = null;
 		let readmeFontSizeInput = null;
+		let readmeBgColorInput = null;
+		let readmeFontInput = null;
 
 		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
 		const volumeSlider = document.getElementById('volume-slider');
@@ -1239,20 +1293,38 @@
 			const modalHtml = `
 			<div id="global-settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center;">
 				<div style="background:#fff; border-radius:10px; width:420px; max-width:90%; padding:18px; box-sizing:border-box;">
-					<h3 style="margin:0 0 10px 0; color:#007b5e;">README サイズ設定</h3>
+					<h3 style="margin:0 0 10px 0; color:#007b5e;">README設定</h3>
 					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label style="flex:1; display:flex; align-items:center; gap:8px;"><input type="checkbox" id="readme-auto-switch"> READMEサイズを自動適用（ONでREADME選択時に自動適用）</label>
+						<label class="toggle-switch" style="flex:1;">
+							<input type="checkbox" id="readme-auto-switch">
+							<span class="toggle-slider"></span>
+							<span style="font-weight:600;">READMEのプレビューサイズを固定する</span>
+						</label>
+					</div>
+					<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
+						<div style="display:flex; gap:8px; align-items:center; flex:1;">
+							<label style="width:80px;">W:</label><input id="readme-width-input" type="number" value="1024" style="width:80px; border:1px solid #eee; border-radius:20px; padding:6px 10px; text-align:center;">
+						</div>
+						<div style="display:flex; gap:8px; align-items:center; flex:1;">
+							<label style="width:80px;">H:</label><input id="readme-height-input" type="number" value="768" style="width:80px; border:1px solid #eee; border-radius:20px; padding:6px 10px; text-align:center;">
+						</div>
 					</div>
 					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label style="width:80px;">幅 (px)</label><input id="readme-width-input" type="number" value="1024" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label style="width:80px;">高さ (px)</label><input id="readme-height-input" type="number" value="768" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+						<label style="width:80px;">フォント (px)</label><input id="readme-fontsize-input" type="number" value="20" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
 					</div>
 					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-						<label style="width:80px;">フォント (px)</label><input id="readme-fontsize-input" type="number" value="20" style="flex:1; padding:6px; border:1px solid #ccc; border-radius:6px;">
+						<label style="width:80px;">背景色</label><input id="readme-bgcolor-input" type="color" value="#ffffff" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
+					</div>
+					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
+						<label style="width:80px;">フォント</label>
+						<select id="readme-font-input" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
+							<option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
+							<option value="'Sawarabi Mincho', serif">さわらび明朝</option>
+							<option value="\"Segoe UI\", \"Meiryo\", sans-serif">標準フォント</option>
+						</select>
 					</div>
 					<div style="display:flex; justify-content:flex-end; gap:8px;">
+						<button id="global-settings-reset" class="control-btn">リセット</button>
 						<button id="global-settings-cancel" class="control-btn">キャンセル</button>
 						<button id="global-settings-save" class="control-btn done-btn">保存</button>
 					</div>
@@ -1265,12 +1337,17 @@
 			readmeWidthInput = document.getElementById('readme-width-input');
 			readmeHeightInput = document.getElementById('readme-height-input');
 			readmeFontSizeInput = document.getElementById('readme-fontsize-input');
+			readmeBgColorInput = document.getElementById('readme-bgcolor-input');
+			readmeFontInput = document.getElementById('readme-font-input');
+			const readmeResetBtn = document.getElementById('global-settings-reset');
 
 			// 初期値を設定
 			readmeAutoCheckbox.checked = globalSettings.readmeAuto;
 			readmeWidthInput.value = globalSettings.readmeWidth;
 			readmeHeightInput.value = globalSettings.readmeHeight;
 			readmeFontSizeInput.value = globalSettings.readmeFontSize;
+			readmeBgColorInput.value = globalSettings.readmeBgColor;
+			readmeFontInput.value = globalSettings.readmeFontFamily;
 
 			// ボタン制御
 			readmeSettingsBtn.addEventListener('click', () => {
@@ -1279,15 +1356,27 @@
 				readmeWidthInput.value = globalSettings.readmeWidth;
 				readmeHeightInput.value = globalSettings.readmeHeight;
 				readmeFontSizeInput.value = globalSettings.readmeFontSize;
+				readmeBgColorInput.value = globalSettings.readmeBgColor;
+				readmeFontInput.value = globalSettings.readmeFontFamily;
 				globalSettingsModal.style.display = 'flex';
 			});
 
 			document.getElementById('global-settings-cancel').addEventListener('click', () => { globalSettingsModal.style.display = 'none'; });
+			readmeResetBtn.addEventListener('click', () => {
+				readmeAutoCheckbox.checked = true;
+				readmeWidthInput.value = globalSettings.readmeWidth = 1024;
+				readmeHeightInput.value = globalSettings.readmeHeight = 768;
+				readmeFontSizeInput.value = globalSettings.readmeFontSize = 20;
+				readmeBgColorInput.value = globalSettings.readmeBgColor = '#FDFBF7';
+				readmeFontInput.value = globalSettings.readmeFontFamily = "'Sawarabi Gothic', sans-serif";
+			});
 			document.getElementById('global-settings-save').addEventListener('click', () => {
 				globalSettings.readmeAuto = !!readmeAutoCheckbox.checked;
 				globalSettings.readmeWidth = parseInt(readmeWidthInput.value) || 1024;
 				globalSettings.readmeHeight = parseInt(readmeHeightInput.value) || 768;
 				globalSettings.readmeFontSize = parseInt(readmeFontSizeInput.value) || 20;
+				globalSettings.readmeBgColor = readmeBgColorInput.value || '#ffffff';
+				globalSettings.readmeFontFamily = readmeFontInput.value || 'sans-serif';
 				globalSettingsModal.style.display = 'none';
 				// 現在選択中が README なら設定を即時反映
 				const activeItem = document.querySelector('.list-item.active');
@@ -1892,9 +1981,11 @@
 						externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 					} else {
 						const pre = document.createElement('pre'); pre.className = 'text-preview-content'; pre.textContent = text; contentLayer.appendChild(pre);
-						// README の場合はフォントサイズを適用
+						// README の場合はフォント・背景を適用
 						if (fileName.startsWith('readme')) {
 							pre.style.fontSize = (globalSettings.readmeFontSize || 20) + 'px';
+							pre.style.backgroundColor = globalSettings.readmeBgColor || '#ffffff';
+							pre.style.fontFamily = globalSettings.readmeFontFamily || 'sans-serif';
 							if (globalSettings.readmeAuto) {
 								applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
 							}
