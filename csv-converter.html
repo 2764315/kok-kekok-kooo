@@ -947,9 +947,9 @@
 
 			let treeHtml = `
 				<div style="font-weight:bold; color:#333; margin-bottom:8px; display:flex; align-items:flex-start; gap:6px;">
-					<i data-lucide="folder" style="width:16px; height:16px; flex-shrink: 0; color:#007b5e; margin-top:2px;"></i>
+					<i data-lucide="folder" style="width:16px; height:16px; color:#007b5e; margin-top:2px;"></i>
 					<span style="flex-grow:1; word-break:break-all; line-height:1.4;">${folderPath}</span>
-					<button id="dynamic-csv-delete-btn" class="csv-folder-delete-btn" title="この回答を丸ごと削除" style="flex-shrink: 0;">
+					<button id="dynamic-csv-delete-btn" class="csv-folder-delete-btn" title="この回答を丸ごと削除">
 						<i data-lucide="trash-2" style="width:16px; height:16px; color:#999; transition: color 0.2s;"></i>
 					</button>
 				</div>
@@ -972,21 +972,21 @@
 				let deleteFileBtn = '';
 				if (file.isUrl) {
 					deleteFileBtn = `
-					<button class="csv-file-delete-btn" data-file-id="${file.id}" data-file-url="${file.content}" title="このファイルを削除" style="flex-shrink: 0;">
+					<button class="csv-file-delete-btn" data-file-id="${file.id}" data-file-url="${file.content}" title="このファイルを削除">
 						<i data-lucide="trash-2" style="width:14px; height:14px; color:#999; transition: color 0.2s;"></i>
 					</button>`;
 				}
 
-				treeHtml += `<div class="csv-tree-item ${activeClass}" data-index="${index}" style="width: 100%; align-items: flex-start;">
-								<i data-lucide="file-text" style="width:14px; height:14px; flex-shrink: 0; margin-top: 3px; ${iconColor}"></i>
-								<span style="flex-grow:1; word-break:break-all; line-height:1.4;">${file.name}</span>
+				treeHtml += `<div class="csv-tree-item ${activeClass}" data-index="${index}" style="width: 100%;">
+								<i data-lucide="file-text" style="width:14px; height:14px; ${iconColor}"></i>
+								<span style="flex-grow:1; overflow:hidden; text-overflow:ellipsis;">${file.name}</span>
 								${deleteFileBtn}
 							</div>`;
 			});
 			treeHtml += `</div>`;
 
 			if (hasSharedLink) {
-				treeHtml += `<p style="font-size: 11px; color: #e74c3c; margin: 10px 0 0 0; line-height: 1.4; font-weight: bold;"><i data-lucide="alert-triangle" style="width:12px; height:12px; margin-right: 2px;"></i>ダウンロード用URLが含まれています</p>`;
+				treeHtml += `<p style="font-size: 11px; color: #e74c3c; margin: 10px 0 0 0; line-height: 1.4;"><i data-lucide="alert-triangle" style="width:12px; height:12px; margin-right: 2px;"></i>ファイル転送サービスのURLが含まれています。リンク先をご確認ください。</p>`;
 			}
 
 			csvTreeContainer.innerHTML = treeHtml;
@@ -999,15 +999,13 @@
 				dynamicDeleteBtn.addEventListener('click', (e) => {
 					e.stopPropagation();
 					if (csvState.csvData.length === 0) return;
-					if (confirm('この回答を削除しますか？\n（元のCSVファイル自体は変更されません）')) {
+					if (confirm('この回答を削除しますか？\n（元のCSVファイル自体は変更されません。削除した内容は、LOG.txtとしてZIPファイルに記録されます）')) {
 						const row = csvState.csvData[csvState.currentIndex];
 						const now = new Date();
 						const timeStr = `${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+						const rowValues = Object.values(row).join(', ');
 
-						// カンマなし区切り（スペース区切り）で内容を結合
-						const rowValues = Object.values(row).join(' ');
-
-						csvState.deleteLogs.push(`[${timeStr}] 削除した回答内容: ${rowValues}\n`);
+						csvState.deleteLogs.push(`[${timeStr}] フォルダ削除: ${folderPath}\n内容: ${rowValues}\n`);
 
 						csvState.csvData.splice(csvState.currentIndex, 1);
 						csvState.tags.splice(csvState.currentIndex, 1);
@@ -1047,7 +1045,7 @@
 			document.querySelectorAll('.csv-file-delete-btn').forEach(btn => {
 				btn.addEventListener('click', (e) => {
 					e.stopPropagation();
-					if (confirm('このURLファイルを削除しますか？\n（README内の該当箇所は [—検閲済み—] と表記されます）')) {
+					if (confirm('このURLファイルを削除しますか？\n（README内の該当箇所は [—検閲済み—] と表記されます。削除した内容は、LOG.txtとしてZIPファイルに記録されます。）')) {
 						const fileId = e.currentTarget.getAttribute('data-file-id');
 						const fileUrl = e.currentTarget.getAttribute('data-file-url');
 
