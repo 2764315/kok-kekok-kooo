@@ -555,7 +555,7 @@
 		}
 
 		.panel-box input[type="number"] {
-			width: 50px;
+			width: 55px;
 			border: 1px solid #eee;
 			border-radius: 4px;
 			padding: 2px 4px;
@@ -1055,7 +1055,7 @@
 				<h3 style="margin-bottom: 4px;">発表リスト</h3>
 				<p id="drag-hint-text"
 					style="display: none; font-size: 11px; color: #666; margin: 0 0 10px 0; text-align: left;">
-					ドラッグで順番を変更できます</p>
+					ドラッグで順番を変更できます。README.txtは先頭に配置されます。LOG.txtは表示されません。</p>
 			</div>
 
 			<div id="list-container" style="padding: 0 15px 15px 15px;">
@@ -1119,11 +1119,6 @@
 				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
 				<span>H:</span> <input type="number" id="input-height" value="720">
 
-				<span id="readme-settings-btn"
-					style="margin-left:8px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border:none; box-shadow:none; background:none; color:#555; padding:0;">
-					<i data-lucide="settings" style="width:16px;height:16px;"></i>
-					<span style="font-weight:600;">README設定</span>
-				</span>
 			</div>
 		</div>
 
@@ -1257,15 +1252,6 @@
 			readmeFontFamily: "'Sawarabi Gothic', sans-serif"
 		};
 
-		// モーダル要素は後で DOM に追加するため、参照は変数で扱う
-		let globalSettingsModal = null;
-		let readmeAutoCheckbox = null;
-		let readmeWidthInput = null;
-		let readmeHeightInput = null;
-		let readmeFontSizeInput = null;
-		let readmeBgColorInput = null;
-		let readmeFontInput = null;
-
 		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
 		const volumeSlider = document.getElementById('volume-slider');
 		const rewindBtn = document.getElementById('rewind-btn');
@@ -1320,7 +1306,7 @@
 						<select id="readme-font-input" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
 							<option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
 							<option value="'Sawarabi Mincho', serif">さわらび明朝</option>
-							<option value="\"Segoe UI\", \"Meiryo\", sans-serif">標準フォント</option>
+							<option value=""Segoe UI", "Meiryo", sans-serif">標準フォント</option>
 						</select>
 					</div>
 					<div style="display:flex; justify-content:flex-end; gap:8px;">
@@ -1350,16 +1336,18 @@
 			readmeFontInput.value = globalSettings.readmeFontFamily;
 
 			// ボタン制御
-			readmeSettingsBtn.addEventListener('click', () => {
-				if (!globalSettingsModal) return;
-				readmeAutoCheckbox.checked = globalSettings.readmeAuto;
-				readmeWidthInput.value = globalSettings.readmeWidth;
-				readmeHeightInput.value = globalSettings.readmeHeight;
-				readmeFontSizeInput.value = globalSettings.readmeFontSize;
-				readmeBgColorInput.value = globalSettings.readmeBgColor;
-				readmeFontInput.value = globalSettings.readmeFontFamily;
-				globalSettingsModal.style.display = 'flex';
-			});
+			if (readmeSettingsBtn) {
+				readmeSettingsBtn.addEventListener('click', () => {
+					if (!globalSettingsModal) return;
+					readmeAutoCheckbox.checked = globalSettings.readmeAuto;
+					readmeWidthInput.value = globalSettings.readmeWidth;
+					readmeHeightInput.value = globalSettings.readmeHeight;
+					readmeFontSizeInput.value = globalSettings.readmeFontSize;
+					readmeBgColorInput.value = globalSettings.readmeBgColor;
+					readmeFontInput.value = globalSettings.readmeFontFamily;
+					globalSettingsModal.style.display = 'flex';
+				});
+			}
 
 			document.getElementById('global-settings-cancel').addEventListener('click', () => { globalSettingsModal.style.display = 'none'; });
 			readmeResetBtn.addEventListener('click', () => {
@@ -1997,11 +1985,11 @@
 				const img = document.createElement('img'); img.src = fileURL; contentLayer.appendChild(img);
 			} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
 				const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "";
-				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ブラウザの仕様により、パソコン内のPowerPoint、Excel、Wordファイルは表示できません。<br><strong>PDF形式に変換する</strong>か、GoogleドライブやSharePointで共有リンクを発行し、<br><strong>テキストファイル（.txt）にURLを貼り付けて読み込んでください。</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ブラウザの仕様により、パソコン内のPowerPoint、Excel、Wordファイルは表示できません。<br><strong>PDF形式に変換する</strong>か、GoogleドライブやSharePointで共有リンクを発行し、<br><strong>新規テキストファイル（.txt）にURLを貼り付けて読み込んでください。</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 				lucide.createIcons({ root: contentLayer });
 			} else {
 				const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">Googleドライブに保存して共有リンクを発行し、<br>テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">Googleドライブに保存して共有リンクを発行し、<br>新規テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 				lucide.createIcons({ root: contentLayer });
 			}
 		}

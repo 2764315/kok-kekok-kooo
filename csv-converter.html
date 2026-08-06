@@ -372,113 +372,6 @@
 		.hidden {
 			display: none !important;
 		}
-
-		/* === 共通ヘルプモーダル === */
-		#global-help-modal-overlay {
-			display: none;
-			position: fixed;
-			top: 0;
-			left: 0;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.5);
-			z-index: 100;
-			justify-content: center;
-			align-items: center;
-		}
-
-		.help-modal-content {
-			background-color: #fff;
-			border-radius: 12px;
-			width: 600px;
-			max-width: 90%;
-			box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-			position: relative;
-			display: flex;
-			flex-direction: column;
-			max-height: 90vh;
-		}
-
-		.help-modal-close {
-			position: absolute;
-			top: 15px;
-			right: 20px;
-			background: none;
-			border: none;
-			font-size: 24px;
-			color: #999;
-			cursor: pointer;
-			z-index: 10;
-		}
-
-		.help-modal-close:hover {
-			color: #333;
-		}
-
-		.help-tab-container {
-			display: flex;
-			border-bottom: 1px solid #ddd;
-			background-color: #f9f9f9;
-			border-radius: 12px 12px 0 0;
-		}
-
-		.help-tab-btn {
-			flex: 1;
-			padding: 15px;
-			border: none;
-			background: none;
-			font-size: 15px;
-			font-weight: bold;
-			color: #666;
-			cursor: pointer;
-			border-bottom: 3px solid transparent;
-			transition: all 0.2s;
-		}
-
-		.help-tab-btn.active {
-			color: #007b5e;
-			border-bottom-color: #007b5e;
-		}
-
-		.help-tab-btn:hover:not(.active) {
-			background-color: #eee;
-		}
-
-		.help-tab-body {
-			padding: 30px;
-			overflow-y: auto;
-		}
-
-		.help-tab-content {
-			display: none;
-		}
-
-		.help-tab-content.active {
-			display: block;
-		}
-
-		.help-tab-content h2 {
-			margin-top: 0;
-			color: #007b5e;
-			border-bottom: 2px solid #A7E0CF;
-			padding-bottom: 10px;
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.help-tab-content h4 {
-			color: #333;
-			margin-bottom: 5px;
-			margin-top: 15px;
-		}
-
-		.help-tab-content p {
-			margin-top: 0;
-			font-size: 14px;
-			color: #555;
-			line-height: 1.6;
-		}
 	</style>
 </head>
 
@@ -508,7 +401,7 @@
 
 			<div id="csv-controls" class="hidden" style="padding: 15px;">
 				<div class="csv-box">
-					<label class="csv-label">参照 (プレビュー)</label>
+					<label class="csv-label">回答リスト</label>
 					<div style="display: flex; gap: 8px; align-items: center;">
 						<button id="csv-prev-btn" class="csv-icon-btn"><i data-lucide="chevron-left"
 								style="width:16px; height:16px;"></i></button>
@@ -526,8 +419,10 @@
 
 				<!-- カテゴリ設定エリア -->
 				<div class="csv-box">
-					<label class="csv-label">カテゴリ設定</label>
-					<input type="text" id="csv-tag-input" class="csv-select" placeholder="例: つくってみた" autocomplete="off">
+					<label class="csv-label">カテゴリ設定（任意）</label>
+					<p class="csv-note">フォルダの先頭に表示されます。ジャンル分け、発表順の整理、自分用のメモなどに使えます。</p>
+					<input type="text" id="csv-tag-input" class="csv-select" placeholder="例：泥団子,◯日目,要連絡"
+						autocomplete="off">
 					<div id="category-history-container"
 						style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
 				</div>
@@ -577,80 +472,7 @@
 		</div>
 	</div>
 
-	<!-- 共通ヘルプモーダル -->
-	<div id="global-help-modal-overlay">
-		<div class="help-modal-content">
-			<button id="global-close-modal-btn" class="help-modal-close">×</button>
-
-			<div class="help-tab-container">
-				<button class="help-tab-btn active" data-tab="help-csv">フォルダ生成ツール</button>
-				<button class="help-tab-btn" data-tab="help-preview">プレビューデック</button>
-			</div>
-
-			<div class="help-tab-body">
-				<!-- CSV変換ツールの使い方 -->
-				<div id="help-csv" class="help-tab-content active">
-					<h2><i data-lucide="folder-plus"></i> ツールについて</h2>
-					<p style="margin-top: 15px;">
-						CSVを読み込むと、回答者ごとのフォルダが作成され、データ管理がしやすくなります。<br><br>
-						URLが記載されている場合、説明文では伏字になりますが、URLのみを掲載したtxtファイルが別途生成されます。
-					</p>
-				</div>
-
-				<!-- プレビューデックの使い方 -->
-				<div id="help-preview" class="help-tab-content">
-					<h2><i data-lucide="monitor-play"></i> 自由研究発表ツールの使い方</h2>
-					<h4>① フォルダを読み込む</h4>
-					<p>左側の「フォルダを読み込む」ボタンを押し、研究データがまとまったフォルダを選択します。</p>
-
-					<h4>② リストを選ぶ・移動する</h4>
-					<p>リストの項目やグループ枠は、マウスでドラッグ＆ドロップして順番を入れ替えられます。<br>
-						プレビュー上部の「前へ」「次へ」ボタンを使えば、スムーズに次のファイルへ切り替えが可能です。</p>
-
-					<h4>③ プレビューのサイズを調節する</h4>
-					<p>枠の右下をマウスで引っ張るか、上部の入力欄（WとH）に数値を打ち込んで配信画面に合わせてください。</p>
-
-					<h4>💡 音量の調節について</h4>
-					<p>上部のスライダーでMP4動画やYouTube（リンク・埋め込み）の音量を手元で調整できます。</p>
-
-					<h4>💡 Googleスライドを操作するコツ</h4>
-					<p>セキュリティの都合上、マウスホイールでスライドをめくることはできません。<br>
-						<strong>プレビュー画面（スライド）を一度クリックして選択し、キーボードの「右・左矢印キー」や「スペースキー」を押す</strong>ことで、綺麗にページをめくることができます。
-					</p>
-
-					<h4>④ OBSに取り込む</h4>
-					<p>OBS Studioで「ウィンドウキャプチャ」を追加し、緑色のプレビュー枠だけが映るように「Altキー(Windows) / Optionキー(Mac)」を押しながら端をクロップしてください。
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<script>
-		// --- モーダル制御 ---
-		const globalInfoBtn = document.getElementById('global-info-btn');
-		const globalHelpModalOverlay = document.getElementById('global-help-modal-overlay');
-		const globalCloseModalBtn = document.getElementById('global-close-modal-btn');
-		const helpTabBtns = document.querySelectorAll('.help-tab-btn');
-		const helpTabContents = document.querySelectorAll('.help-tab-content');
-
-		if (globalInfoBtn) {
-			globalInfoBtn.addEventListener('click', () => { globalHelpModalOverlay.style.display = 'flex'; });
-		}
-		globalCloseModalBtn.addEventListener('click', () => { globalHelpModalOverlay.style.display = 'none'; });
-		globalHelpModalOverlay.addEventListener('click', (e) => { if (e.target === globalHelpModalOverlay) globalHelpModalOverlay.style.display = 'none'; });
-
-		helpTabBtns.forEach(btn => {
-			btn.addEventListener('click', () => {
-				helpTabBtns.forEach(b => b.classList.remove('active'));
-				btn.classList.add('active');
-				const targetId = btn.getAttribute('data-tab');
-				helpTabContents.forEach(content => {
-					if (content.id === targetId) content.classList.add('active');
-					else content.classList.remove('active');
-				});
-			});
-		});
 
 		// --- CSV・フォルダ生成ロジック ---
 		const csvState = {
