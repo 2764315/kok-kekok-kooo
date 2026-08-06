@@ -8,7 +8,7 @@
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://www.youtube.com/iframe_api"></script>
 	<link
-		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Sawarabi+Gothic&family=Sawarabi+Mincho&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP&family=Sawarabi+Gothic&family=Sawarabi+Mincho&family=Yomogi&family=Zen+Maru+Gothic&display=swap"
 		rel="stylesheet">
 
 	<style>
@@ -1248,8 +1248,13 @@
 			readmeWidth: 1024,
 			readmeHeight: 768,
 			readmeFontSize: 20,
-			readmeBgColor: '#FDFBF7',
+			readmeBgColor: '#fdfbf7',
 			readmeFontFamily: "'Sawarabi Gothic', sans-serif"
+		};
+
+		let alarmSettings = {
+			time: 0,
+			vol: 0.5
 		};
 
 		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
@@ -1270,109 +1275,83 @@
 		let isMuted = false;
 		let previousVolume = 1;
 
+		// --- Web Audio API (アラーム音) ---
+		const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+		function playAlarmBeep(timeOffs, freq, vol) {
+			const osc = audioCtx.createOscillator();
+			const gain = audioCtx.createGain();
+			osc.type = 'sine'; // 正弦波に固定
+			osc.frequency.value = freq;
+			gain.gain.setValueAtTime(vol, audioCtx.currentTime + timeOffs);
+			gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + timeOffs + 0.2);
+			osc.connect(gain);
+			gain.connect(audioCtx.destination);
+			osc.start(audioCtx.currentTime + timeOffs);
+			osc.stop(audioCtx.currentTime + timeOffs + 0.25);
+		}
+
+		function playAlarm(overrideVol) {
+			if (audioCtx.state === 'suspended') audioCtx.resume();
+			const vol = overrideVol !== undefined ? overrideVol : alarmSettings.vol;
+			if (vol <= 0) return;
+
+			// ピ・ピ・ピッ と鳴らす
+			playAlarmBeep(0, 880, vol);
+			playAlarmBeep(0.2, 880, vol);
+			playAlarmBeep(0.4, 880, vol);
+		}
+
+		function getTextColorForBackground(hexColor) {
+			let hex = hexColor.replace('#', '');
+			if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]; // 短縮形の対応
+			const r = parseInt(hex.substr(0, 2), 16);
+			const g = parseInt(hex.substr(2, 2), 16);
+			const b = parseInt(hex.substr(4, 2), 16);
+			// 輝度（YIQ）を計算して文字色を判定
+			const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+			return (yiq >= 128) ? '#333333' : '#ffffff';
+		}
+
 		window.addEventListener('DOMContentLoaded', () => {
 			// フォルダ読み込み前はプレビュー枠をHDに固定
 			userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
+		});
 
-			// モーダルの DOM をここで作成しておく
-			const modalHtml = `
-			<div id="global-settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center;">
-				<div style="background:#fff; border-radius:10px; width:420px; max-width:90%; padding:18px; box-sizing:border-box;">
-					<h3 style="margin:0 0 10px 0; color:#007b5e;">README設定</h3>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label class="toggle-switch" style="flex:1;">
-							<input type="checkbox" id="readme-auto-switch">
-							<span class="toggle-slider"></span>
-							<span style="font-weight:600;">READMEのプレビューサイズを固定する</span>
-						</label>
-					</div>
-					<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-						<div style="display:flex; gap:8px; align-items:center; flex:1;">
-							<label style="width:80px;">W:</label><input id="readme-width-input" type="number" value="1024" style="width:80px; border:1px solid #eee; border-radius:20px; padding:6px 10px; text-align:center;">
-						</div>
-						<div style="display:flex; gap:8px; align-items:center; flex:1;">
-							<label style="width:80px;">H:</label><input id="readme-height-input" type="number" value="768" style="width:80px; border:1px solid #eee; border-radius:20px; padding:6px 10px; text-align:center;">
-						</div>
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label style="width:80px;">フォント (px)</label><input id="readme-fontsize-input" type="number" value="20" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-						<label style="width:80px;">背景色</label><input id="readme-bgcolor-input" type="color" value="#ffffff" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-						<label style="width:80px;">フォント</label>
-						<select id="readme-font-input" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
-							<option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
-							<option value="'Sawarabi Mincho', serif">さわらび明朝</option>
-							<option value=""Segoe UI", "Meiryo", sans-serif">標準フォント</option>
-						</select>
-					</div>
-					<div style="display:flex; justify-content:flex-end; gap:8px;">
-						<button id="global-settings-reset" class="control-btn">リセット</button>
-						<button id="global-settings-cancel" class="control-btn">キャンセル</button>
-						<button id="global-settings-save" class="control-btn done-btn">保存</button>
-					</div>
-				</div>
-			</div>`;
+		// --- index.htmlからの設定受信 ---
+		window.addEventListener('message', (event) => {
+			if (event.data && event.data.type === 'updatePreviewSettings') {
+				const s = event.data.settings;
+				if (s.readmeAuto !== undefined) globalSettings.readmeAuto = s.readmeAuto;
+				if (s.readmeWidth !== undefined) globalSettings.readmeWidth = s.readmeWidth;
+				if (s.readmeHeight !== undefined) globalSettings.readmeHeight = s.readmeHeight;
+				if (s.readmeFontSize !== undefined) globalSettings.readmeFontSize = s.readmeFontSize;
+				if (s.readmeBgColor !== undefined) globalSettings.readmeBgColor = s.readmeBgColor;
+				if (s.readmeFontFamily !== undefined) globalSettings.readmeFontFamily = s.readmeFontFamily;
+				if (s.alarmTime !== undefined) alarmSettings.time = s.alarmTime;
+				if (s.alarmVol !== undefined) alarmSettings.vol = s.alarmVol;
 
-			document.body.insertAdjacentHTML('beforeend', modalHtml);
-			globalSettingsModal = document.getElementById('global-settings-modal');
-			readmeAutoCheckbox = document.getElementById('readme-auto-switch');
-			readmeWidthInput = document.getElementById('readme-width-input');
-			readmeHeightInput = document.getElementById('readme-height-input');
-			readmeFontSizeInput = document.getElementById('readme-fontsize-input');
-			readmeBgColorInput = document.getElementById('readme-bgcolor-input');
-			readmeFontInput = document.getElementById('readme-font-input');
-			const readmeResetBtn = document.getElementById('global-settings-reset');
-
-			// 初期値を設定
-			readmeAutoCheckbox.checked = globalSettings.readmeAuto;
-			readmeWidthInput.value = globalSettings.readmeWidth;
-			readmeHeightInput.value = globalSettings.readmeHeight;
-			readmeFontSizeInput.value = globalSettings.readmeFontSize;
-			readmeBgColorInput.value = globalSettings.readmeBgColor;
-			readmeFontInput.value = globalSettings.readmeFontFamily;
-
-			// ボタン制御
-			if (readmeSettingsBtn) {
-				readmeSettingsBtn.addEventListener('click', () => {
-					if (!globalSettingsModal) return;
-					readmeAutoCheckbox.checked = globalSettings.readmeAuto;
-					readmeWidthInput.value = globalSettings.readmeWidth;
-					readmeHeightInput.value = globalSettings.readmeHeight;
-					readmeFontSizeInput.value = globalSettings.readmeFontSize;
-					readmeBgColorInput.value = globalSettings.readmeBgColor;
-					readmeFontInput.value = globalSettings.readmeFontFamily;
-					globalSettingsModal.style.display = 'flex';
-				});
-			}
-
-			document.getElementById('global-settings-cancel').addEventListener('click', () => { globalSettingsModal.style.display = 'none'; });
-			readmeResetBtn.addEventListener('click', () => {
-				readmeAutoCheckbox.checked = true;
-				readmeWidthInput.value = globalSettings.readmeWidth = 1024;
-				readmeHeightInput.value = globalSettings.readmeHeight = 768;
-				readmeFontSizeInput.value = globalSettings.readmeFontSize = 20;
-				readmeBgColorInput.value = globalSettings.readmeBgColor = '#FDFBF7';
-				readmeFontInput.value = globalSettings.readmeFontFamily = "'Sawarabi Gothic', sans-serif";
-			});
-			document.getElementById('global-settings-save').addEventListener('click', () => {
-				globalSettings.readmeAuto = !!readmeAutoCheckbox.checked;
-				globalSettings.readmeWidth = parseInt(readmeWidthInput.value) || 1024;
-				globalSettings.readmeHeight = parseInt(readmeHeightInput.value) || 768;
-				globalSettings.readmeFontSize = parseInt(readmeFontSizeInput.value) || 20;
-				globalSettings.readmeBgColor = readmeBgColorInput.value || '#ffffff';
-				globalSettings.readmeFontFamily = readmeFontInput.value || 'sans-serif';
-				globalSettingsModal.style.display = 'none';
-				// 現在選択中が README なら設定を即時反映
+				// 現在READMEを表示中であれば即時反映
 				const activeItem = document.querySelector('.list-item.active');
-				if (activeItem) activeItem.click();
-			});
-
-			// モーダル外クリックで閉じる
-			globalSettingsModal.addEventListener('click', (e) => { if (e.target === globalSettingsModal) globalSettingsModal.style.display = 'none'; });
+				if (activeItem && activeItem.textContent.toLowerCase().includes('readme')) {
+					if (globalSettings.readmeAuto) {
+						applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
+					} else {
+						restoreUserSize();
+					}
+					// フォント・背景も即時反映
+					const pre = contentLayer.querySelector('.text-preview-content');
+					if (pre) {
+						pre.style.backgroundColor = globalSettings.readmeBgColor;
+						pre.style.color = getTextColorForBackground(globalSettings.readmeBgColor);
+						pre.style.fontFamily = globalSettings.readmeFontFamily;
+						pre.style.fontSize = globalSettings.readmeFontSize + 'px';
+					}
+				}
+			} else if (event.data && event.data.type === 'testAlarm') {
+				playAlarm(event.data.volume);
+			}
 		});
 
 		function applySize(w, h, preset) {
@@ -1654,7 +1633,15 @@
 		function startTimer() {
 			clearInterval(timerInterval);
 			secondsElapsed = 0; updateTimerDisplay();
-			timerInterval = setInterval(() => { secondsElapsed++; updateTimerDisplay(); }, 1000);
+			timerInterval = setInterval(() => {
+				secondsElapsed++;
+				updateTimerDisplay();
+
+				// アラーム機能
+				if (alarmSettings.time > 0 && secondsElapsed === alarmSettings.time * 60) {
+					playAlarm();
+				}
+			}, 1000);
 		}
 		function updateTimerDisplay() {
 			const minutes = Math.floor(secondsElapsed / 60);
@@ -1972,8 +1959,9 @@
 						// README の場合はフォント・背景を適用
 						if (fileName.startsWith('readme')) {
 							pre.style.fontSize = (globalSettings.readmeFontSize || 20) + 'px';
-							pre.style.backgroundColor = globalSettings.readmeBgColor || '#ffffff';
-							pre.style.fontFamily = globalSettings.readmeFontFamily || 'sans-serif';
+							pre.style.backgroundColor = globalSettings.readmeBgColor || '#fdfbf7';
+							pre.style.color = getTextColorForBackground(globalSettings.readmeBgColor || '#fdfbf7');
+							pre.style.fontFamily = globalSettings.readmeFontFamily || "'Sawarabi Gothic', sans-serif";
 							if (globalSettings.readmeAuto) {
 								applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
 							}

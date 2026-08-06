@@ -478,8 +478,22 @@
 		const csvState = {
 			csvData: [], headers: [], hiddenColumns: new Set(), filenameColumns: [],
 			filenameOrder: [], currentIndex: 0, generatedFiles: [], deleteLogs: [],
-			tags: [], categoryHistory: new Set(), deletedUrls: {}
+			tags: [], categoryHistory: new Set(), deletedUrls: {},
+			settings: {
+				useFolderNumber: true,
+				useUrlDomain: true,
+				readmeHeadingStyle: 'hash'
+			}
 		};
+
+		// 親フレーム(index.html)からの設定受信
+		window.addEventListener('message', (event) => {
+			if (event.data && event.data.type === 'updateCsvSettings') {
+				csvState.settings = event.data.settings;
+				// 設定が変わったらプレビューを更新
+				updateCsvPreview();
+			}
+		});
 
 		const csvFileInput = document.getElementById('csv-file');
 
@@ -694,7 +708,9 @@
 				const cleanUrl = match.replace(/,+$/, ''); const trailing = match.substring(cleanUrl.length);
 				let domainStr = 'unknown';
 				try { const urlObj = new URL(cleanUrl); domainStr = urlObj.hostname.replace(/\./g, '-'); } catch (e) { }
-				const urlId = `URL-${String(currentCount).padStart(2, '0')}__${domainStr}`;
+				const urlId = csvState.settings.useUrlDomain
+					? `URL-${String(currentCount).padStart(2, '0')}__${domainStr}`
+					: `URL-${String(currentCount).padStart(2, '0')}`;
 				urls.push({ id: urlId, url: cleanUrl }); currentCount++;
 				return `[${urlId}]${trailing}`;
 			});
@@ -706,7 +722,17 @@
 			csvState.headers.forEach(header => {
 				const { text, urls, nextIndex } = processCsvTextAndExtractUrls(row[header], globalUrlCount);
 				extractedUrls = [...extractedUrls, ...urls]; globalUrlCount = nextIndex;
-				if (!csvState.hiddenColumns.has(header)) infoText += `# ${header}\n${text}\n\n`;
+				if (!csvState.hiddenColumns.has(header)) {
+					let headingText = "";
+					switch (csvState.settings.readmeHeadingStyle) {
+						case 'bracket': headingText = `【${header}】\n`; break;
+						case 'line': headingText = `―― ${header} ――\n`; break;
+						case 'none': headingText = `${header}\n`; break;
+						case 'hash':
+						default: headingText = `# ${header}\n`; break;
+					}
+					infoText += `${headingText}${text}\n\n`;
+				}
 			});
 			return { infoText, extractedUrls };
 		}
@@ -742,7 +768,8 @@
 			// カテゴリの反映
 			const tag = csvState.tags[csvState.currentIndex] || "";
 			const folderPrefix = tag ? `【${tag}】` : "";
-			const folderPath = `${folderPrefix}${formattedRowNum}-${safeTitle}`;
+			const numberPrefix = csvState.settings.useFolderNumber ? `${formattedRowNum}-` : "";
+			const folderPath = `${folderPrefix}${numberPrefix}${safeTitle}`;
 
 			if (document.activeElement !== csvTagInput) {
 				csvTagInput.value = tag;
@@ -897,7 +924,8 @@
 
 				const tag = csvState.tags[index] || "";
 				const folderPrefix = tag ? `【${tag}】` : "";
-				const folderName = `${folderPrefix}${formattedRowNum}-${safeTitle}`;
+				const numberPrefix = csvState.settings.useFolderNumber ? `${formattedRowNum}-` : "";
+				const folderName = `${folderPrefix}${numberPrefix}${safeTitle}`;
 
 				const folder = zip.folder(folderName);
 
