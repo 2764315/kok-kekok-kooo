@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta name="robots" content="noindex">
+	<meta charset="UTF-8">
+	<title>データプレビュー</title>
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<script src="https://www.youtube.com/iframe_api"></script>
+	<link
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP&family=Sawarabi+Gothic&family=Sawarabi+Mincho&family=Yomogi&family=Zen+Maru+Gothic&display=swap"
+		rel="stylesheet">
+	<!-- 分割したCSSを読み込み -->
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<!-- サイドバー -->
+	<div id="sidebar">
+		<div id="sidebar-header">
+			<div class="brand-logo">
+				<div class="brand-icon-box">
+					<i data-lucide="monitor-play" style="width: 20px; height: 20px;"></i>
+				</div>
+				<span class="brand-title">データプレビュー</span>
+			</div>
+			<button id="toggle-sidebar-btn" title="サイドバーを縮小する">
+				<i data-lucide="chevron-left" id="sidebar-chevron"></i>
+				<span class="toggle-text">閉じる</span>
+			</button>
+		</div>
+
+		<div id="sidebar-scroll-area">
+			<div class="hide-on-collapse sticky-top">
+				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+
+				<button id="load-btn">
+					<i data-lucide="folder-open"></i>フォルダを読み込む
+				</button>
+
+				<h3 style="margin-bottom: 4px;">発表リスト</h3>
+				<p id="drag-hint-text"
+					style="display: none; font-size: 11px; color: #666; margin: 0 0 10px 0; text-align: left;">
+					ドラッグで順番を変更できます。README.txtは先頭に配置されます。LOG.txtは表示されません。</p>
+			</div>
+
+			<div id="list-container" style="padding: 0 15px 15px 15px;">
+				<p class="hide-on-collapse" style="font-size: 13px; color: #555;">
+					上のボタンからフォルダを読み込むと、ここにリストが並びます。</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- メインプレビューエリア -->
+	<div id="main">
+		<div id="presentation-controls">
+			<div class="controls-group">
+				<button id="prev-btn" class="control-btn nav-btn">
+					<i data-lucide="arrow-left"></i>前へ
+				</button>
+				<button id="next-btn" class="control-btn nav-btn">
+					次へ<i data-lucide="arrow-right"></i>
+				</button>
+
+				<button id="activate-drawing-btn" class="control-btn" title="赤ペンを描画">
+					<i data-lucide="pen"></i>赤ペン
+				</button>
+
+				<button id="chromakey-btn" class="control-btn" title="クロマキー背景で表示する">
+					<i data-lucide="image"></i>クロマキー
+				</button>
+			</div>
+
+			<div id="size-inputs" class="panel-box">
+				<div class="volume-container">
+					<span id="volume-icon-wrapper" style="cursor: pointer; display: inline-flex; align-items: center;"
+						title="ミュート切替">
+						<i data-lucide="volume-2"></i>
+					</span>
+					<input type="range" id="volume-slider" min="0" max="1" step="0.05" value="1" title="音量調節">
+					<button id="rewind-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="5秒戻る">
+						<i data-lucide="rotate-ccw"></i>
+					</button>
+					<button id="forward-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
+						title="5秒進む">
+						<i data-lucide="rotate-cw"></i>
+					</button>
+					<button id="play-pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
+						title="再生">
+						<i data-lucide="play"></i>
+					</button>
+				</div>
+				<button id="fullscreen-btn" class="control-btn">
+					<i data-lucide="maximize"></i>全画面
+				</button>
+				<select id="size-selector" class="control-btn">
+					<option value="1920x1080">FHD (1920×1080)</option>
+					<option value="1280x720" selected>HD (1280×720)</option>
+					<option value="1024x768">XGA (1024×768)</option>
+					<option value="720x480">SD (720×480)</option>
+					<option value="640x480">VGA (640×480)</option>
+				</select>
+				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
+				<span>H:</span> <input type="number" id="input-height" value="720">
+
+			</div>
+		</div>
+
+		<div id="presentation-wrapper">
+			<div id="wrapper-header">
+				<div id="zoom-controls-container">
+					<button id="zoom-out-btn" class="control-btn" title="縮小"><i data-lucide="minus"></i></button>
+					<input type="range" id="zoom-slider" min="0.5" max="3.0" step="0.1" value="1.0"
+						style="width: 70px; accent-color: #A7E0CF; cursor: pointer;">
+					<span id="zoom-level-text">100%</span>
+					<button id="zoom-in-btn" class="control-btn" title="拡大"><i data-lucide="plus"></i></button>
+					<button id="zoom-reset-btn" class="control-btn" title="リセット"><i
+							data-lucide="zoom-in"></i>リセット</button>
+				</div>
+
+				<div id="timer-display-container">
+					<div class="analog-clock">
+						<div class="second-hand" id="second-hand"></div>
+					</div>
+					<span id="timer-text">0分</span>
+					<button id="toggle-timer-inline-btn" title="タイマーを隠す"><i data-lucide="eye"></i></button>
+				</div>
+			</div>
+
+			<div id="presentation-area">
+				<div id="zoom-wrapper">
+					<div id="content-layer">
+						<p id="empty-message" style="color: #888;">ここに発表が表示されます<br>OBSでキャプチャーしてください</p>
+					</div>
+					<canvas id="drawing-canvas"></canvas>
+				</div>
+			</div>
+
+			<a id="external-link-btn" href="#" target="_blank" style="display: none;" title="新規タブで開く">
+				<i data-lucide="external-link" style="width: 18px; height: 18px;"></i>
+				<span class="btn-text">新規タブで開く</span>
+			</a>
+
+
+
+			<div id="drawing-sidebar" style="display: none;">
+				<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン"><i data-lucide="pen"></i></button>
+				<button id="tool-eraser-btn" class="tool-btn" title="消しゴム"><i data-lucide="eraser"></i></button>
+				<div class="tool-divider"></div>
+				<button id="tool-thick-md" class="tool-btn active-tool" title="中サイズ">
+					<div style="width: 8px; height: 8px; background-color: #e74c3c; border-radius: 50%;"></div>
+				</button>
+				<button id="tool-thick-lg" class="tool-btn" title="大サイズ">
+					<div style="width: 16px; height: 16px; background-color: #e74c3c; border-radius: 50%;"></div>
+				</button>
+				<div class="tool-divider"></div>
+				<button id="tool-clear-btn" class="tool-btn" title="全消し"><i data-lucide="trash-2"></i></button>
+				<button id="tool-done-btn" class="done-btn">完了</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- 分割したJSを読み込み -->
+	<script src="js/data-preview.js"></script>
+
+</body>
+
+</html>

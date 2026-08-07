@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+	<meta name="robots" content="noindex">
+	<meta charset="UTF-8">
+	<title>フォルダ生成</title>
+	<script src="https://unpkg.com/lucide@latest"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+	<!-- 分割したCSSを読み込み -->
+	<link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+	<!-- サイドバー -->
+	<div id="csv-sidebar">
+		<div id="sidebar-header">
+			<div class="brand-logo">
+				<div class="brand-icon-box">
+					<i data-lucide="folder-plus" style="width: 20px; height: 20px;"></i>
+				</div>
+				<span class="brand-title">フォルダ生成</span>
+			</div>
+		</div>
+
+		<div id="csv-scroll-area">
+			<div class="sticky-top">
+				<label class="csv-btn csv-btn-yellow">
+					<i data-lucide="file-spreadsheet"></i> CSVを読み込む
+					<input type="file" id="csv-file" accept=".csv" class="hidden" />
+				</label>
+				<p id="csv-empty-hint" style="font-size: 13px; color: #555; margin: 12px 0 0 0; line-height: 1.4;">
+					CSVを読み込むと、ここに操作ボタンが表示されます
+				</p>
+			</div>
+
+			<div id="csv-controls" class="hidden" style="padding: 15px;">
+				<div class="csv-box">
+					<label class="csv-label">回答リスト</label>
+					<div style="display: flex; gap: 8px; align-items: center;">
+						<button id="csv-prev-btn" class="csv-icon-btn"><i data-lucide="chevron-left"
+								style="width:16px; height:16px;"></i></button>
+						<select id="csv-row-select" class="csv-select"></select>
+						<button id="csv-next-btn" class="csv-icon-btn"><i data-lucide="chevron-right"
+								style="width:16px; height:16px;"></i></button>
+					</div>
+				</div>
+
+				<div class="csv-box">
+					<label class="csv-label">非表示にする項目</label>
+					<p class="csv-note">配信に映したくない項目を非表示にします</p>
+					<div id="csv-column-checkboxes"></div>
+				</div>
+
+				<!-- カテゴリ設定エリア -->
+				<div class="csv-box">
+					<label class="csv-label">カテゴリ設定（任意）</label>
+					<p class="csv-note">フォルダの先頭に表示されます。ジャンル分け、発表順の整理、自分用のメモなどに使えます</p>
+					<input type="text" id="csv-tag-input" class="csv-select" placeholder="例：泥団子,◯日目,要連絡"
+						autocomplete="off">
+					<div id="category-history-container"
+						style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;"></div>
+				</div>
+
+				<div class="csv-box">
+					<button id="csv-filename-accordion-btn" class="csv-accordion-btn">
+						<span>ファイル名に含める項目</span>
+						<i data-lucide="chevron-down" id="csv-filename-accordion-icon"
+							style="transition: transform 0.2s;"></i>
+					</button>
+					<div id="csv-filename-accordion-content" class="hidden">
+						<p class="csv-note">複数選択可能／ドラッグで順序の入れ替え</p>
+						<div id="csv-filename-checkboxes"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="csv-download-area" class="hidden">
+			<button id="csv-download-btn" class="csv-btn csv-btn-green">
+				<i data-lucide="download"></i> ZIPをダウンロード
+			</button>
+		</div>
+	</div>
+
+	<!-- メインコンテンツエリア -->
+	<div id="csv-main-area">
+		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+			<h2 style="margin: 0; font-size: 18px; color: #333; display: flex; align-items: center; gap: 8px;">
+				<i data-lucide="folder" style="color: #007b5e;"></i>
+				<span id="csv-preview-folder-name">未選択</span>
+			</h2>
+		</div>
+
+		<div class="csv-preview-container">
+			<!-- XGAサイズ（1024x768）に固定されたカード -->
+			<div class="csv-card" style="width: 1024px; height: 768px; flex-shrink: 0;">
+				<div class="csv-card-header"><i data-lucide="file-text" style="width:16px; height:16px;"></i> ファイル内容
+				</div>
+				<div id="csv-preview-content">左側のメニューからCSVファイルをアップロードしてください</div>
+			</div>
+			<div class="csv-card" style="width: 300px; height: 768px; flex-shrink: 0;">
+				<div class="csv-card-header"><i data-lucide="list-tree" style="width:16px; height:16px;"></i> 生成ファイル構成
+				</div>
+				<div id="csv-tree-container">CSVアップロード後に表示されます</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="js/folder-generation.js"></script>
+
+</body>
+
+</html>
