@@ -486,30 +486,10 @@
 							</div>
 						</div>
 					</div>
-					<div class="tw-form-section">
-						<div class="tw-section-header">
-							<h3 id="section-title-folder" class="tw-section-title">URL表記設定</h3>
-						</div>
-						<div class="tw-grid">
-							<div class="tw-field tw-flex-between">
-								<div>
-									<label id="label-url-domain" class="tw-label"
-										style="margin-bottom:0;">URLの伏字にドメイン名を含める</label>
-									<div id="hint-url-domain" class="tw-hint">
-										リンク先がわかりやすくなります(例：URL-01＿_sample-com)<br>README.txtの伏字、各フォルダのURL.txtファイル名に反映されます
-									</div>
-								</div>
-								<label class="toggle-switch">
-									<input type="checkbox" id="setting-url-domain" checked>
-									<span class="toggle-slider"></span>
-								</label>
-							</div>
-						</div>
-					</div>
 
 					<div class="tw-form-section">
 						<div class="tw-section-header">
-							<h3 id="section-title-readme-csv" class="tw-section-title">README.txt設定</h3>
+							<h3 id="section-title-readme-csv" class="tw-section-title">READMEスタイル設定</h3>
 						</div>
 						<div class="tw-grid">
 							<div class="tw-field">
@@ -523,6 +503,19 @@
 									<option value="none">スタイルなし</option>
 								</select>
 							</div>
+							<div class="tw-field tw-flex-between">
+								<div>
+									<label id="label-url-domain" class="tw-label"
+										style="margin-bottom:0;">URLの伏せ字にドメインを付与する</label>
+									<div id="hint-url-domain" class="tw-hint">
+										リンク先がわかりやすくなります（例：URL-01＿_sample-com）<br>この設定は、出力するtxtファイルにも反映されます
+									</div>
+								</div>
+								<label class="toggle-switch">
+									<input type="checkbox" id="setting-url-domain" checked>
+									<span class="toggle-slider"></span>
+								</label>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -533,7 +526,7 @@
 					<!-- README Settings -->
 					<div class="tw-form-section">
 						<div class="tw-section-header">
-							<h3 id="section-title-readme-preview" class="tw-section-title">README.txt 表示設定</h3>
+							<h3 id="section-title-readme-preview" class="tw-section-title">README表示設定</h3>
 						</div>
 
 						<div class="tw-grid">
@@ -543,7 +536,7 @@
 									<label id="label-readme-auto" class="tw-label"
 										style="margin-bottom:0;">README.txtのプレビューサイズを固定する</label>
 									<div id="hint-readme-auto" class="tw-hint">
-										前置き説明と発表でシーン切り替えがあり、キャプチャーサイズが異なる時などに使用します</div>
+										シーン切り替えなどでキャプチャーサイズが異なる時などに使用します</div>
 								</div>
 								<label class="toggle-switch">
 									<input type="checkbox" id="setting-readme-auto" checked>

@@ -1849,9 +1849,9 @@
 			const isPreviewable = fileName.match(/\.(mp4|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
 
 			if (isOffice) {
-				addGroupWarning('Officeファイルあり');
+				addGroupWarning('Officeファイルはプレビューできません。以下の手順をお試しください。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
 			} else if (!isPreviewable) {
-				addGroupWarning('プレビュー不可');
+				addGroupWarning('プレビューできないファイルです。以下の手順で表示できる場合があります。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
 			}
 
 			if (fileName.endsWith('.txt')) {
@@ -1887,7 +1887,7 @@
 					}
 
 					if (containsTransfer) {
-						addGroupWarning('ダウンロード用URLの可能性あり');
+						addGroupWarning('ダウンロード用URLの可能性があります。以下の手順をお試しください。1.URLからファイルをダウンロードする 2.このtxtファイルを削除する 3.ダウンロードしたデータをフォルダに保存する 4.再度フォルダを読み込む');
 					} else {
 						if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
 							addGroupWarning('新規タブの閲覧を推奨');
@@ -2032,11 +2032,11 @@
 				const img = document.createElement('img'); img.src = fileURL; contentLayer.appendChild(img);
 			} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
 				const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "";
-				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ブラウザの仕様により、パソコン内のPowerPoint、Excel、Wordファイルは表示できません。<br><strong>PDF形式に変換する</strong>か、GoogleドライブやSharePointで共有リンクを発行し、<br><strong>新規テキストファイル（.txt）にURLを貼り付けて読み込んでください。</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの注意案内をご確認ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 				lucide.createIcons({ root: contentLayer });
 			} else {
 				const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">Googleドライブに保存して共有リンクを発行し、<br>新規テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの注意案内をご確認ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 				lucide.createIcons({ root: contentLayer });
 			}
 		}
