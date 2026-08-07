@@ -8,7 +8,7 @@
 	<script src="https://unpkg.com/lucide@latest"></script>
 	<script src="https://www.youtube.com/iframe_api"></script>
 	<link
-		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Sawarabi+Gothic&family=Sawarabi+Mincho&display=swap"
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP&family=Sawarabi+Gothic&family=Sawarabi+Mincho&family=Yomogi&family=Zen+Maru+Gothic&display=swap"
 		rel="stylesheet">
 
 	<style>
@@ -264,7 +264,6 @@
 			background-color: rgba(255, 255, 255, 0.8);
 		}
 
-		/* 変更点：グループを閉じた際に .group-warnings も非表示にする */
 		.group-container.collapsed-group .list-item,
 		.group-container.collapsed-group .sub-group-title,
 		.group-container.collapsed-group .group-warnings {
@@ -387,11 +386,10 @@
 			transform: translateY(-1px);
 		}
 
-		/* 変更点：アクティブ時の背景色を薄い青色に変更 */
 		.list-item.active {
 			background-color: rgba(241, 207, 15, 0.4);
 			color: #333;
-			border-color: #F1CF0F;
+			border-color: #f1cf0f;
 			font-weight: normal;
 			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
 		}
@@ -1073,11 +1071,6 @@
 				<span style="margin-left: 5px;">W:</span> <input type="number" id="input-width" value="1280"> x
 				<span>H:</span> <input type="number" id="input-height" value="720">
 
-				<span id="readme-settings-btn"
-					style="margin-left:8px; display:inline-flex; align-items:center; gap:4px; cursor:pointer; border:none; box-shadow:none; background:none; color:#555; padding:0;">
-					<i data-lucide="settings" style="width:16px;height:16px;"></i>
-					<span style="font-weight:600;">README設定</span>
-				</span>
 			</div>
 		</div>
 
@@ -1202,18 +1195,14 @@
 			readmeWidth: 1024,
 			readmeHeight: 768,
 			readmeFontSize: 20,
-			readmeBgColor: '#FDFBF7',
+			readmeBgColor: '#fdfbf7',
 			readmeFontFamily: "'Sawarabi Gothic', sans-serif"
 		};
 
-		// モーダル要素は後で DOM に追加するため、参照は変数で扱う
-		let globalSettingsModal = null;
-		let readmeAutoCheckbox = null;
-		let readmeWidthInput = null;
-		let readmeHeightInput = null;
-		let readmeFontSizeInput = null;
-		let readmeBgColorInput = null;
-		let readmeFontInput = null;
+		let alarmSettings = {
+			time: 0,
+			vol: 0.5
+		};
 
 		const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
 		const volumeSlider = document.getElementById('volume-slider');
@@ -1286,103 +1275,6 @@
 			// フォルダ読み込み前はプレビュー枠をHDに固定
 			userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
 			applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
-
-			// モーダルの DOM をここで作成しておく
-			const modalHtml = `
-			<div id="global-settings-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; justify-content:center; align-items:center;">
-				<div style="background:#fff; border-radius:10px; width:420px; max-width:90%; padding:18px; box-sizing:border-box;">
-					<h3 style="margin:0 0 10px 0; color:#007b5e;">README設定</h3>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label class="toggle-switch" style="flex:1;">
-							<input type="checkbox" id="readme-auto-switch">
-							<span class="toggle-slider"></span>
-							<span style="font-weight:600;">READMEのプレビューサイズを固定する</span>
-						</label>
-					</div>
-					<div style="display:flex; gap:12px; align-items:center; margin-bottom:8px;">
-						<div style="display:flex; gap:8px; align-items:center; flex:1;">
-							<label style="width:80px;">W:</label><input id="readme-width-input" type="number" value="1024" style="width:80px; border:1px solid #eee; border-radius:20px; padding:6px 10px; text-align:center;">
-						</div>
-						<div style="display:flex; gap:8px; align-items:center; flex:1;">
-							<label style="width:80px;">H:</label><input id="readme-height-input" type="number" value="768" style="width:80px; border:1px solid #eee; border-radius:20px; padding:6px 10px; text-align:center;">
-						</div>
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
-						<label style="width:80px;">フォント (px)</label><input id="readme-fontsize-input" type="number" value="20" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-						<label style="width:80px;">背景色</label><input id="readme-bgcolor-input" type="color" value="#ffffff" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
-					</div>
-					<div style="display:flex; gap:8px; align-items:center; margin-bottom:12px;">
-						<label style="width:80px;">フォント</label>
-						<select id="readme-font-input" style="flex:1; padding:6px 10px; border:1px solid #ccc; border-radius:6px; min-width:0;">
-							<option value="'Sawarabi Gothic', sans-serif">さわらびゴシック</option>
-							<option value="'Sawarabi Mincho', serif">さわらび明朝</option>
-							<option value="\"Segoe UI\", \"Meiryo\", sans-serif">標準フォント</option>
-						</select>
-					</div>
-					<div style="display:flex; justify-content:flex-end; gap:8px;">
-						<button id="global-settings-reset" class="control-btn">リセット</button>
-						<button id="global-settings-cancel" class="control-btn">キャンセル</button>
-						<button id="global-settings-save" class="control-btn done-btn">保存</button>
-					</div>
-				</div>
-			</div>`;
-
-			document.body.insertAdjacentHTML('beforeend', modalHtml);
-			globalSettingsModal = document.getElementById('global-settings-modal');
-			readmeAutoCheckbox = document.getElementById('readme-auto-switch');
-			readmeWidthInput = document.getElementById('readme-width-input');
-			readmeHeightInput = document.getElementById('readme-height-input');
-			readmeFontSizeInput = document.getElementById('readme-fontsize-input');
-			readmeBgColorInput = document.getElementById('readme-bgcolor-input');
-			readmeFontInput = document.getElementById('readme-font-input');
-			const readmeResetBtn = document.getElementById('global-settings-reset');
-
-			// 初期値を設定
-			readmeAutoCheckbox.checked = globalSettings.readmeAuto;
-			readmeWidthInput.value = globalSettings.readmeWidth;
-			readmeHeightInput.value = globalSettings.readmeHeight;
-			readmeFontSizeInput.value = globalSettings.readmeFontSize;
-			readmeBgColorInput.value = globalSettings.readmeBgColor;
-			readmeFontInput.value = globalSettings.readmeFontFamily;
-
-			// ボタン制御
-			readmeSettingsBtn.addEventListener('click', () => {
-				if (!globalSettingsModal) return;
-				readmeAutoCheckbox.checked = globalSettings.readmeAuto;
-				readmeWidthInput.value = globalSettings.readmeWidth;
-				readmeHeightInput.value = globalSettings.readmeHeight;
-				readmeFontSizeInput.value = globalSettings.readmeFontSize;
-				readmeBgColorInput.value = globalSettings.readmeBgColor;
-				readmeFontInput.value = globalSettings.readmeFontFamily;
-				globalSettingsModal.style.display = 'flex';
-			});
-
-			document.getElementById('global-settings-cancel').addEventListener('click', () => { globalSettingsModal.style.display = 'none'; });
-			readmeResetBtn.addEventListener('click', () => {
-				readmeAutoCheckbox.checked = true;
-				readmeWidthInput.value = globalSettings.readmeWidth = 1024;
-				readmeHeightInput.value = globalSettings.readmeHeight = 768;
-				readmeFontSizeInput.value = globalSettings.readmeFontSize = 20;
-				readmeBgColorInput.value = globalSettings.readmeBgColor = '#FDFBF7';
-				readmeFontInput.value = globalSettings.readmeFontFamily = "'Sawarabi Gothic', sans-serif";
-			});
-			document.getElementById('global-settings-save').addEventListener('click', () => {
-				globalSettings.readmeAuto = !!readmeAutoCheckbox.checked;
-				globalSettings.readmeWidth = parseInt(readmeWidthInput.value) || 1024;
-				globalSettings.readmeHeight = parseInt(readmeHeightInput.value) || 768;
-				globalSettings.readmeFontSize = parseInt(readmeFontSizeInput.value) || 20;
-				globalSettings.readmeBgColor = readmeBgColorInput.value || '#ffffff';
-				globalSettings.readmeFontFamily = readmeFontInput.value || 'sans-serif';
-				globalSettingsModal.style.display = 'none';
-				// 現在選択中が README なら設定を即時反映
-				const activeItem = document.querySelector('.list-item.active');
-				if (activeItem) activeItem.click();
-			});
-
-			// モーダル外クリックで閉じる
-			globalSettingsModal.addEventListener('click', (e) => { if (e.target === globalSettingsModal) globalSettingsModal.style.display = 'none'; });
 		});
 
 		// --- index.htmlからの設定受信 ---
@@ -1822,7 +1714,6 @@
 				return nameA.localeCompare(nameB);
 			});
 
-			// グループごとにファイルを収集し、グループ内で README を先頭にしてから描画する
 			const groupsMap = new Map();
 			const groupOrder = [];
 			validFiles.forEach(file => {
@@ -1844,11 +1735,10 @@
 				else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) fileIcon = "image";
 				else if (fileName.match(/\.(txt|pdf)$/)) fileIcon = "file-text";
 				else if (fileName.match(/\.(html|htm)$/)) fileIcon = "globe";
-				else { fileIcon = "alert-circle"; iconColorStyle = "color: #e74c3c;"; }
+				else { fileIcon = "file-text"; iconColorStyle = "color: #e74c3c;"; }
 				groupsMap.get(key).files.push({ file, fileIcon, iconColorStyle });
 			});
 
-			// グループ順に要素を作成
 			groupOrder.forEach(key => {
 				const groupInfo = groupsMap.get(key);
 				const mainGroupName = groupInfo.mainGroupName;
@@ -1873,14 +1763,13 @@
 				});
 				currentGroupContainer.appendChild(groupTitle);
 				setupGroupDragAndDrop(currentGroupContainer);
-				// サブグループタイトル
+
 				if (subGroupName && subGroupName !== "") {
 					const subGroupTitle = document.createElement('div'); subGroupTitle.className = 'sub-group-title';
 					subGroupTitle.innerHTML = `<i data-lucide="corner-down-right" style="width:14px;height:14px;"></i> ${subGroupName}`;
 					currentGroupContainer.appendChild(subGroupTitle);
 				}
 
-				// グループ内ファイルは README を先頭にソートしてから追加
 				groupInfo.files.sort((a, b) => {
 					const aReadme = a.file.name.toLowerCase().startsWith('readme');
 					const bReadme = b.file.name.toLowerCase().startsWith('readme');
@@ -1974,34 +1863,35 @@
 					const sharedDomains = ['gigafile.nu', 'gigafile.jp', 'xgf.nu', 'datadeliver.net', 'dtbn.jp', 'firestorage.jp', 'xfs.jp', 'tenpu.me', 'ac-data.info', 'okurin.bitpark.co.jp', 'delifile.link'];
 					const containsDriveFolder = /drive\.google\.com\/drive\/folders\//i.test(text);
 					const containsTransfer = sharedDomains.some(d => text.indexOf(d) !== -1);
-					// If text is a single URL, expose external link button
+
+					// --- 修正箇所：isKnownEmbeddable の正規表現に spreadsheets と document を追加 ---
+					const isKnownEmbeddable = /docs\.google\.com\/(presentation|spreadsheets|document)\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
+					// ---------------------------------------------------------------------
+
 					if (/^https?:\/\/\S+$/.test(text)) {
 						if (actionBtn) { actionBtn.href = text; actionBtn.style.display = 'flex'; }
 					}
 					if (iconSpan) {
-						// Drive folder links and transfer services should be highlighted
 						if (containsDriveFolder || containsTransfer) {
-							iconSpan.innerHTML = '<i data-lucide="alert-circle" style="width:18px;height:18px;color:#e74c3c;"></i>';
+							iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#e74c3c;"></i>';
 						} else {
-							const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
-							if (isKnownEmbeddable) iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#333;"></i>';
-							else iconSpan.innerHTML = '<i data-lucide="file-text" style="width:18px;height:18px;color:#333;"></i>';
+							if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
+								iconSpan.innerHTML = '<i data-lucide="globe" style="width:18px;height:18px;color:#f39c12;"></i>';
+							} else if (isKnownEmbeddable) {
+								iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#333;"></i>';
+							} else {
+								iconSpan.innerHTML = '<i data-lucide="file-text" style="width:18px;height:18px;color:#333;"></i>';
+							}
 						}
 						lucide.createIcons({ root: iconSpan });
 					}
 
-					// If a file-transfer service URL exists in this group's files, add a small notice under the group
 					if (containsTransfer) {
-						try {
-							const groupEl = container.closest('.group-container') || container;
-							if (groupEl && !groupEl.querySelector('.group-transfer-note')) {
-								const p = document.createElement('p');
-								p.className = 'group-transfer-note';
-								p.style.cssText = 'font-size:11px; color:#e74c3c; margin:6px 12px 0 12px; line-height:1.2;';
-								p.textContent = 'ファイル転送サービスのURLが含まれています。リンク先の確認と、フォルダの反映をおすすめします。';
-								groupEl.appendChild(p);
-							}
-						} catch (err) { console.error(err); }
+						addGroupWarning('ダウンロード用URLの可能性あり');
+					} else {
+						if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
+							addGroupWarning('新規タブの閲覧を推奨');
+						}
 					}
 				};
 				reader.readAsText(file);
@@ -2081,20 +1971,46 @@
 						if (iframe) { iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; if (iframe.hasAttribute('allow')) iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, '')); }
 					} else if (/^https?:\/\/\S+$/.test(text)) {
 						let iframeSrc = text; let isKnownEmbeddable = false;
-						if (iframeSrc.includes('[docs.google.com/presentation/d/](https://docs.google.com/presentation/d/)')) {
-							if (iframeSrc.includes('/pub')) iframeSrc = iframeSrc.replace(/\/pub.*/, '/embed?rm=minimal');
-							else if (!iframeSrc.includes('/embed')) { const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/); if (match && match[1] !== 'e') iframeSrc = `[https://docs.google.com/presentation/d/$](https://docs.google.com/presentation/d/$){match[1]}/embed?rm=minimal`; }
+
+						// --- 修正箇所：ドキュメントとスプレッドシートの埋め込み処理を追加 ---
+						if (iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//)) {
+							const typeMatch = iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//);
+							const docType = typeMatch[1];
+
+							if (iframeSrc.includes('/pub')) {
+								if (docType === 'presentation') {
+									iframeSrc = iframeSrc.replace(/\/pub.*/, '/embed?rm=minimal');
+								} else if (docType === 'spreadsheets') {
+									iframeSrc = iframeSrc.includes('/pubhtml')
+										? iframeSrc.replace(/\/pubhtml.*/, '/pubhtml?widget=true&headers=false')
+										: iframeSrc.replace(/\/pub.*/, '/pubhtml?widget=true&headers=false');
+								} else if (docType === 'document') {
+									iframeSrc = iframeSrc.replace(/\/pub.*/, '/pub?embedded=true');
+								}
+							} else if (!iframeSrc.includes('/embed') && !iframeSrc.includes('/preview')) {
+								const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/);
+								if (match && match[1] !== 'e') {
+									if (docType === 'presentation') {
+										iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`;
+									} else {
+										// ドキュメントやスプレッドシートは /preview でプレビュー表示が可能
+										iframeSrc = `https://docs.google.com/${docType}/d/${match[1]}/preview`;
+									}
+								}
+							}
 							isKnownEmbeddable = true;
 						}
+						// -----------------------------------------------------------------
 						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
 							try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); isKnownEmbeddable = true; } catch (e) { console.error(e); }
 						}
-						else if (iframeSrc.includes('[drive.google.com/open?id=](https://drive.google.com/open?id=)')) {
-							try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `[https://drive.google.com/file/d/$](https://drive.google.com/file/d/$){fileId}/preview`; isKnownEmbeddable = true; } } catch (e) { console.error(e); }
+						else if (iframeSrc.includes('drive.google.com/open?id=')) {
+							try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; isKnownEmbeddable = true; } } catch (e) { console.error(e); }
 						}
-						else if (iframeSrc.includes('[drive.google.com/file/d/](https://drive.google.com/file/d/)')) {
+						else if (iframeSrc.includes('drive.google.com/file/d/')) {
 							const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; isKnownEmbeddable = true; }
 						}
+
 						contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
 						externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 					} else {
@@ -2102,8 +2018,9 @@
 						// README の場合はフォント・背景を適用
 						if (fileName.startsWith('readme')) {
 							pre.style.fontSize = (globalSettings.readmeFontSize || 20) + 'px';
-							pre.style.backgroundColor = globalSettings.readmeBgColor || '#ffffff';
-							pre.style.fontFamily = globalSettings.readmeFontFamily || 'sans-serif';
+							pre.style.backgroundColor = globalSettings.readmeBgColor || '#fdfbf7';
+							pre.style.color = getTextColorForBackground(globalSettings.readmeBgColor || '#fdfbf7');
+							pre.style.fontFamily = globalSettings.readmeFontFamily || "'Sawarabi Gothic', sans-serif";
 							if (globalSettings.readmeAuto) {
 								applySize(globalSettings.readmeWidth, globalSettings.readmeHeight, `${globalSettings.readmeWidth}x${globalSettings.readmeHeight}`);
 							}
@@ -2119,7 +2036,7 @@
 				lucide.createIcons({ root: contentLayer });
 			} else {
 				const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">Googleドライブに保存して共有リンクを発行し、<br>テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+				contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">Googleドライブに保存して共有リンクを発行し、<br>新規テキストファイル（.txt）にURLを貼り付けて読み込むと表示できる場合があります。</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 				lucide.createIcons({ root: contentLayer });
 			}
 		}
