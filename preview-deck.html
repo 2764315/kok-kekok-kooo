@@ -202,10 +202,6 @@
 			background-color: #00FF00 !important;
 		}
 
-		body.chromakey-mode #url-warning {
-			display: none !important;
-		}
-
 		#sidebar-scroll-area {
 			flex-grow: 1;
 			overflow-y: auto;
@@ -268,8 +264,10 @@
 			background-color: rgba(255, 255, 255, 0.8);
 		}
 
+		/* 変更点：グループを閉じた際に .group-warnings も非表示にする */
 		.group-container.collapsed-group .list-item,
-		.group-container.collapsed-group .sub-group-title {
+		.group-container.collapsed-group .sub-group-title,
+		.group-container.collapsed-group .group-warnings {
 			display: none !important;
 		}
 
@@ -389,10 +387,11 @@
 			transform: translateY(-1px);
 		}
 
+		/* 変更点：アクティブ時の背景色を薄い青色に変更 */
 		.list-item.active {
-			background-color: #F1CF0F;
+			background-color: rgba(241, 207, 15, 0.4);
 			color: #333;
-			border-color: #dcb800;
+			border-color: #F1CF0F;
 			font-weight: normal;
 			box-shadow: 0 2px 5px rgba(241, 207, 15, 0.4);
 		}
@@ -764,6 +763,7 @@
 		}
 
 		#presentation-area {
+			box-sizing: content-box;
 			width: 1280px;
 			height: 720px;
 			max-width: 1920px;
@@ -981,50 +981,6 @@
 			font-size: 12px;
 			letter-spacing: 2px;
 		}
-
-		#url-warning {
-			position: absolute;
-			top: 220px;
-			right: -36px;
-			width: 36px;
-			background-color: #ffffff;
-			border: 2px solid #A7E0CF;
-			border-left: none;
-			border-radius: 0 8px 8px 0;
-			padding: 10px 0;
-			color: #333;
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			z-index: 60;
-			box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
-			cursor: pointer;
-			box-sizing: border-box;
-			transition: background-color 0.2s;
-		}
-
-		#url-warning:hover {
-			background-color: #fdf5f5;
-		}
-
-		#url-warning .warning-text {
-			writing-mode: vertical-rl;
-			text-orientation: upright;
-			font-size: 11px;
-			letter-spacing: 1px;
-			opacity: 0;
-			max-height: 0;
-			overflow: hidden;
-			transition: opacity 0.2s ease, max-height 0.3s ease, margin-top 0.3s ease;
-			pointer-events: none;
-		}
-
-		#url-warning.expanded .warning-text {
-			opacity: 1;
-			max-height: 400px;
-			margin-top: 8px;
-			transition-delay: 0.1s;
-		}
 	</style>
 </head>
 
@@ -1099,11 +1055,9 @@
 						title="5秒進む">
 						<i data-lucide="rotate-cw"></i>
 					</button>
-					<button id="play-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="再生">
+					<button id="play-pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;"
+						title="再生">
 						<i data-lucide="play"></i>
-					</button>
-					<button id="pause-btn" class="control-btn" style="padding: 2px 8px; font-size: 11px;" title="停止">
-						<i data-lucide="pause"></i>
 					</button>
 				</div>
 				<button id="fullscreen-btn" class="control-btn">
@@ -1157,10 +1111,7 @@
 				<span class="btn-text">新規タブで開く</span>
 			</a>
 
-			<div id="url-warning" style="display: none;" title="警告（クリックで詳細を表示）">
-				<i data-lucide="alert-circle" style="width: 18px; height: 18px; color: #e74c3c; margin: 0;"></i>
-				<span class="warning-text">正常に表示・操作できない場合、新規タブで開いてください</span>
-			</div>
+
 
 			<div id="drawing-sidebar" style="display: none;">
 				<button id="tool-pen-btn" class="tool-btn active-tool" title="赤ペン"><i data-lucide="pen"></i></button>
@@ -1194,8 +1145,6 @@
 		const emptyMessage = document.getElementById('empty-message');
 		const presentationControls = document.getElementById('presentation-controls');
 
-		const urlWarning = document.getElementById('url-warning');
-		urlWarning.addEventListener('click', () => { urlWarning.classList.toggle('expanded'); });
 		const externalLinkBtn = document.getElementById('external-link-btn');
 		const toggleSidebarBtn = document.getElementById('toggle-sidebar-btn');
 		const sidebar = document.getElementById('sidebar');
@@ -1261,8 +1210,8 @@
 		const volumeSlider = document.getElementById('volume-slider');
 		const rewindBtn = document.getElementById('rewind-btn');
 		const forwardBtn = document.getElementById('forward-btn');
-		const playBtn = document.getElementById('play-btn');
-		const pauseBtn = document.getElementById('pause-btn');
+		const playPauseBtn = document.getElementById('play-pause-btn');
+		let isPlaying = false;
 
 		const timerDisplayContainer = document.getElementById('timer-display-container');
 		const toggleTimerInlineBtn = document.getElementById('toggle-timer-inline-btn');
@@ -1281,25 +1230,36 @@
 		function playAlarmBeep(timeOffs, freq, vol) {
 			const osc = audioCtx.createOscillator();
 			const gain = audioCtx.createGain();
-			osc.type = 'sine'; // 正弦波に固定
+			osc.type = 'sine';
 			osc.frequency.value = freq;
-			gain.gain.setValueAtTime(vol, audioCtx.currentTime + timeOffs);
-			gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + timeOffs + 0.2);
+
+			const startTime = audioCtx.currentTime + timeOffs;
+
+			// アタックとリリースの調整（プツッというノイズを防ぐ）
+			gain.gain.setValueAtTime(0, startTime);
+			gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
+			gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.18);
+
 			osc.connect(gain);
 			gain.connect(audioCtx.destination);
-			osc.start(audioCtx.currentTime + timeOffs);
-			osc.stop(audioCtx.currentTime + timeOffs + 0.25);
+
+			osc.start(startTime);
+			osc.stop(startTime + 0.2);
 		}
 
 		function playAlarm(overrideVol) {
 			if (audioCtx.state === 'suspended') audioCtx.resume();
-			const vol = overrideVol !== undefined ? overrideVol : alarmSettings.vol;
+			let vol = overrideVol !== undefined ? overrideVol : alarmSettings.vol;
 			if (vol <= 0) return;
 
-			// ピ・ピ・ピッ と鳴らす
-			playAlarmBeep(0, 880, vol);
+			// 音量を少し上げるための係数 (標準50%でも聞こえやすくする)
+			vol = Math.min(vol * 1.5, 1.0);
+
+			// ピ・ピ・ピ・ピッ と4回鳴らす (間隔は0.2秒)
+			playAlarmBeep(0.0, 880, vol);
 			playAlarmBeep(0.2, 880, vol);
 			playAlarmBeep(0.4, 880, vol);
+			playAlarmBeep(0.6, 880, vol);
 		}
 
 		function getTextColorForBackground(hexColor) {
@@ -1349,8 +1309,6 @@
 						pre.style.fontSize = globalSettings.readmeFontSize + 'px';
 					}
 				}
-			} else if (event.data && event.data.type === 'testAlarm') {
-				playAlarm(event.data.volume);
 			}
 		});
 
@@ -1396,8 +1354,6 @@
 		const resizeObserver = new ResizeObserver(entries => {
 			for (let entry of entries) {
 				const width = presentationArea.offsetWidth;
-				// CSS側で width: 100% と justify-content: center を指定したため、JSでの固定幅付与は廃止
-				// presentationControls.style.width = `${width}px`;
 
 				const contentWidth = Math.round(entry.contentRect.width);
 				const contentHeight = Math.round(entry.contentRect.height);
@@ -1621,28 +1577,66 @@
 			if (video) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 5);
 			if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function') ytPlayer.seekTo(Math.min(ytPlayer.getDuration(), ytPlayer.getCurrentTime() + 5), true);
 		});
-		playBtn.addEventListener('click', () => {
-			const video = contentLayer.querySelector('video'); if (video) video.play();
-			if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
-		});
-		pauseBtn.addEventListener('click', () => {
-			const video = contentLayer.querySelector('video'); if (video) video.pause();
-			if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+		function updatePlayPauseUI(playing) {
+			isPlaying = playing;
+			if (isPlaying) {
+				playPauseBtn.innerHTML = '<i data-lucide="pause"></i>';
+				playPauseBtn.title = '停止';
+			} else {
+				playPauseBtn.innerHTML = '<i data-lucide="play"></i>';
+				playPauseBtn.title = '再生';
+			}
+			lucide.createIcons({ root: playPauseBtn });
+		}
+
+		playPauseBtn.addEventListener('click', () => {
+			const video = contentLayer.querySelector('video');
+			if (isPlaying) {
+				if (video) video.pause();
+				if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
+				updatePlayPauseUI(false);
+			} else {
+				if (video) video.play();
+				if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
+				updatePlayPauseUI(true);
+			}
 		});
 
 		function startTimer() {
 			clearInterval(timerInterval);
-			secondsElapsed = 0; updateTimerDisplay();
+			secondsElapsed = 0;
+			updateTimerDisplay();
+
+			// ユーザー操作時に確実にAudioContextをアクティブにする
+			if (audioCtx.state === 'suspended') {
+				audioCtx.resume();
+			}
+
+			const startTimeMs = Date.now();
+			let alarmTriggered = false;
+
 			timerInterval = setInterval(() => {
-				secondsElapsed++;
+				// バックグラウンドでタブが休止状態になっても正確に時間を測るため Date.now() を使用
+				secondsElapsed = Math.floor((Date.now() - startTimeMs) / 1000);
 				updateTimerDisplay();
 
 				// アラーム機能
-				if (alarmSettings.time > 0 && secondsElapsed === alarmSettings.time * 60) {
-					playAlarm();
+				if (alarmSettings.time > 0 && !alarmTriggered) {
+					const targetSeconds = alarmSettings.time * 60;
+					if (secondsElapsed >= targetSeconds) {
+						playAlarm();
+						alarmTriggered = true;
+					}
 				}
 			}, 1000);
 		}
+
+		// 念のため、画面内クリック時にもAudioContextをアンロック
+		document.addEventListener('click', () => {
+			if (audioCtx && audioCtx.state === 'suspended') {
+				audioCtx.resume();
+			}
+		});
 		function updateTimerDisplay() {
 			const minutes = Math.floor(secondsElapsed / 60);
 			timerText.innerText = `${minutes}分`;
@@ -1704,9 +1698,6 @@
 			activeGroupName = "";
 			clearInterval(timerInterval); secondsElapsed = 0; updateTimerDisplay();
 
-			// ----------------------------------------------------
-			// ★ LOG.txt をリストから除外するようにフィルターを修正
-			// ----------------------------------------------------
 			const validFiles = files.filter(file => !file.name.startsWith('.') && file.name.toLowerCase() !== 'log.txt');
 
 			if (validFiles.length > 0) document.getElementById('drag-hint-text').style.display = 'block';
@@ -1725,7 +1716,6 @@
 				return nameA.localeCompare(nameB);
 			});
 
-			// グループごとにファイルを収集し、グループ内で README を先頭にしてから描画する
 			const groupsMap = new Map();
 			const groupOrder = [];
 			validFiles.forEach(file => {
@@ -1745,13 +1735,12 @@
 				const fileName = file.name.toLowerCase();
 				if (fileName.endsWith('.mp4')) fileIcon = "film";
 				else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) fileIcon = "image";
-				else if (fileName.endsWith('.txt') || fileName.endsWith('.pdf')) fileIcon = "file-text";
+				else if (fileName.match(/\.(txt|pdf)$/)) fileIcon = "file-text";
 				else if (fileName.match(/\.(html|htm)$/)) fileIcon = "globe";
-				else { fileIcon = "alert-circle"; iconColorStyle = "color: #e74c3c;"; }
+				else { fileIcon = "file-text"; iconColorStyle = "color: #e74c3c;"; } // アラートからファイルアイコン（赤色）へ変更
 				groupsMap.get(key).files.push({ file, fileIcon, iconColorStyle });
 			});
 
-			// グループ順に要素を作成
 			groupOrder.forEach(key => {
 				const groupInfo = groupsMap.get(key);
 				const mainGroupName = groupInfo.mainGroupName;
@@ -1776,14 +1765,13 @@
 				});
 				currentGroupContainer.appendChild(groupTitle);
 				setupGroupDragAndDrop(currentGroupContainer);
-				// サブグループタイトル
+
 				if (subGroupName && subGroupName !== "") {
 					const subGroupTitle = document.createElement('div'); subGroupTitle.className = 'sub-group-title';
 					subGroupTitle.innerHTML = `<i data-lucide="corner-down-right" style="width:14px;height:14px;"></i> ${subGroupName}`;
 					currentGroupContainer.appendChild(subGroupTitle);
 				}
 
-				// グループ内ファイルは README を先頭にソートしてから追加
 				groupInfo.files.sort((a, b) => {
 					const aReadme = a.file.name.toLowerCase().startsWith('readme');
 					const bReadme = b.file.name.toLowerCase().startsWith('readme');
@@ -1824,10 +1812,51 @@
 			button.className = 'list-item';
 			if (isSubItem) button.classList.add('is-sub-item');
 			button.innerHTML = `<span class="item-icon"><i data-lucide="${fileIcon}" style="width:18px;height:18px; ${iconColorStyle}"></i></span><span class="item-text">${file.name}</span>
-				<a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
+			<a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
 			button.title = file.name;
 
-			if (file.name.toLowerCase().endsWith('.txt')) {
+			const addGroupWarning = (text) => {
+				try {
+					const groupEl = container.closest('.group-container') || container;
+					if (!groupEl) return;
+
+					let warningEl = groupEl.querySelector('.group-warnings');
+					if (!warningEl) {
+						warningEl = document.createElement('details');
+						warningEl.className = 'group-warnings';
+						warningEl.style.cssText = 'font-size:11px; color:rgb(102, 102, 102); margin:4px 12px 6px 12px; line-height:1.4;';
+						warningEl.innerHTML = '<summary style="cursor:pointer; outline:none; user-select:none;">注意案内</summary><ul style="margin:4px 0 0 0; padding-left:16px;"></ul>';
+					}
+					groupEl.appendChild(warningEl);
+
+					const list = warningEl.querySelector('ul');
+					const warningText = `[${file.name}] ${text}`;
+
+					let exists = false;
+					list.querySelectorAll('li').forEach(li => {
+						if (li.textContent === warningText) exists = true;
+					});
+
+					if (!exists) {
+						const li = document.createElement('li');
+						li.textContent = warningText;
+						list.appendChild(li);
+					}
+					lucide.createIcons({ root: warningEl });
+				} catch (err) { console.error(err); }
+			};
+
+			const fileName = file.name.toLowerCase();
+			const isOffice = fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/);
+			const isPreviewable = fileName.match(/\.(mp4|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
+
+			if (isOffice) {
+				addGroupWarning('Officeファイルあり');
+			} else if (!isPreviewable) {
+				addGroupWarning('プレビュー不可');
+			}
+
+			if (fileName.endsWith('.txt')) {
 				const reader = new FileReader();
 				reader.onload = function (e) {
 					const text = e.target.result.trim();
@@ -1836,34 +1865,34 @@
 					const sharedDomains = ['gigafile.nu', 'gigafile.jp', 'xgf.nu', 'datadeliver.net', 'dtbn.jp', 'firestorage.jp', 'xfs.jp', 'tenpu.me', 'ac-data.info', 'okurin.bitpark.co.jp', 'delifile.link'];
 					const containsDriveFolder = /drive\.google\.com\/drive\/folders\//i.test(text);
 					const containsTransfer = sharedDomains.some(d => text.indexOf(d) !== -1);
-					// If text is a single URL, expose external link button
 					if (/^https?:\/\/\S+$/.test(text)) {
 						if (actionBtn) { actionBtn.href = text; actionBtn.style.display = 'flex'; }
 					}
 					if (iconSpan) {
-						// Drive folder links and transfer services should be highlighted
 						if (containsDriveFolder || containsTransfer) {
-							iconSpan.innerHTML = '<i data-lucide="alert-circle" style="width:18px;height:18px;color:#e74c3c;"></i>';
+							iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#e74c3c;"></i>';
 						} else {
 							const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
-							if (isKnownEmbeddable) iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#333;"></i>';
-							else iconSpan.innerHTML = '<i data-lucide="file-text" style="width:18px;height:18px;color:#333;"></i>';
+
+							// 変更点：新規タブの閲覧を推奨の場合、黄色いglobeアイコンにする
+							if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
+								iconSpan.innerHTML = '<i data-lucide="globe" style="width:18px;height:18px;color:#f39c12;"></i>';
+							} else if (isKnownEmbeddable) {
+								iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#333;"></i>';
+							} else {
+								iconSpan.innerHTML = '<i data-lucide="file-text" style="width:18px;height:18px;color:#333;"></i>';
+							}
 						}
 						lucide.createIcons({ root: iconSpan });
 					}
 
-					// If a file-transfer service URL exists in this group's files, add a small notice under the group
 					if (containsTransfer) {
-						try {
-							const groupEl = container.closest('.group-container') || container;
-							if (groupEl && !groupEl.querySelector('.group-transfer-note')) {
-								const p = document.createElement('p');
-								p.className = 'group-transfer-note';
-								p.style.cssText = 'font-size:11px; color:#e74c3c; margin:6px 12px 0 12px; line-height:1.2;';
-								p.textContent = 'ファイル転送サービスのURLが含まれています。リンク先の確認と、フォルダの反映をおすすめします。';
-								groupEl.appendChild(p);
-							}
-						} catch (err) { console.error(err); }
+						addGroupWarning('ダウンロード用URLの可能性あり');
+					} else {
+						const isKnownEmbeddable = /docs\.google\.com\/presentation\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
+						if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
+							addGroupWarning('新規タブの閲覧を推奨');
+						}
 					}
 				};
 				reader.readAsText(file);
@@ -1899,12 +1928,18 @@
 					else button.before(draggingItem);
 				}
 			});
-			container.appendChild(button);
+
+			const warningNode = container.querySelector('.group-warnings');
+			if (warningNode) {
+				container.insertBefore(button, warningNode);
+			} else {
+				container.appendChild(button);
+			}
 		}
 
 		function showContent(file) {
+			updatePlayPauseUI(false);
 			contentLayer.innerHTML = '';
-			urlWarning.style.display = 'none'; urlWarning.classList.remove('expanded');
 			externalLinkBtn.style.display = 'none';
 			drawingHistory = []; redrawCanvas();
 			applyZoom(currentZoom, 1.0); currentZoom = 1.0;
@@ -1937,21 +1972,20 @@
 						if (iframe) { iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; if (iframe.hasAttribute('allow')) iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, '')); }
 					} else if (/^https?:\/\/\S+$/.test(text)) {
 						let iframeSrc = text; let isKnownEmbeddable = false;
-						if (iframeSrc.includes('docs.google.com/presentation/d/')) {
+						if (iframeSrc.includes('[docs.google.com/presentation/d/](https://docs.google.com/presentation/d/)')) {
 							if (iframeSrc.includes('/pub')) iframeSrc = iframeSrc.replace(/\/pub.*/, '/embed?rm=minimal');
-							else if (!iframeSrc.includes('/embed')) { const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/); if (match && match[1] !== 'e') iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`; }
+							else if (!iframeSrc.includes('/embed')) { const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/); if (match && match[1] !== 'e') iframeSrc = `[https://docs.google.com/presentation/d/$](https://docs.google.com/presentation/d/$){match[1]}/embed?rm=minimal`; }
 							isKnownEmbeddable = true;
 						}
 						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
 							try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); isKnownEmbeddable = true; } catch (e) { console.error(e); }
 						}
-						else if (iframeSrc.includes('drive.google.com/open?id=')) {
-							try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; isKnownEmbeddable = true; } } catch (e) { console.error(e); }
+						else if (iframeSrc.includes('[drive.google.com/open?id=](https://drive.google.com/open?id=)')) {
+							try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `[https://drive.google.com/file/d/$](https://drive.google.com/file/d/$){fileId}/preview`; isKnownEmbeddable = true; } } catch (e) { console.error(e); }
 						}
-						else if (iframeSrc.includes('drive.google.com/file/d/')) {
+						else if (iframeSrc.includes('[drive.google.com/file/d/](https://drive.google.com/file/d/)')) {
 							const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; isKnownEmbeddable = true; }
 						}
-						if (!isKnownEmbeddable) urlWarning.style.display = 'flex';
 						contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
 						externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 					} else {

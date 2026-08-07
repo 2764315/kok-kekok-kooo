@@ -683,7 +683,27 @@
 		const globalSettingsModalOverlay = document.getElementById('global-settings-modal-overlay');
 		const globalCloseSettingsBtn = document.getElementById('global-close-settings-btn');
 
-		globalSettingsBtn.addEventListener('click', () => { globalSettingsModalOverlay.classList.add('show'); });
+		globalSettingsBtn.addEventListener('click', () => {
+			globalSettingsModalOverlay.classList.add('show');
+
+			// 現在表示されているiframeに合わせてタブを切り替える
+			const isCsvVisible = frameCsv.style.display !== 'none';
+
+			helpTabBtns.forEach(b => b.classList.remove('active'));
+			helpTabContents.forEach(c => c.classList.remove('active'));
+
+			if (isCsvVisible) {
+				const csvTabBtn = document.querySelector('.help-tab-btn[data-tab="help-csv"]');
+				const csvTabContent = document.getElementById('help-csv');
+				if (csvTabBtn) csvTabBtn.classList.add('active');
+				if (csvTabContent) csvTabContent.classList.add('active');
+			} else {
+				const previewTabBtn = document.querySelector('.help-tab-btn[data-tab="help-preview"]');
+				const previewTabContent = document.getElementById('help-preview');
+				if (previewTabBtn) previewTabBtn.classList.add('active');
+				if (previewTabContent) previewTabContent.classList.add('active');
+			}
+		});
 		globalCloseSettingsBtn.addEventListener('click', () => { globalSettingsModalOverlay.classList.remove('show'); });
 		globalSettingsModalOverlay.addEventListener('click', (e) => { if (e.target === globalSettingsModalOverlay) globalSettingsModalOverlay.classList.remove('show'); });
 
