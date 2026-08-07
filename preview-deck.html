@@ -1830,7 +1830,9 @@
 					const containsDriveFolder = /drive\.google\.com\/drive\/folders\//i.test(text);
 					const containsTransfer = sharedDomains.some(d => text.indexOf(d) !== -1);
 
+					// --- 修正箇所：isKnownEmbeddable の正規表現に spreadsheets と document を追加 ---
 					const isKnownEmbeddable = /docs\.google\.com\/(presentation|spreadsheets|document)\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
+					// ---------------------------------------------------------------------
 
 					if (/^https?:\/\/\S+$/.test(text)) {
 						if (actionBtn) { actionBtn.href = text; actionBtn.style.display = 'flex'; }
@@ -1936,6 +1938,7 @@
 					} else if (/^https?:\/\/\S+$/.test(text)) {
 						let iframeSrc = text; let isKnownEmbeddable = false;
 
+						// --- 修正箇所：ドキュメントとスプレッドシートの埋め込み処理を追加 ---
 						if (iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//)) {
 							const typeMatch = iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//);
 							const docType = typeMatch[1];
@@ -1956,12 +1959,14 @@
 									if (docType === 'presentation') {
 										iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`;
 									} else {
+										// ドキュメントやスプレッドシートは /preview でプレビュー表示が可能
 										iframeSrc = `https://docs.google.com/${docType}/d/${match[1]}/preview`;
 									}
 								}
 							}
 							isKnownEmbeddable = true;
 						}
+						// -----------------------------------------------------------------
 						else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
 							try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); isKnownEmbeddable = true; } catch (e) { console.error(e); }
 						}
