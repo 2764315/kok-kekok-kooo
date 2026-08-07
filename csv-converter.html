@@ -329,11 +329,10 @@
 			word-wrap: break-word;
 			padding: 20px;
 			overflow: auto;
-			font-family: 'Sawarabi Gothic', sans-serif;
-			font-size: 16px;
+			font-size: 14px;
 			line-height: 1.8;
 			color: #333;
-			background-color: #FDFBF7;
+			background-color: #fff;
 			flex: 1;
 		}
 
@@ -393,9 +392,8 @@
 					<i data-lucide="file-spreadsheet"></i> CSVを読み込む
 					<input type="file" id="csv-file" accept=".csv" class="hidden" />
 				</label>
-				<p id="csv-empty-hint"
-					style="font-size: 11px; color: #666; margin: 12px 0 0 0; text-align: center; line-height: 1.4;">
-					CSVを読み込むと、<br>ここに操作ボタンが表示されます
+				<p id="csv-empty-hint" style="font-size: 13px; color: #555; margin: 12px 0 0 0; line-height: 1.4;">
+					CSVを読み込むと、ここに操作ボタンが表示されます
 				</p>
 			</div>
 
@@ -420,7 +418,7 @@
 				<!-- カテゴリ設定エリア -->
 				<div class="csv-box">
 					<label class="csv-label">カテゴリ設定（任意）</label>
-					<p class="csv-note">フォルダの先頭に表示されます。ジャンル分け、発表順の整理、自分用のメモなどに使えます。</p>
+					<p class="csv-note">フォルダの先頭に表示されます。ジャンル分け、発表順の整理、自分用のメモなどに使えます</p>
 					<input type="text" id="csv-tag-input" class="csv-select" placeholder="例：泥団子,◯日目,要連絡"
 						autocomplete="off">
 					<div id="category-history-container"
@@ -835,7 +833,7 @@
 			treeHtml += `</div>`;
 
 			if (hasSharedLink) {
-				treeHtml += `<p style="font-size: 11px; color: #e74c3c; margin: 10px 0 0 0; line-height: 1.4;"><i data-lucide="alert-triangle" style="width:12px; height:12px; margin-right: 2px;"></i>ファイル転送サービスのURLが含まれています。リンク先をご確認ください。</p>`;
+				treeHtml += `<p style="font-size: 11px; color: #e74c3c; margin: 10px 0 0 0; line-height: 1.4;"><i data-lucide="alert-triangle" style="width:12px; height:12px; margin-right: 2px;"></i>ダウンロード用URLの可能性があります。以下の手順をお試しください。1.URLからファイルをダウンロードする 2.URL.txtファイルを削除する 3.ZIPファイルをダウンロードし解凍する 4.フォルダにダウンロードしたファイルを保存する 5.データプレビュー(配信用機能)で読み込む</p>`;
 			}
 
 			csvTreeContainer.innerHTML = treeHtml;

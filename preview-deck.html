@@ -1222,42 +1222,19 @@
 		let isMuted = false;
 		let previousVolume = 1;
 
-		// --- Web Audio API (アラーム音) ---
-		const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-		function playAlarmBeep(timeOffs, freq, vol) {
-			const osc = audioCtx.createOscillator();
-			const gain = audioCtx.createGain();
-			osc.type = 'sine';
-			osc.frequency.value = freq;
-
-			const startTime = audioCtx.currentTime + timeOffs;
-
-			// アタックとリリースの調整（プツッというノイズを防ぐ）
-			gain.gain.setValueAtTime(0, startTime);
-			gain.gain.linearRampToValueAtTime(vol, startTime + 0.02);
-			gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.18);
-
-			osc.connect(gain);
-			gain.connect(audioCtx.destination);
-
-			osc.start(startTime);
-			osc.stop(startTime + 0.2);
-		}
+		// --- MP3によるアラーム再生処理 ---
+		let alarmAudio = new Audio('se/ani_ge_chicken_koke03.mp3');
 
 		function playAlarm(overrideVol) {
-			if (audioCtx.state === 'suspended') audioCtx.resume();
-			let vol = overrideVol !== undefined ? overrideVol : alarmSettings.vol;
-			if (vol <= 0) return;
+			let masterVol = overrideVol !== undefined ? overrideVol : alarmSettings.vol;
+			if (masterVol <= 0) return;
 
-			// 音量を少し上げるための係数 (標準50%でも聞こえやすくする)
-			vol = Math.min(vol * 1.5, 1.0);
+			alarmAudio.currentTime = 0;
+			alarmAudio.volume = masterVol;
 
-			// ピ・ピ・ピ・ピッ と4回鳴らす (間隔は0.2秒)
-			playAlarmBeep(0.0, 880, vol);
-			playAlarmBeep(0.2, 880, vol);
-			playAlarmBeep(0.4, 880, vol);
-			playAlarmBeep(0.6, 880, vol);
+			alarmAudio.play().catch(e => {
+				console.error("音声の再生に失敗しました:", e);
+			});
 		}
 
 		function getTextColorForBackground(hexColor) {
@@ -1605,11 +1582,6 @@
 			secondsElapsed = 0;
 			updateTimerDisplay();
 
-			// ユーザー操作時に確実にAudioContextをアクティブにする
-			if (audioCtx.state === 'suspended') {
-				audioCtx.resume();
-			}
-
 			const startTimeMs = Date.now();
 			let alarmTriggered = false;
 
@@ -1629,12 +1601,6 @@
 			}, 1000);
 		}
 
-		// 念のため、画面内クリック時にもAudioContextをアンロック
-		document.addEventListener('click', () => {
-			if (audioCtx && audioCtx.state === 'suspended') {
-				audioCtx.resume();
-			}
-		});
 		function updateTimerDisplay() {
 			const minutes = Math.floor(secondsElapsed / 60);
 			timerText.innerText = `${minutes}分`;
