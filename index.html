@@ -594,14 +594,14 @@
 					<div class="tw-form-section">
 						<div class="tw-section-header">
 							<h3 id="section-title-alarm" class="tw-section-title">アラーム設定</h3>
-							<p id="section-desc-alarm" class="tw-section-desc">指定した時間が経過した際に、アラーム音を鳴らします。</p>
+							<p id="section-desc-alarm" class="tw-section-desc">指定した時間が経過した際に、アラーム音が鳴ります。</p>
 						</div>
 
 						<div class="tw-grid">
 							<div class="tw-grid tw-sm-grid-cols-1">
 								<div class="tw-field">
 									<label id="label-alarm-time" class="tw-label">アラーム時間 (分)<div id="hint-alarm-time"
-											class="tw-hint">※0でアラームオフ</div></label>
+											class="tw-hint">0でアラームオフ</div></label>
 
 									<input type="number" class="tw-input" id="setting-alarm-time" value="0" min="0">
 
@@ -622,19 +622,66 @@
 										</button>
 									</div>
 								</div>
+								<div class="tw-field tw-hint">音声素材：<a href="https://www.on-jin.com/"
+										target="_blank">On-Jin
+										～音人～</a></div>
+
 
 							</div>
 
 
 						</div>
 					</div>
-
 				</div>
+
 			</div>
 		</div>
 	</div>
 
 	<script>
+		// --- LocalStorageによる設定の保存と復元 ---
+		function saveSettings() {
+			const settings = {
+				folderNumber: document.getElementById('setting-folder-number').checked,
+				urlDomain: document.getElementById('setting-url-domain').checked,
+				readmeHeading: document.getElementById('setting-readme-heading').value,
+				readmeAuto: document.getElementById('setting-readme-auto').checked,
+				readmeWidth: document.getElementById('setting-readme-width').value,
+				readmeHeight: document.getElementById('setting-readme-height').value,
+				readmeFontSize: document.getElementById('setting-readme-font-size').value,
+				readmeBg: document.getElementById('setting-readme-bg').value,
+				readmeFont: document.getElementById('setting-readme-font').value,
+				alarmTime: document.getElementById('setting-alarm-time').value,
+				alarmVol: document.getElementById('setting-alarm-vol').value
+			};
+			localStorage.setItem('kokekokkoAppSettings', JSON.stringify(settings));
+		}
+
+		function loadSettings() {
+			const saved = localStorage.getItem('kokekokkoAppSettings');
+			if (saved) {
+				try {
+					const settings = JSON.parse(saved);
+					if (settings.folderNumber !== undefined) document.getElementById('setting-folder-number').checked = settings.folderNumber;
+					if (settings.urlDomain !== undefined) document.getElementById('setting-url-domain').checked = settings.urlDomain;
+					if (settings.readmeHeading !== undefined) document.getElementById('setting-readme-heading').value = settings.readmeHeading;
+					if (settings.readmeAuto !== undefined) document.getElementById('setting-readme-auto').checked = settings.readmeAuto;
+					if (settings.readmeWidth !== undefined) document.getElementById('setting-readme-width').value = settings.readmeWidth;
+					if (settings.readmeHeight !== undefined) document.getElementById('setting-readme-height').value = settings.readmeHeight;
+					if (settings.readmeFontSize !== undefined) document.getElementById('setting-readme-font-size').value = settings.readmeFontSize;
+					if (settings.readmeBg !== undefined) document.getElementById('setting-readme-bg').value = settings.readmeBg;
+					if (settings.readmeFont !== undefined) document.getElementById('setting-readme-font').value = settings.readmeFont;
+					if (settings.alarmTime !== undefined) document.getElementById('setting-alarm-time').value = settings.alarmTime;
+					if (settings.alarmVol !== undefined) {
+						document.getElementById('setting-alarm-vol').value = settings.alarmVol;
+						document.getElementById('alarm-vol-display').innerText = Math.round(settings.alarmVol * 100) + '%';
+					}
+				} catch (e) {
+					console.error("設定の復元に失敗しました", e);
+				}
+			}
+		}
+
 		// --- 画面切り替え制御 ---
 		const navCsvBtn = document.getElementById('nav-csv-btn');
 		const navPreviewBtn = document.getElementById('nav-preview-btn');
@@ -719,10 +766,10 @@
 			}
 		}
 
-		// 値が変更されたら送信
-		if (folderNumCheck) folderNumCheck.addEventListener('change', sendSettingsToCsvFrame);
-		if (urlDomainCheck) urlDomainCheck.addEventListener('change', sendSettingsToCsvFrame);
-		if (readmeHeadingSelect) readmeHeadingSelect.addEventListener('change', sendSettingsToCsvFrame);
+		// 値が変更されたら保存＆送信
+		if (folderNumCheck) folderNumCheck.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
+		if (urlDomainCheck) urlDomainCheck.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
+		if (readmeHeadingSelect) readmeHeadingSelect.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
 
 		// iframe がロードされたら初期設定を送信
 		frameCsv.addEventListener('load', sendSettingsToCsvFrame);
@@ -772,28 +819,51 @@
 			}
 		}
 
-		// 値が変更されたら送信
+		// 値が変更されたら保存＆送信
 		if (readmeAutoCheck) {
 			readmeAutoCheck.addEventListener('change', () => {
 				updateReadmeSizeInputsState();
+				saveSettings();
 				sendSettingsToPreviewFrame();
 			});
 		}
-		if (readmeWidthInput) readmeWidthInput.addEventListener('change', sendSettingsToPreviewFrame);
-		if (readmeHeightInput) readmeHeightInput.addEventListener('change', sendSettingsToPreviewFrame);
-		if (readmeFontSizeInput) readmeFontSizeInput.addEventListener('change', sendSettingsToPreviewFrame);
-		if (readmeBgInput) readmeBgInput.addEventListener('input', sendSettingsToPreviewFrame); // inputだとリアルタイム反映
-		if (readmeFontSelect) readmeFontSelect.addEventListener('change', sendSettingsToPreviewFrame);
-		if (alarmTimeInput) alarmTimeInput.addEventListener('change', sendSettingsToPreviewFrame);
+		if (readmeWidthInput) readmeWidthInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
+		if (readmeHeightInput) readmeHeightInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
+		if (readmeFontSizeInput) readmeFontSizeInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
+		if (readmeBgInput) readmeBgInput.addEventListener('input', () => { saveSettings(); sendSettingsToPreviewFrame(); }); // inputだとリアルタイム反映
+		if (readmeFontSelect) readmeFontSelect.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
+		if (alarmTimeInput) alarmTimeInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
 		if (alarmVolInput) {
 			alarmVolInput.addEventListener('input', () => {
 				alarmVolDisplay.innerText = Math.round(alarmVolInput.value * 100) + '%';
+				saveSettings();
 				sendSettingsToPreviewFrame();
 			});
 		}
 
-		// 初期化時の状態反映
-		updateReadmeSizeInputsState();
+		// --- MP3によるアラーム再生処理 ---
+		let alarmAudio = new Audio('se/ani_ge_chicken_koke03.mp3');
+
+		function playRoosterVoice() {
+			let masterVol = parseFloat(alarmVolInput.value) || 0.5;
+			if (masterVol <= 0) return;
+
+			// 再生位置を先頭に戻して音量を設定
+			alarmAudio.currentTime = 0;
+			alarmAudio.volume = masterVol;
+
+			// 再生
+			alarmAudio.play().catch(e => {
+				console.error("音声の再生に失敗しました:", e);
+			});
+		}
+
+		// テスト再生ボタン
+		if (testAlarmBtn) {
+			testAlarmBtn.addEventListener('click', () => {
+				playRoosterVoice();
+			});
+		}
 
 		// 初期化ボタン
 		if (resetReadmeBtn) {
@@ -805,24 +875,19 @@
 				readmeBgInput.value = '#fdfbf7';
 				readmeFontSelect.value = "'Sawarabi Gothic', sans-serif";
 				updateReadmeSizeInputsState();
+				saveSettings();
 				sendSettingsToPreviewFrame();
-			});
-		}
-
-		// アラームテスト再生
-		if (testAlarmBtn) {
-			testAlarmBtn.addEventListener('click', () => {
-				if (framePreview && framePreview.contentWindow) {
-					framePreview.contentWindow.postMessage({
-						type: 'testAlarm',
-						volume: parseFloat(alarmVolInput.value)
-					}, '*');
-				}
 			});
 		}
 
 		// iframe がロードされたら初期設定を送信
 		framePreview.addEventListener('load', sendSettingsToPreviewFrame);
+
+		// ページロード時の初期設定実行
+		document.addEventListener('DOMContentLoaded', () => {
+			loadSettings();
+			updateReadmeSizeInputsState();
+		});
 
 		lucide.createIcons();
 	</script>
