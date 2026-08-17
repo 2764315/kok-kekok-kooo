@@ -4,7 +4,7 @@
 <head>
 	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>発表配信ツール ｺｯｹｺｯｺ-!!!</title>
+	<title>発表配信ツール コッケコッコー!!!</title>
 	<script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"
 		integrity="sha384-E1pALgGQd5jo9+CjsxlKe6NWRynty/TMVcFeBANdn+V5RTR5v+POlW5Ys+JJrUa8"
 		crossorigin="anonymous"></script>
@@ -191,9 +191,18 @@
 								<div class="tw-field">
 									<label id="label-alarm-time" class="tw-label">アラーム時間 (分)<div id="hint-alarm-time"
 											class="tw-hint">0でアラームオフ</div></label>
-
 									<input type="number" class="tw-input" id="setting-alarm-time" value="0" min="0">
-
+								</div>
+								<div class="tw-field">
+									<label id="label-alarm-sound" class="tw-label">アラーム音</label>
+									<select class="tw-select" id="setting-alarm-sound">
+										<option value="se/call_niwatori.mp3" selected>ニワトリ</option>
+										<option value="se/call_ahiru.mp3">アヒル</option>
+										<option value="se/call_cuckoo.mp3">カッコウ</option>
+										<option value="se/call_kizibato.mp3">キジバト</option>
+										<option value="se/call_ohruri.mp3">オオルリ</option>
+										<option value="se/call_kekkahappyo.mp3">ケッカハッピョー</option>
+									</select>
 								</div>
 								<div class="tw-field" id="field-alarm-vol"
 									style="justify-content: center; padding-top: 6px;">
@@ -211,9 +220,12 @@
 										</button>
 									</div>
 								</div>
-								<div class="tw-field tw-hint">音声素材：<a href="https://www.on-jin.com/"
-										target="_blank">On-Jin
-										～音人～</a></div>
+								<div class="tw-field tw-hint">音源：カシヲ
+									<a href="https://youtu.be/j1qdBO51ka8?si=JYZqRQsFKdoPb521" target="_blank"
+										style="color:#6b7280;">声マネキング</a> /
+									<a href="https://youtu.be/YcfXozFdLz4?si=S_DlXrkhWiZXk4Eu&t=2019" target="_blank"
+										style="color:#6b7280;">MyVoiceZoo</a>
+								</div>
 							</div>
 						</div>
 					</div>
