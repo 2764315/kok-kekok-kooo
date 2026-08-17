@@ -11,7 +11,8 @@ function saveSettings() {
 		readmeBg: document.getElementById('setting-readme-bg').value,
 		readmeFont: document.getElementById('setting-readme-font').value,
 		alarmTime: document.getElementById('setting-alarm-time').value,
-		alarmVol: document.getElementById('setting-alarm-vol').value
+		alarmVol: document.getElementById('setting-alarm-vol').value,
+		alarmSound: document.getElementById('setting-alarm-sound') ? document.getElementById('setting-alarm-sound').value : 'se/call_niwatori.mp3'
 	};
 	localStorage.setItem('kokekokkoAppSettings', JSON.stringify(settings));
 }
@@ -34,6 +35,9 @@ function loadSettings() {
 			if (settings.alarmVol !== undefined) {
 				document.getElementById('setting-alarm-vol').value = settings.alarmVol;
 				document.getElementById('alarm-vol-display').innerText = Math.round(settings.alarmVol * 100) + '%';
+			}
+			if (settings.alarmSound !== undefined && document.getElementById('setting-alarm-sound')) {
+				document.getElementById('setting-alarm-sound').value = settings.alarmSound;
 			}
 		} catch (e) {
 			console.error("設定の復元に失敗しました", e);
@@ -146,6 +150,7 @@ const alarmTimeInput = document.getElementById('setting-alarm-time');
 const alarmVolInput = document.getElementById('setting-alarm-vol');
 const alarmVolDisplay = document.getElementById('alarm-vol-display');
 const testAlarmBtn = document.getElementById('test-alarm-btn');
+const alarmSoundSelect = document.getElementById('setting-alarm-sound');
 
 function sendSettingsToPreviewFrame() {
 	if (framePreview && framePreview.contentWindow) {
@@ -159,7 +164,8 @@ function sendSettingsToPreviewFrame() {
 				readmeBgColor: readmeBgInput.value,
 				readmeFontFamily: readmeFontSelect.value,
 				alarmTime: parseInt(alarmTimeInput.value) || 0,
-				alarmVol: parseFloat(alarmVolInput.value) || 0.5
+				alarmVol: parseFloat(alarmVolInput.value) || 0.5,
+				alarmSound: alarmSoundSelect ? alarmSoundSelect.value : 'se/call_niwatori.mp3'
 			}
 		}, '*');
 	}
@@ -199,13 +205,22 @@ if (alarmVolInput) {
 		sendSettingsToPreviewFrame();
 	});
 }
+if (alarmSoundSelect) {
+	alarmSoundSelect.addEventListener('change', () => {
+		saveSettings();
+		sendSettingsToPreviewFrame();
+	});
+}
 
 // --- MP3によるアラーム再生処理 ---
-let alarmAudio = new Audio('se/ani_ge_chicken_koke03.mp3');
+let alarmAudio = new Audio('se/call_niwatori.mp3');
 
 function playRoosterVoice() {
 	let masterVol = parseFloat(alarmVolInput.value) || 0.5;
 	if (masterVol <= 0) return;
+
+	let soundSrc = alarmSoundSelect ? alarmSoundSelect.value : 'se/call_niwatori.mp3';
+	alarmAudio.src = soundSrc;
 
 	// 再生位置を先頭に戻して音量を設定
 	alarmAudio.currentTime = 0;

@@ -1,6 +1,7 @@
 // --- データプレビュー制御 ---
 let ytPlayer = null;
 let isYtApiReady = false;
+let audioCtx = null; // ★ Web Audio API用コンテキスト
 window.onYouTubeIframeAPIReady = function () { isYtApiReady = true; };
 
 const folderInput = document.getElementById('folder-input');
@@ -70,7 +71,8 @@ const globalSettings = {
 
 let alarmSettings = {
 	time: 0,
-	vol: 0.5
+	vol: 0.5,
+	sound: 'se/call_niwatori.mp3'
 };
 
 const volumeIconWrapper = document.getElementById('volume-icon-wrapper');
@@ -89,15 +91,16 @@ let timerInterval = null;
 let secondsElapsed = 0;
 let activeGroupName = "";
 let isMuted = false;
-let previousVolume = 1;
+let previousVolume = 1.0; // デフォルト1.0に変更
 
 // --- MP3によるアラーム再生処理 ---
-let alarmAudio = new Audio('se/ani_ge_chicken_koke03.mp3');
+let alarmAudio = new Audio('se/call_niwatori.mp3');
 
 function playAlarm(overrideVol) {
 	let masterVol = overrideVol !== undefined ? overrideVol : alarmSettings.vol;
 	if (masterVol <= 0) return;
 
+	alarmAudio.src = alarmSettings.sound || 'se/call_niwatori.mp3';
 	alarmAudio.currentTime = 0;
 	alarmAudio.volume = masterVol;
 
@@ -135,6 +138,7 @@ window.addEventListener('message', (event) => {
 		if (s.readmeFontFamily !== undefined) globalSettings.readmeFontFamily = s.readmeFontFamily;
 		if (s.alarmTime !== undefined) alarmSettings.time = s.alarmTime;
 		if (s.alarmVol !== undefined) alarmSettings.vol = s.alarmVol;
+		if (s.alarmSound !== undefined) alarmSettings.sound = s.alarmSound;
 
 		// 現在READMEを表示中であれば即時反映
 		const activeItem = document.querySelector('.list-item.active');
@@ -387,40 +391,62 @@ canvas.addEventListener('mousemove', (e) => {
 canvas.addEventListener('mouseup', () => { if (isDrawing) { ctx.closePath(); isDrawing = false; } });
 canvas.addEventListener('mouseout', () => { if (isDrawing) { ctx.closePath(); isDrawing = false; } });
 
+// ★ 音量最大200%対応（Web Audio API の GainNode と連動）
 function applyVolume() {
-	const vol = parseFloat(volumeSlider.value);
-	const video = contentLayer.querySelector('video');
-	if (video) video.volume = vol;
-	if (ytPlayer && typeof ytPlayer.setVolume === 'function') ytPlayer.setVolume(vol * 100);
+	const rawVol = parseFloat(volumeSlider.value); // 0.0 ~ 2.0
+	const actualVol = rawVol; // スライダーの値をそのまま音量とする（最大200%）
+
+	const media = contentLayer.querySelector('video, audio');
+	if (media) {
+		if (media.audioRouted && media.gainNode) {
+			media.volume = 1.0; // 本体音量は1.0に固定し、GainNodeで増幅する
+			media.gainNode.gain.value = actualVol;
+		} else {
+			media.volume = Math.min(1.0, actualVol); // ルーティング前は100%を上限にする
+		}
+	}
+	if (ytPlayer && typeof ytPlayer.setVolume === 'function') {
+		ytPlayer.setVolume(Math.min(100, actualVol * 100)); // YouTubeは最大100%
+	}
 }
-function updateVolumeIcon(vol) {
+
+function updateVolumeIcon(rawVol) {
 	let iconName = 'volume-2';
-	if (vol === 0) iconName = 'volume-x';
-	else if (vol <= 0.5) iconName = 'volume-1';
+	if (rawVol === 0) iconName = 'volume-x';
+	else if (rawVol <= 0.5) iconName = 'volume-1';
 	volumeIconWrapper.innerHTML = `<i data-lucide="${iconName}"></i>`;
 	lucide.createIcons({ root: volumeIconWrapper });
 }
+
 volumeIconWrapper.addEventListener('click', () => {
 	isMuted = !isMuted;
-	if (isMuted) { previousVolume = volumeSlider.value; volumeSlider.value = 0; }
-	else { volumeSlider.value = previousVolume > 0 ? previousVolume : 0.5; }
-	applyVolume(); updateVolumeIcon(parseFloat(volumeSlider.value));
+	if (isMuted) {
+		previousVolume = volumeSlider.value;
+		volumeSlider.value = 0;
+	} else {
+		volumeSlider.value = previousVolume > 0 ? previousVolume : 1.0;
+	}
+	applyVolume();
+	updateVolumeIcon(parseFloat(volumeSlider.value));
 });
+
 volumeSlider.addEventListener('input', () => {
 	isMuted = volumeSlider.value == 0;
-	applyVolume(); updateVolumeIcon(parseFloat(volumeSlider.value));
+	applyVolume();
+	updateVolumeIcon(parseFloat(volumeSlider.value));
 });
 
 rewindBtn.addEventListener('click', () => {
-	const video = contentLayer.querySelector('video');
-	if (video) video.currentTime = Math.max(0, video.currentTime - 5);
+	const media = contentLayer.querySelector('video, audio');
+	if (media) media.currentTime = Math.max(0, media.currentTime - 5);
 	if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function') ytPlayer.seekTo(Math.max(0, ytPlayer.getCurrentTime() - 5), true);
 });
 forwardBtn.addEventListener('click', () => {
-	const video = contentLayer.querySelector('video');
-	if (video) video.currentTime = Math.min(video.duration || Infinity, video.currentTime + 5);
+	const media = contentLayer.querySelector('video, audio');
+	if (media) media.currentTime = Math.min(media.duration || Infinity, media.currentTime + 5);
 	if (ytPlayer && typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function') ytPlayer.seekTo(Math.min(ytPlayer.getDuration(), ytPlayer.getCurrentTime() + 5), true);
 });
+
 function updatePlayPauseUI(playing) {
 	isPlaying = playing;
 	if (isPlaying) {
@@ -434,13 +460,13 @@ function updatePlayPauseUI(playing) {
 }
 
 playPauseBtn.addEventListener('click', () => {
-	const video = contentLayer.querySelector('video');
+	const media = contentLayer.querySelector('video, audio');
 	if (isPlaying) {
-		if (video) video.pause();
+		if (media) media.pause();
 		if (ytPlayer && typeof ytPlayer.pauseVideo === 'function') ytPlayer.pauseVideo();
 		updatePlayPauseUI(false);
 	} else {
-		if (video) video.play();
+		if (media) media.play();
 		if (ytPlayer && typeof ytPlayer.playVideo === 'function') ytPlayer.playVideo();
 		updatePlayPauseUI(true);
 	}
@@ -567,6 +593,7 @@ folderInput.addEventListener('change', (event) => {
 		let fileIcon = "file"; let iconColorStyle = "";
 		const fileName = file.name.toLowerCase();
 		if (fileName.endsWith('.mp4')) fileIcon = "film";
+		else if (fileName.match(/\.(mp3|wav|m4a)$/)) fileIcon = "music";
 		else if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/)) fileIcon = "image";
 		else if (fileName.match(/\.(txt|pdf)$/)) fileIcon = "file-text";
 		else if (fileName.match(/\.(html|htm)$/)) fileIcon = "globe";
@@ -681,7 +708,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 
 	const fileName = file.name.toLowerCase();
 	const isOffice = fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/);
-	const isPreviewable = fileName.match(/\.(mp4|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
+	const isPreviewable = fileName.match(/\.(mp4|mp3|wav|m4a|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
 
 	if (isOffice) {
 		addGroupWarning('Officeファイルはプレビューできません。以下の手順をお試しください。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
@@ -699,9 +726,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 			const containsDriveFolder = /drive\.google\.com\/drive\/folders\//i.test(text);
 			const containsTransfer = sharedDomains.some(d => text.indexOf(d) !== -1);
 
-			// --- 修正箇所：isKnownEmbeddable の正規表現に spreadsheets と document を追加 ---
 			const isKnownEmbeddable = /docs\.google\.com\/(presentation|spreadsheets|document)\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
-			// ---------------------------------------------------------------------
 
 			if (/^https?:\/\/\S+$/.test(text)) {
 				if (actionBtn) { actionBtn.href = text; actionBtn.style.display = 'flex'; }
@@ -782,9 +807,47 @@ function showContent(file) {
 	const fileURL = URL.createObjectURL(file);
 	const fileName = file.name.toLowerCase();
 
-	if (fileName.endsWith('.mp4')) {
-		const video = document.createElement('video'); video.src = fileURL; video.controls = true; video.volume = volumeSlider.value;
-		contentLayer.appendChild(video);
+	if (fileName.match(/\.(mp4|mp3|wav|m4a)$/)) {
+		const isAudio = fileName.match(/\.(mp3|wav|m4a)$/);
+		const media = document.createElement(isAudio ? 'audio' : 'video');
+		media.src = fileURL;
+		media.controls = true;
+
+		if (isAudio) {
+			media.style.width = '60%';
+			media.style.height = '50px';
+			media.style.outline = 'none';
+		}
+
+		contentLayer.appendChild(media);
+
+		// ★ 再生終了時にボタンを「再生」に戻す
+		media.addEventListener('ended', () => {
+			updatePlayPauseUI(false);
+		});
+
+		// ★ Web Audio API を使って100%以上の音量を実現
+		media.addEventListener('play', () => {
+			if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+			if (audioCtx.state === 'suspended') audioCtx.resume();
+
+			if (!media.audioRouted) {
+				try {
+					const source = audioCtx.createMediaElementSource(media);
+					const gainNode = audioCtx.createGain();
+					source.connect(gainNode);
+					gainNode.connect(audioCtx.destination);
+					media.audioRouted = true;
+					media.gainNode = gainNode;
+					applyVolume();
+				} catch (e) {
+					console.error("Web Audio API routing error:", e);
+				}
+			}
+		}, { once: true });
+
+		applyVolume();
+
 	} else if (fileName.match(/\.(pdf|html|htm)$/)) {
 		const iframe = document.createElement('iframe'); iframe.src = fileURL; iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none';
 		contentLayer.appendChild(iframe);
@@ -798,7 +861,15 @@ function showContent(file) {
 				const videoId = ytMatch[1]; contentLayer.innerHTML = '<div id="yt-player-container"></div>';
 				ytPlayer = new YT.Player('yt-player-container', {
 					videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
-					events: { 'onReady': function (event) { event.target.setVolume(parseFloat(volumeSlider.value) * 100); } }
+					events: {
+						'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
+						// ★ 再生終了時にボタンを「再生」に戻す
+						'onStateChange': function (event) {
+							if (event.data === YT.PlayerState.ENDED) {
+								updatePlayPauseUI(false);
+							}
+						}
+					}
 				}); return;
 			}
 			if (text.toLowerCase().startsWith('<iframe')) {
@@ -807,7 +878,6 @@ function showContent(file) {
 			} else if (/^https?:\/\/\S+$/.test(text)) {
 				let iframeSrc = text; let isKnownEmbeddable = false;
 
-				// --- 修正箇所：ドキュメントとスプレッドシートの埋め込み処理を追加 ---
 				if (iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//)) {
 					const typeMatch = iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//);
 					const docType = typeMatch[1];
@@ -828,14 +898,12 @@ function showContent(file) {
 							if (docType === 'presentation') {
 								iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`;
 							} else {
-								// ドキュメントやスプレッドシートは /preview でプレビュー表示が可能
 								iframeSrc = `https://docs.google.com/${docType}/d/${match[1]}/preview`;
 							}
 						}
 					}
 					isKnownEmbeddable = true;
 				}
-				// -----------------------------------------------------------------
 				else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
 					try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); isKnownEmbeddable = true; } catch (e) { console.error(e); }
 				}
@@ -850,7 +918,6 @@ function showContent(file) {
 				externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 			} else {
 				const pre = document.createElement('pre'); pre.className = 'text-preview-content'; pre.textContent = text; contentLayer.appendChild(pre);
-				// README の場合はフォント・背景を適用
 				if (fileName.startsWith('readme')) {
 					pre.style.fontSize = (globalSettings.readmeFontSize || 20) + 'px';
 					pre.style.backgroundColor = globalSettings.readmeBgColor || '#fdfbf7';
