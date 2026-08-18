@@ -821,10 +821,10 @@ function showContent(file) {
 
 		contentLayer.appendChild(media);
 
-		// ★ 再生終了時にボタンを「再生」に戻す
-		media.addEventListener('ended', () => {
-			updatePlayPauseUI(false);
-		});
+		// ★ 再生・一時停止・終了時にボタンの表示を同期
+		media.addEventListener('play', () => updatePlayPauseUI(true));
+		media.addEventListener('pause', () => updatePlayPauseUI(false));
+		media.addEventListener('ended', () => updatePlayPauseUI(false));
 
 		// ★ Web Audio API を使って100%以上の音量を実現
 		media.addEventListener('play', () => {
@@ -863,9 +863,11 @@ function showContent(file) {
 					videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
 					events: {
 						'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
-						// ★ 再生終了時にボタンを「再生」に戻す
+						// ★ YouTube再生・一時停止・終了時にボタンの表示を同期
 						'onStateChange': function (event) {
-							if (event.data === YT.PlayerState.ENDED) {
+							if (event.data === YT.PlayerState.PLAYING) {
+								updatePlayPauseUI(true);
+							} else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
 								updatePlayPauseUI(false);
 							}
 						}
