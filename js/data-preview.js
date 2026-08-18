@@ -856,7 +856,7 @@ function showContent(file) {
 		reader.onload = function (e) {
 			let text = e.target.result.trim();
 			// クエリパラメータ（?si=...など）が後ろに続いても、確実に11桁の動画IDだけを取得できるようにマッチングを変更します
-			const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s?#]{11})/i);
+			const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
 			if (ytMatch && isYtApiReady) {
 				externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
 				const videoId = ytMatch[1]; contentLayer.innerHTML = '<div id="yt-player-container"></div>';
