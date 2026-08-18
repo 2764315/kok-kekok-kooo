@@ -111,6 +111,6 @@ Googleフォームの回答データから発表用フォルダや案内資料�
 
 ---
 
-## 📄 素材提供・クレジット
+## 📄 素材・クレジット
 
-* **音声素材**: [On-Jin ～音人～](https://www.on-jin.com/) 様
+* **アラーム音声**: カシヲ様 [声マネキング](https://youtu.be/j1qdBO51ka8?si=JYZqRQsFKdoPb521) / [MyVoiceZoo](https://youtu.be/YcfXozFdLz4?si=S_DlXrkhWiZXk4Eu&t=2019)
