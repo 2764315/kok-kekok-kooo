@@ -685,7 +685,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 				warningEl = document.createElement('details');
 				warningEl.className = 'group-warnings';
 				warningEl.style.cssText = 'font-size:11px; color:rgb(102, 102, 102); margin:4px 12px 6px 12px; line-height:1.4;';
-				warningEl.innerHTML = '<summary style="cursor:pointer; outline:none; user-select:none;">注意案内</summary><ul style="margin:4px 0 0 0; padding-left:16px;"></ul>';
+				warningEl.innerHTML = '<summary style="cursor:pointer; outline:none; user-select:none;">指示コメ</summary><ul style="margin:4px 0 0 0; padding-left:16px;"></ul>';
 			}
 			groupEl.appendChild(warningEl);
 
@@ -711,9 +711,9 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 	const isPreviewable = fileName.match(/\.(mp4|mp3|wav|m4a|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
 
 	if (isOffice) {
-		addGroupWarning('Officeファイルはプレビューできません。以下の手順をお試しください。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
+		addGroupWarning('OfficeファイルはGoogleドライブにアップロードしたら見れるかも知れないね💦😉.txtファイルに共有リンクを貼ったらどうかな…？🤔✨');
 	} else if (!isPreviewable) {
-		addGroupWarning('プレビューできないファイルです。以下の手順で表示できる場合があります。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
+		addGroupWarning('このファイルは見れないんじゃないかなぁ💦もしかしたらGoogleドライブにアップロードしたら見れるかもよ〜🤭.txtファイルに共有リンク貼ったらいいのにねっ👍✨');
 	}
 
 	if (fileName.endsWith('.txt')) {
@@ -747,10 +747,10 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 			}
 
 			if (containsTransfer) {
-				addGroupWarning('ダウンロード用URLの可能性があります。以下の手順をお試しください。1.URLからファイルをダウンロードする 2.このtxtファイルを削除する 3.ダウンロードしたデータをフォルダに保存する 4.再度フォルダを読み込む');
+				addGroupWarning('ダウンロード用URLの可能性があるから😃💦チョット手間だけどURLからファイルをDLして😃📁このtxtファイルは削除（ぽいっ🗑️）したらDLしたデータをフォルダに保存して😉💖再度フォルダを読み込んでみてネッ❗✨🙏ヨロシクね〜〜ッッ😜👍❗✨笑');
 			} else {
 				if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
-					addGroupWarning('新規タブの閲覧を推奨');
+					addGroupWarning('ﾔﾊｯ😃❗❗一部のサイトちゃんは、プレビュー表示ができないみたいなんだよね〜😅💦申し訳ないんだけど💦「新規タブ」で見ちゃってほしいナ〜〜ッッ😉👍チョット手間に感じちゃうかもだけどイジワルしないでね😜ナンチャッテ❗✨🙏');
 				}
 			}
 		};
@@ -821,10 +821,10 @@ function showContent(file) {
 
 		contentLayer.appendChild(media);
 
-		// ★ 再生終了時にボタンを「再生」に戻す
-		media.addEventListener('ended', () => {
-			updatePlayPauseUI(false);
-		});
+		// ★ 再生・一時停止・終了時にボタンの表示を同期
+		media.addEventListener('play', () => updatePlayPauseUI(true));
+		media.addEventListener('pause', () => updatePlayPauseUI(false));
+		media.addEventListener('ended', () => updatePlayPauseUI(false));
 
 		// ★ Web Audio API を使って100%以上の音量を実現
 		media.addEventListener('play', () => {
@@ -863,9 +863,11 @@ function showContent(file) {
 					videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
 					events: {
 						'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
-						// ★ 再生終了時にボタンを「再生」に戻す
+						// ★ YouTube再生・一時停止・終了時にボタンの表示を同期
 						'onStateChange': function (event) {
-							if (event.data === YT.PlayerState.ENDED) {
+							if (event.data === YT.PlayerState.PLAYING) {
+								updatePlayPauseUI(true);
+							} else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
 								updatePlayPauseUI(false);
 							}
 						}
@@ -934,11 +936,11 @@ function showContent(file) {
 		const img = document.createElement('img'); img.src = fileURL; contentLayer.appendChild(img);
 	} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
 		const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "";
-		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの注意案内をご確認ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ヒントが欲しい場合、<br>左メニューの「指示コメ」を参照ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 		lucide.createIcons({ root: contentLayer });
 	} else {
 		const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの注意案内をご確認ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ヒントが欲しい場合、<br>左メニューの「指示コメ」を参照ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 		lucide.createIcons({ root: contentLayer });
 	}
 }
