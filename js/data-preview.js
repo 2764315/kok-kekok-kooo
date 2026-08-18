@@ -672,7 +672,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 	button.className = 'list-item';
 	if (isSubItem) button.classList.add('is-sub-item');
 	button.innerHTML = `<span class="item-icon"><i data-lucide="${fileIcon}" style="width:18px;height:18px; ${iconColorStyle}"></i></span><span class="item-text">${file.name}</span>
-			<a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
+ <a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
 	button.title = file.name;
 
 	const addGroupWarning = (text) => {
@@ -707,6 +707,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 	};
 
 	const fileName = file.name.toLowerCase();
+
 	const isOffice = fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/);
 	const isPreviewable = fileName.match(/\.(mp4|mp3|wav|m4a|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
 
@@ -750,7 +751,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 				addGroupWarning('ダウンロード用URLの可能性があるから😃💦チョット手間だけどURLからファイルをDLして😃📁このtxtファイルは削除（ぽいっ🗑️）したらDLしたデータをフォルダに保存して😉💖再度フォルダを読み込んでみてネッ❗✨🙏ヨロシクね〜〜ッッ😜👍❗✨笑');
 			} else {
 				if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
-					addGroupWarning('ﾔﾊｯ😃❗❗一部のサイトちゃんは、プレビュー表示ができないみたいなんだよね〜😅💦申し訳ないんだけど💦「新規タブ」で見ちゃってほしいナ〜〜ッッ😉👍チョット手間に感じちゃうかもだけどイジワルしないでね😜ナンチャッテ❗✨🙏');
+					addGroupWarning('ﾔﾊｯ😃❗❗一部のサイトちゃんは、プレビュー表示ができないみたいんだよね〜😅💦申し訳ないんだけど💦「新規タブ」で見ちゃってほしいナ〜〜ッッ😉👍チョット手間に感じちゃうかもだけどイジワルしないでね😜ナンチャッテ❗✨🙏');
 				}
 			}
 		};
@@ -855,31 +856,43 @@ function showContent(file) {
 		const reader = new FileReader();
 		reader.onload = function (e) {
 			let text = e.target.result.trim();
-			// クエリパラメータ（?si=...など）が後ろに続いても、確実に11桁の動画IDだけを取得できるようにマッチングを変更します
+
+			// 【改善】クエリパラメータ付きのURLからでも確実に11桁の動画IDを取得
 			const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
-			if (ytMatch && isYtApiReady) {
+
+			if (ytMatch) {
 				externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
-				const videoId = ytMatch[1]; contentLayer.innerHTML = '<div id="yt-player-container"></div>';
-				ytPlayer = new YT.Player('yt-player-container', {
-					videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
-					events: {
-						'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
-						// ★ YouTube再生・一時停止・終了時にボタンの表示を同期
-						'onStateChange': function (event) {
-							if (event.data === YT.PlayerState.PLAYING) {
-								updatePlayPauseUI(true);
-							} else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-								updatePlayPauseUI(false);
+				const videoId = ytMatch[1];
+
+				if (isYtApiReady) {
+					contentLayer.innerHTML = '<div id="yt-player-container"></div>';
+					ytPlayer = new YT.Player('yt-player-container', {
+						videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
+						events: {
+							'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
+							// ★ YouTube再生・一時停止・終了時にボタンの表示を同期
+							'onStateChange': function (event) {
+								if (event.data === YT.PlayerState.PLAYING) {
+									updatePlayPauseUI(true);
+								} else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+									updatePlayPauseUI(false);
+								}
 							}
 						}
-					}
-				}); return;
+					});
+				} else {
+					// 【フォールバック】APIが未ロードの場合は埋め込みURL（/embed/）を使用してブロックを回避
+					const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+					contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${embedUrl}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
+				}
+				return; // YouTube処理を終えたらここで終了し、下の一般URL判定に流さない
 			}
+
 			if (text.toLowerCase().startsWith('<iframe')) {
 				contentLayer.innerHTML = text; const iframe = contentLayer.querySelector('iframe');
 				if (iframe) { iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; if (iframe.hasAttribute('allow')) iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, '')); }
 			} else if (/^https?:\/\/\S+$/.test(text)) {
-				let iframeSrc = text; let isKnownEmbeddable = false;
+				let iframeSrc = text;
 
 				if (iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//)) {
 					const typeMatch = iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//);
@@ -905,16 +918,15 @@ function showContent(file) {
 							}
 						}
 					}
-					isKnownEmbeddable = true;
 				}
 				else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
-					try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); isKnownEmbeddable = true; } catch (e) { console.error(e); }
+					try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); } catch (e) { console.error(e); }
 				}
 				else if (iframeSrc.includes('drive.google.com/open?id=')) {
-					try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; isKnownEmbeddable = true; } } catch (e) { console.error(e); }
+					try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; } } catch (e) { console.error(e); }
 				}
 				else if (iframeSrc.includes('drive.google.com/file/d/')) {
-					const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; isKnownEmbeddable = true; }
+					const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; }
 				}
 
 				contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
