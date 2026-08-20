@@ -124,6 +124,18 @@ window.addEventListener('DOMContentLoaded', () => {
 	// フォルダ読み込み前はプレビュー枠をHDに固定
 	userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
 	applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
+
+	const sidebarEl = document.getElementById('sidebar');
+	const sidebarScrollArea = document.getElementById('sidebar-scroll-area');
+	if (sidebarEl) {
+		sidebarEl.style.height = '100vh';
+		sidebarEl.style.maxHeight = '100vh';
+	}
+	if (sidebarScrollArea) {
+		sidebarScrollArea.style.flex = '1 1 0px';
+		sidebarScrollArea.style.minHeight = '0';
+		sidebarScrollArea.style.overflowY = 'auto';
+	}
 });
 
 // --- index.htmlからの設定受信 ---
@@ -585,9 +597,9 @@ folderInput.addEventListener('change', (event) => {
 		else if (pathParts.length > 2) { mainGroupName = pathParts[1]; if (pathParts.length > 3) subGroupName = pathParts.slice(2, -1).join(' / '); }
 		else if (pathParts.length === 1) { mainGroupName = file.name; isStandaloneFile = true; }
 
-		const key = mainGroupName + '||' + subGroupName;
+		const key = mainGroupName;
 		if (!groupsMap.has(key)) {
-			groupsMap.set(key, { files: [], mainGroupName, subGroupName, isStandaloneFile });
+			groupsMap.set(key, { files: [], mainGroupName, isStandaloneFile });
 			groupOrder.push(key);
 		}
 		let fileIcon = "file"; let iconColorStyle = "";
@@ -598,13 +610,13 @@ folderInput.addEventListener('change', (event) => {
 		else if (fileName.match(/\.(txt|pdf)$/)) fileIcon = "file-text";
 		else if (fileName.match(/\.(html|htm)$/)) fileIcon = "globe";
 		else { fileIcon = "file-text"; iconColorStyle = "color: #e74c3c;"; }
-		groupsMap.get(key).files.push({ file, fileIcon, iconColorStyle });
+
+		groupsMap.get(key).files.push({ file, fileIcon, iconColorStyle, subGroupName });
 	});
 
 	groupOrder.forEach(key => {
 		const groupInfo = groupsMap.get(key);
 		const mainGroupName = groupInfo.mainGroupName;
-		const subGroupName = groupInfo.subGroupName;
 		const isStandaloneFile = groupInfo.isStandaloneFile;
 		const currentGroupContainer = document.createElement('div');
 		currentGroupContainer.className = 'group-container'; currentGroupContainer.draggable = true;
@@ -626,21 +638,33 @@ folderInput.addEventListener('change', (event) => {
 		currentGroupContainer.appendChild(groupTitle);
 		setupGroupDragAndDrop(currentGroupContainer);
 
-		if (subGroupName && subGroupName !== "") {
-			const subGroupTitle = document.createElement('div'); subGroupTitle.className = 'sub-group-title';
-			subGroupTitle.innerHTML = `<i data-lucide="corner-down-right" style="width:14px;height:14px;"></i> ${subGroupName}`;
-			currentGroupContainer.appendChild(subGroupTitle);
-		}
-
 		groupInfo.files.sort((a, b) => {
+			if (a.subGroupName !== b.subGroupName) return a.subGroupName.localeCompare(b.subGroupName);
 			const aReadme = a.file.name.toLowerCase().startsWith('readme');
 			const bReadme = b.file.name.toLowerCase().startsWith('readme');
 			if (aReadme && !bReadme) return -1;
 			if (!aReadme && bReadme) return 1;
 			return a.file.name.localeCompare(b.file.name);
 		});
-		groupInfo.files.forEach(({ file, fileIcon, iconColorStyle }) => {
-			createListButton(file, currentGroupContainer, mainGroupName, subGroupName !== "", fileIcon, iconColorStyle);
+
+		let currentSubGroup = null;
+
+		groupInfo.files.forEach(({ file, fileIcon, iconColorStyle, subGroupName }) => {
+			if (subGroupName && subGroupName !== currentSubGroup) {
+				const subGroupTitle = document.createElement('div');
+				subGroupTitle.className = 'sub-group-title';
+				subGroupTitle.innerHTML = `<i data-lucide="corner-down-right" style="width:14px;height:14px;"></i> ${subGroupName}`;
+
+				const warningNode = currentGroupContainer.querySelector('.group-warnings');
+				if (warningNode) {
+					currentGroupContainer.insertBefore(subGroupTitle, warningNode);
+				} else {
+					currentGroupContainer.appendChild(subGroupTitle);
+				}
+				currentSubGroup = subGroupName;
+			}
+
+			createListButton(file, currentGroupContainer, mainGroupName, subGroupName, fileIcon, iconColorStyle);
 		});
 		listContainer.appendChild(currentGroupContainer);
 	});
@@ -648,17 +672,28 @@ folderInput.addEventListener('change', (event) => {
 	lucide.createIcons({ root: listContainer });
 });
 
+// グループ同士のドラッグ＆ドロップ処理
 function setupGroupDragAndDrop(group) {
 	group.addEventListener('dragstart', (e) => {
-		if (e.target.classList.contains('list-item') || e.target.closest('.group-toggle-btn')) { e.preventDefault(); return; }
-		group.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move';
+		if (e.target !== group && !e.target.classList.contains('group-title')) { return; }
+		group.classList.add('dragging');
+		e.dataTransfer.effectAllowed = 'move';
 	});
 	group.addEventListener('dragend', () => { group.classList.remove('dragging'); });
-	group.addEventListener('dragover', (e) => { e.preventDefault(); });
+
+	group.addEventListener('dragover', (e) => {
+		// グループを移動しているときのみブラウザ標準のドロップ許可を出す
+		const draggingGroup = document.querySelector('.group-container.dragging');
+		if (draggingGroup) {
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'move';
+		}
+	});
+
 	group.addEventListener('drop', (e) => {
-		e.preventDefault(); e.stopPropagation();
 		const draggingGroup = document.querySelector('.group-container.dragging');
 		if (draggingGroup && draggingGroup !== group) {
+			e.preventDefault(); e.stopPropagation();
 			const allGroups = Array.from(listContainer.querySelectorAll('.group-container'));
 			const draggingIndex = allGroups.indexOf(draggingGroup); const dropIndex = allGroups.indexOf(group);
 			if (draggingIndex < dropIndex) group.after(draggingGroup); else group.before(draggingGroup);
@@ -667,7 +702,6 @@ function setupGroupDragAndDrop(group) {
 	});
 }
 
-// ★ 安全にURLのホスト名を判定するユーティリティ関数
 function getHostFromUrl(urlString) {
 	try {
 		const url = new URL(urlString);
@@ -677,10 +711,13 @@ function getHostFromUrl(urlString) {
 	}
 }
 
-function createListButton(file, container, folderName, isSubItem = false, fileIcon = "file", iconColorStyle = "") {
+// リストアイテム（ボタン）の生成とドラッグ＆ドロップ処理
+function createListButton(file, container, folderName, subGroupName = "", fileIcon = "file", iconColorStyle = "") {
 	const button = document.createElement('button');
 	button.className = 'list-item';
-	if (isSubItem) button.classList.add('is-sub-item');
+	if (subGroupName !== "") button.classList.add('is-sub-item');
+	button.setAttribute('data-subgroup', subGroupName);
+
 	button.innerHTML = `<span class="item-icon"><i data-lucide="${fileIcon}" style="width:18px;height:18px; ${iconColorStyle}"></i></span><span class="item-text">${file.name}</span>
  <a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
 	button.title = file.name;
@@ -735,7 +772,6 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 			const actionBtn = button.querySelector('.item-action');
 			const sharedDomains = ['gigafile.nu', 'gigafile.jp', 'xgf.nu', 'datadeliver.net', 'dtbn.jp', 'firestorage.jp', 'xfs.jp', 'tenpu.me', 'ac-data.info', 'okurin.bitpark.co.jp', 'delifile.link'];
 
-			// ★ 安全にホスト名をパースして判定 (CodeQL修正箇所)
 			const host = getHostFromUrl(text);
 			const isDriveFolder = host === 'drive.google.com' && text.includes('/folders/');
 			const containsTransfer = sharedDomains.some(d => host === d || host.endsWith('.' + d));
@@ -792,13 +828,45 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 	};
 
 	button.draggable = true;
-	button.addEventListener('dragstart', (e) => { e.stopPropagation(); button.classList.add('dragging'); });
+	button.addEventListener('dragstart', (e) => {
+		e.stopPropagation();
+		button.classList.add('dragging');
+		e.dataTransfer.effectAllowed = 'move';
+	});
 	button.addEventListener('dragend', () => { button.classList.remove('dragging'); });
-	button.addEventListener('dragover', (e) => { e.preventDefault(); });
+
+	// ★ アイテムのドラッグオーバー制御（Macのコピーアイコン防止と階層チェック）
+	const handleItemDragOverEnter = (e) => {
+		const draggingItem = document.querySelector('.list-item.dragging');
+		if (draggingItem) {
+			e.stopPropagation(); // 親（グループ）にイベントを伝えない
+			const dragSubgroup = draggingItem.getAttribute('data-subgroup');
+			const dropSubgroup = button.getAttribute('data-subgroup');
+
+			// 階層が違う場合は、e.preventDefault() を呼ばないことでOSに「ドロップ不可(🚫)」と認識させる
+			if (dragSubgroup !== dropSubgroup) {
+				e.dataTransfer.dropEffect = 'none';
+				return;
+			}
+
+			// 同一階層ならドロップを許可（デフォルトのアクションをキャンセル）
+			e.preventDefault();
+			e.dataTransfer.dropEffect = 'move';
+		}
+	};
+
+	button.addEventListener('dragenter', handleItemDragOverEnter);
+	button.addEventListener('dragover', handleItemDragOverEnter);
+
 	button.addEventListener('drop', (e) => {
-		e.preventDefault(); e.stopPropagation();
 		const draggingItem = document.querySelector('.list-item.dragging');
 		if (draggingItem && draggingItem !== button) {
+			e.stopPropagation(); // 親への伝播を防ぐ
+			const dragSubgroup = draggingItem.getAttribute('data-subgroup');
+			const dropSubgroup = button.getAttribute('data-subgroup');
+			if (dragSubgroup !== dropSubgroup) return; // 階層違いは無視
+
+			e.preventDefault(); // ここで最終的にブラウザの処理を停止
 			const groupChildren = Array.from(container.children);
 			const draggingIndex = groupChildren.indexOf(draggingItem); const dropIndex = groupChildren.indexOf(button);
 			if (draggingIndex !== -1) { if (draggingIndex < dropIndex) button.after(draggingItem); else button.before(draggingItem); }
@@ -968,11 +1036,11 @@ function showContent(file) {
 		const img = document.createElement('img'); img.src = fileURL; contentLayer.appendChild(img);
 	} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
 		const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "";
-		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ヒントが欲しい場合、<br>左メニューの「指示コメ」を参照ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの「指示コメ」を参照ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 		lucide.createIcons({ root: contentLayer });
 	} else {
 		const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ヒントが欲しい場合、<br>左メニューの「指示コメ」を参照ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの「指示コメ」を参照ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 		lucide.createIcons({ root: contentLayer });
 	}
 }

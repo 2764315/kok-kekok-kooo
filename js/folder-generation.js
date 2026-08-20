@@ -37,6 +37,14 @@ const csvAccordionBtn = document.getElementById('csv-filename-accordion-btn');
 const csvAccordionContent = document.getElementById('csv-filename-accordion-content');
 const csvAccordionIcon = document.getElementById('csv-filename-accordion-icon');
 
+// URL表記方法のセレクトボックス
+const csvUrlFormatSelect = document.getElementById('csv-url-format');
+if (csvUrlFormatSelect) {
+	csvUrlFormatSelect.addEventListener('change', () => {
+		updateCsvPreview();
+	});
+}
+
 csvAccordionBtn.addEventListener('click', () => {
 	csvAccordionContent.classList.toggle('hidden');
 	if (csvAccordionContent.classList.contains('hidden')) csvAccordionIcon.style.transform = 'rotate(0deg)';
@@ -228,15 +236,33 @@ function processCsvTextAndExtractUrls(text, startIndex) {
 	if (typeof text !== 'string') return { text, urls: [], nextIndex: startIndex };
 	const urlRegex = /(https?:\/\/[^\s]+)/g;
 	const urls = []; let currentCount = startIndex;
+
+	// セレクトボックスからURL表記方法を取得（初期値は'number'）
+	const urlFormat = csvUrlFormatSelect ? csvUrlFormatSelect.value : 'number';
+
 	const replacedText = text.replace(urlRegex, (match) => {
 		const cleanUrl = match.replace(/,+$/, ''); const trailing = match.substring(cleanUrl.length);
 		let domainStr = 'unknown';
 		try { const urlObj = new URL(cleanUrl); domainStr = urlObj.hostname.replace(/\./g, '-'); } catch (e) { }
-		const urlId = csvState.settings.useUrlDomain
-			? `URL-${String(currentCount).padStart(2, '0')}__${domainStr}`
-			: `URL-${String(currentCount).padStart(2, '0')}`;
-		urls.push({ id: urlId, url: cleanUrl }); currentCount++;
-		return `[${urlId}]${trailing}`;
+
+		let baseId = `URL-${String(currentCount).padStart(2, '0')}`;
+		let fileId = baseId;
+		let displayText = '';
+
+		// READMEの表記とファイル名をセレクトボックスの内容に応じて切り替える
+		if (urlFormat === 'domain') {
+			fileId = `${baseId}__${domainStr}`;
+			displayText = `[${fileId}]`;
+		} else if (urlFormat === 'number') {
+			fileId = baseId;
+			displayText = `[${baseId}]`;
+		} else if (urlFormat === 'none') {
+			fileId = `${baseId}__${domainStr}`;
+			displayText = cleanUrl; // URLを伏せ字にせずそのまま表示
+		}
+
+		urls.push({ id: fileId, url: cleanUrl, displayText: displayText }); currentCount++;
+		return `${displayText}${trailing}`;
 	});
 	return { text: replacedText, urls, nextIndex: currentCount };
 }
@@ -302,9 +328,11 @@ function updateCsvPreview() {
 	// 削除されたURLの処理
 	const deleted = csvState.deletedUrls[csvState.currentIndex] || [];
 	let readmeContent = infoText.trim();
-	deleted.forEach(delId => {
-		const targetStr = `[${delId}]`;
-		readmeContent = readmeContent.split(targetStr).join('[—検閲済み—]');
+	extractedUrls.forEach(urlObj => {
+		if (deleted.includes(urlObj.id)) {
+			// displayText（表示されている文字列そのまま）を対象に検閲置換を行う
+			readmeContent = readmeContent.split(urlObj.displayText).join('[—検閲済み—]');
+		}
 	});
 
 	csvState.generatedFiles = [];
@@ -455,9 +483,11 @@ csvDownloadBtn.addEventListener('click', async () => {
 
 		const deleted = csvState.deletedUrls[index] || [];
 		let readmeContent = infoText.trim();
-		deleted.forEach(delId => {
-			const targetStr = `[${delId}]`;
-			readmeContent = readmeContent.split(targetStr).join('[—検閲済み—]');
+		extractedUrls.forEach(urlObj => {
+			if (deleted.includes(urlObj.id)) {
+				// displayText（表示されている文字列そのまま）を対象に検閲置換を行う
+				readmeContent = readmeContent.split(urlObj.displayText).join('[—検閲済み—]');
+			}
 		});
 
 		folder.file(`README-${safeTitle}.txt`, readmeContent);
