@@ -672,7 +672,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 	button.className = 'list-item';
 	if (isSubItem) button.classList.add('is-sub-item');
 	button.innerHTML = `<span class="item-icon"><i data-lucide="${fileIcon}" style="width:18px;height:18px; ${iconColorStyle}"></i></span><span class="item-text">${file.name}</span>
-			<a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
+ <a href="#" target="_blank" class="item-action" title="新規タブで開く" style="display: none;" onclick="event.stopPropagation();"><i data-lucide="external-link" style="width:16px;height:16px;"></i></a>`;
 	button.title = file.name;
 
 	const addGroupWarning = (text) => {
@@ -685,7 +685,7 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 				warningEl = document.createElement('details');
 				warningEl.className = 'group-warnings';
 				warningEl.style.cssText = 'font-size:11px; color:rgb(102, 102, 102); margin:4px 12px 6px 12px; line-height:1.4;';
-				warningEl.innerHTML = '<summary style="cursor:pointer; outline:none; user-select:none;">注意案内</summary><ul style="margin:4px 0 0 0; padding-left:16px;"></ul>';
+				warningEl.innerHTML = '<summary style="cursor:pointer; outline:none; user-select:none;">指示コメ</summary><ul style="margin:4px 0 0 0; padding-left:16px;"></ul>';
 			}
 			groupEl.appendChild(warningEl);
 
@@ -707,13 +707,14 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 	};
 
 	const fileName = file.name.toLowerCase();
+
 	const isOffice = fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/);
 	const isPreviewable = fileName.match(/\.(mp4|mp3|wav|m4a|jpg|jpeg|png|gif|webp|txt|pdf|html|htm)$/);
 
 	if (isOffice) {
-		addGroupWarning('Officeファイルはプレビューできません。以下の手順をお試しください。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
+		addGroupWarning('OfficeファイルはGoogleドライブにアップロードしたら見れるかも知れないね💦😉.txtファイルに共有リンクを貼ったらどうかな…？🤔✨');
 	} else if (!isPreviewable) {
-		addGroupWarning('プレビューできないファイルです。以下の手順で表示できる場合があります。1.ファイルをGoogleドライブにアップロードする 2.発行した共有リンクを、新規txtファイルに貼り付ける 4.そのtxtファイルを本フォルダに保存する 5.再度フォルダを読み込む');
+		addGroupWarning('このファイルは見れないんじゃないかなぁ💦もしかしたらGoogleドライブにアップロードしたら見れるかもよ〜🤭.txtファイルに共有リンク貼ったらいいのにねっ👍✨');
 	}
 
 	if (fileName.endsWith('.txt')) {
@@ -747,10 +748,10 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 			}
 
 			if (containsTransfer) {
-				addGroupWarning('ダウンロード用URLの可能性があります。以下の手順をお試しください。1.URLからファイルをダウンロードする 2.このtxtファイルを削除する 3.ダウンロードしたデータをフォルダに保存する 4.再度フォルダを読み込む');
+				addGroupWarning('ダウンロード用URLの可能性があるから😃💦チョット手間だけどURLからファイルをDLして😃📁このtxtファイルは削除（ぽいっ🗑️）したらDLしたデータをフォルダに保存して😉💖再度フォルダを読み込んでみてネッ❗✨🙏ヨロシクね〜〜ッッ😜👍❗✨笑');
 			} else {
 				if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
-					addGroupWarning('新規タブの閲覧を推奨');
+					addGroupWarning('ﾔﾊｯ😃❗❗一部のサイトちゃんは、プレビュー表示ができないみたいんだよね〜😅💦申し訳ないんだけど💦「新規タブ」で見ちゃってほしいナ〜〜ッッ😉👍チョット手間に感じちゃうかもだけどイジワルしないでね😜ナンチャッテ❗✨🙏');
 				}
 			}
 		};
@@ -821,10 +822,10 @@ function showContent(file) {
 
 		contentLayer.appendChild(media);
 
-		// ★ 再生終了時にボタンを「再生」に戻す
-		media.addEventListener('ended', () => {
-			updatePlayPauseUI(false);
-		});
+		// ★ 再生・一時停止・終了時にボタンの表示を同期
+		media.addEventListener('play', () => updatePlayPauseUI(true));
+		media.addEventListener('pause', () => updatePlayPauseUI(false));
+		media.addEventListener('ended', () => updatePlayPauseUI(false));
 
 		// ★ Web Audio API を使って100%以上の音量を実現
 		media.addEventListener('play', () => {
@@ -855,28 +856,43 @@ function showContent(file) {
 		const reader = new FileReader();
 		reader.onload = function (e) {
 			let text = e.target.result.trim();
-			const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i);
-			if (ytMatch && isYtApiReady) {
+
+			// 【改善】クエリパラメータ付きのURLからでも確実に11桁の動画IDを取得
+			const ytMatch = text.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/i);
+
+			if (ytMatch) {
 				externalLinkBtn.href = text; externalLinkBtn.style.display = 'flex';
-				const videoId = ytMatch[1]; contentLayer.innerHTML = '<div id="yt-player-container"></div>';
-				ytPlayer = new YT.Player('yt-player-container', {
-					videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
-					events: {
-						'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
-						// ★ 再生終了時にボタンを「再生」に戻す
-						'onStateChange': function (event) {
-							if (event.data === YT.PlayerState.ENDED) {
-								updatePlayPauseUI(false);
+				const videoId = ytMatch[1];
+
+				if (isYtApiReady) {
+					contentLayer.innerHTML = '<div id="yt-player-container"></div>';
+					ytPlayer = new YT.Player('yt-player-container', {
+						videoId: videoId, playerVars: { 'autoplay': 0, 'rel': 0, 'widget_referrer': 'http://localhost/' },
+						events: {
+							'onReady': function (event) { event.target.setVolume(Math.min(100, parseFloat(volumeSlider.value) * 100)); },
+							// ★ YouTube再生・一時停止・終了時にボタンの表示を同期
+							'onStateChange': function (event) {
+								if (event.data === YT.PlayerState.PLAYING) {
+									updatePlayPauseUI(true);
+								} else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+									updatePlayPauseUI(false);
+								}
 							}
 						}
-					}
-				}); return;
+					});
+				} else {
+					// 【フォールバック】APIが未ロードの場合は埋め込みURL（/embed/）を使用してブロックを回避
+					const embedUrl = `https://www.youtube.com/embed/${videoId}?rel=0`;
+					contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${embedUrl}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
+				}
+				return; // YouTube処理を終えたらここで終了し、下の一般URL判定に流さない
 			}
+
 			if (text.toLowerCase().startsWith('<iframe')) {
 				contentLayer.innerHTML = text; const iframe = contentLayer.querySelector('iframe');
 				if (iframe) { iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; if (iframe.hasAttribute('allow')) iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, '')); }
 			} else if (/^https?:\/\/\S+$/.test(text)) {
-				let iframeSrc = text; let isKnownEmbeddable = false;
+				let iframeSrc = text;
 
 				if (iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//)) {
 					const typeMatch = iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//);
@@ -902,16 +918,15 @@ function showContent(file) {
 							}
 						}
 					}
-					isKnownEmbeddable = true;
 				}
 				else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
-					try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); isKnownEmbeddable = true; } catch (e) { console.error(e); }
+					try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); } catch (e) { console.error(e); }
 				}
 				else if (iframeSrc.includes('drive.google.com/open?id=')) {
-					try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; isKnownEmbeddable = true; } } catch (e) { console.error(e); }
+					try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; } } catch (e) { console.error(e); }
 				}
 				else if (iframeSrc.includes('drive.google.com/file/d/')) {
-					const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; isKnownEmbeddable = true; }
+					const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; }
 				}
 
 				contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
@@ -934,11 +949,11 @@ function showContent(file) {
 		const img = document.createElement('img'); img.src = fileURL; contentLayer.appendChild(img);
 	} else if (fileName.match(/\.(pptx|ppt|xlsx|xls|docx|doc)$/)) {
 		const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "";
-		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの注意案内をご確認ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">Officeファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ヒントが欲しい場合、<br>左メニューの「指示コメ」を参照ください</strong></p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 		lucide.createIcons({ root: contentLayer });
 	} else {
 		const extMatch = file.name.match(/\.[^.]+$/); const fileExt = extMatch ? extMatch[0] : "不明";
-		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">左メニューの注意案内をご確認ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
+		contentLayer.innerHTML = `<div style="text-align: center; color: #888; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%;"><i data-lucide="alert-circle" style="width:56px;height:56px; margin-bottom:12px; color:#e74c3c;"></i><p style="font-weight: bold; font-size: 18px; margin: 0; color: #555;">このファイルはプレビューできません</p><p style="font-size: 14px; margin-top: 8px; color: #666; line-height: 1.6;">ヒントが欲しい場合、<br>左メニューの「指示コメ」を参照ください</p><p style="font-size: 12px; margin-top: 15px; word-break: break-all; background: #f0f0f0; padding: 5px 10px; border-radius: 4px;">ファイル形式：${fileExt}</p></div>`;
 		lucide.createIcons({ root: contentLayer });
 	}
 }
