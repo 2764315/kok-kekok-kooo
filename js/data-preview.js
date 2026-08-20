@@ -667,6 +667,16 @@ function setupGroupDragAndDrop(group) {
 	});
 }
 
+// ★ 安全にURLのホスト名を判定するユーティリティ関数
+function getHostFromUrl(urlString) {
+	try {
+		const url = new URL(urlString);
+		return url.hostname;
+	} catch (e) {
+		return "";
+	}
+}
+
 function createListButton(file, container, folderName, isSubItem = false, fileIcon = "file", iconColorStyle = "") {
 	const button = document.createElement('button');
 	button.className = 'list-item';
@@ -724,16 +734,23 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 			const iconSpan = button.querySelector('.item-icon');
 			const actionBtn = button.querySelector('.item-action');
 			const sharedDomains = ['gigafile.nu', 'gigafile.jp', 'xgf.nu', 'datadeliver.net', 'dtbn.jp', 'firestorage.jp', 'xfs.jp', 'tenpu.me', 'ac-data.info', 'okurin.bitpark.co.jp', 'delifile.link'];
-			const containsDriveFolder = /drive\.google\.com\/drive\/folders\//i.test(text);
-			const containsTransfer = sharedDomains.some(d => text.indexOf(d) !== -1);
 
-			const isKnownEmbeddable = /docs\.google\.com\/(presentation|spreadsheets|document)\/d\/|sharepoint\.com|1drv\.ms|(youtube\.com|youtu\.be)\//i.test(text) || /drive\.google\.com\/(file|open)\//i.test(text);
+			// ★ 安全にホスト名をパースして判定 (CodeQL修正箇所)
+			const host = getHostFromUrl(text);
+			const isDriveFolder = host === 'drive.google.com' && text.includes('/folders/');
+			const containsTransfer = sharedDomains.some(d => host === d || host.endsWith('.' + d));
+
+			const isKnownEmbeddable = (host === 'docs.google.com' && /\/(presentation|spreadsheets|document)\/d\//.test(text)) ||
+				(host === 'sharepoint.com' || host.endsWith('.sharepoint.com')) ||
+				(host === '1drv.ms' || host.endsWith('.1drv.ms')) ||
+				(((host === 'youtube.com' || host.endsWith('.youtube.com')) || host === 'youtu.be') && isYtApiReady) ||
+				(host === 'drive.google.com' && /\/(file|open)\//.test(text));
 
 			if (/^https?:\/\/\S+$/.test(text)) {
 				if (actionBtn) { actionBtn.href = text; actionBtn.style.display = 'flex'; }
 			}
 			if (iconSpan) {
-				if (containsDriveFolder || containsTransfer) {
+				if (isDriveFolder || containsTransfer) {
 					iconSpan.innerHTML = '<i data-lucide="link" style="width:18px;height:18px;color:#e74c3c;"></i>';
 				} else {
 					if (/^https?:\/\/\S+$/.test(text) && !isKnownEmbeddable) {
@@ -893,23 +910,24 @@ function showContent(file) {
 				if (iframe) { iframe.style.width = '100%'; iframe.style.height = '100%'; iframe.style.border = 'none'; if (iframe.hasAttribute('allow')) iframe.setAttribute('allow', iframe.getAttribute('allow').replace(/autoplay;?\s*/i, '')); }
 			} else if (/^https?:\/\/\S+$/.test(text)) {
 				let iframeSrc = text;
+				const host = getHostFromUrl(text);
 
-				if (iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//)) {
-					const typeMatch = iframeSrc.match(/docs\.google\.com\/(presentation|spreadsheets|document)\/d\//);
+				if (host === 'docs.google.com' && text.match(/\/(presentation|spreadsheets|document)\/d\//)) {
+					const typeMatch = text.match(/\/(presentation|spreadsheets|document)\/d\//);
 					const docType = typeMatch[1];
 
-					if (iframeSrc.includes('/pub')) {
+					if (text.includes('/pub')) {
 						if (docType === 'presentation') {
-							iframeSrc = iframeSrc.replace(/\/pub.*/, '/embed?rm=minimal');
+							iframeSrc = text.replace(/\/pub.*/, '/embed?rm=minimal');
 						} else if (docType === 'spreadsheets') {
-							iframeSrc = iframeSrc.includes('/pubhtml')
-								? iframeSrc.replace(/\/pubhtml.*/, '/pubhtml?widget=true&headers=false')
-								: iframeSrc.replace(/\/pub.*/, '/pubhtml?widget=true&headers=false');
+							iframeSrc = text.includes('/pubhtml')
+								? text.replace(/\/pubhtml.*/, '/pubhtml?widget=true&headers=false')
+								: text.replace(/\/pub.*/, '/pubhtml?widget=true&headers=false');
 						} else if (docType === 'document') {
-							iframeSrc = iframeSrc.replace(/\/pub.*/, '/pub?embedded=true');
+							iframeSrc = text.replace(/\/pub.*/, '/pub?embedded=true');
 						}
-					} else if (!iframeSrc.includes('/embed') && !iframeSrc.includes('/preview')) {
-						const match = iframeSrc.match(/\/d\/([a-zA-Z0-9_-]+)/);
+					} else if (!text.includes('/embed') && !text.includes('/preview')) {
+						const match = text.match(/\/d\/([a-zA-Z0-9_-]+)/);
 						if (match && match[1] !== 'e') {
 							if (docType === 'presentation') {
 								iframeSrc = `https://docs.google.com/presentation/d/${match[1]}/embed?rm=minimal`;
@@ -919,14 +937,15 @@ function showContent(file) {
 						}
 					}
 				}
-				else if (iframeSrc.includes('sharepoint.com') || iframeSrc.includes('1drv.ms')) {
-					try { const urlObj = new URL(iframeSrc); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); } catch (e) { console.error(e); }
+				// ★ 安全なホスト判定 (CodeQL修正箇所)
+				else if ((host === 'sharepoint.com' || host.endsWith('.sharepoint.com')) || (host === '1drv.ms' || host.endsWith('.1drv.ms'))) {
+					try { const urlObj = new URL(text); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); } catch (e) { console.error(e); }
 				}
-				else if (iframeSrc.includes('drive.google.com/open?id=')) {
-					try { const urlObj = new URL(iframeSrc); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; } } catch (e) { console.error(e); }
+				else if (host === 'drive.google.com' && text.includes('/open?id=')) {
+					try { const urlObj = new URL(text); const fileId = urlObj.searchParams.get('id'); if (fileId) { iframeSrc = `https://drive.google.com/file/d/${fileId}/preview`; } } catch (e) { console.error(e); }
 				}
-				else if (iframeSrc.includes('drive.google.com/file/d/')) {
-					const match = iframeSrc.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; }
+				else if (host === 'drive.google.com' && text.includes('/file/d/')) {
+					const match = text.match(/(https:\/\/drive\.google\.com\/file\/d\/[a-zA-Z0-9_-]+)/); if (match) { iframeSrc = `${match[1]}/preview`; }
 				}
 
 				contentLayer.innerHTML = `<div style="width:100%; height:100%; position:relative; background-color: #ffffff;"><iframe src="${iframeSrc}" style="width:100%; height:100%; border:none; display: block;" allowfullscreen allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
