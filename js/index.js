@@ -93,7 +93,6 @@ function updateMiniPreview() {
 function saveSettings() {
 	const settings = {
 		folderNumber: document.getElementById('setting-folder-number').checked,
-		urlDomain: document.getElementById('setting-url-domain').checked,
 		readmeHeading: document.getElementById('setting-readme-heading').value,
 		readmeAuto: document.getElementById('setting-readme-auto').checked,
 		readmeWidth: document.getElementById('setting-readme-width').value,
@@ -113,17 +112,16 @@ function loadSettings() {
 	if (saved) {
 		try {
 			const settings = JSON.parse(saved);
-			if (settings.folderNumber !== undefined) document.getElementById('setting-folder-number').checked = settings.folderNumber;
-			if (settings.urlDomain !== undefined) document.getElementById('setting-url-domain').checked = settings.urlDomain;
-			if (settings.readmeHeading !== undefined) document.getElementById('setting-readme-heading').value = settings.readmeHeading;
-			if (settings.readmeAuto !== undefined) document.getElementById('setting-readme-auto').checked = settings.readmeAuto;
-			if (settings.readmeWidth !== undefined) document.getElementById('setting-readme-width').value = settings.readmeWidth;
-			if (settings.readmeHeight !== undefined) document.getElementById('setting-readme-height').value = settings.readmeHeight;
-			if (settings.readmeFontSize !== undefined) document.getElementById('setting-readme-font-size').value = settings.readmeFontSize;
-			if (settings.readmeBg !== undefined) document.getElementById('setting-readme-bg').value = settings.readmeBg;
-			if (settings.readmeFont !== undefined) document.getElementById('setting-readme-font').value = settings.readmeFont;
-			if (settings.alarmTime !== undefined) document.getElementById('setting-alarm-time').value = settings.alarmTime;
-			if (settings.alarmVol !== undefined) {
+			if (settings.folderNumber !== undefined && document.getElementById('setting-folder-number')) document.getElementById('setting-folder-number').checked = settings.folderNumber;
+			if (settings.readmeHeading !== undefined && document.getElementById('setting-readme-heading')) document.getElementById('setting-readme-heading').value = settings.readmeHeading;
+			if (settings.readmeAuto !== undefined && document.getElementById('setting-readme-auto')) document.getElementById('setting-readme-auto').checked = settings.readmeAuto;
+			if (settings.readmeWidth !== undefined && document.getElementById('setting-readme-width')) document.getElementById('setting-readme-width').value = settings.readmeWidth;
+			if (settings.readmeHeight !== undefined && document.getElementById('setting-readme-height')) document.getElementById('setting-readme-height').value = settings.readmeHeight;
+			if (settings.readmeFontSize !== undefined && document.getElementById('setting-readme-font-size')) document.getElementById('setting-readme-font-size').value = settings.readmeFontSize;
+			if (settings.readmeBg !== undefined && document.getElementById('setting-readme-bg')) document.getElementById('setting-readme-bg').value = settings.readmeBg;
+			if (settings.readmeFont !== undefined && document.getElementById('setting-readme-font')) document.getElementById('setting-readme-font').value = settings.readmeFont;
+			if (settings.alarmTime !== undefined && document.getElementById('setting-alarm-time')) document.getElementById('setting-alarm-time').value = settings.alarmTime;
+			if (settings.alarmVol !== undefined && document.getElementById('setting-alarm-vol')) {
 				document.getElementById('setting-alarm-vol').value = settings.alarmVol;
 				document.getElementById('alarm-vol-display').innerText = Math.round(settings.alarmVol * 100) + '%';
 			}
@@ -206,7 +204,6 @@ globalSettingsModalOverlay.addEventListener('click', (e) => { if (e.target === g
 
 // --- 設定の連携 (iframe への送信) ---
 const folderNumCheck = document.getElementById('setting-folder-number');
-const urlDomainCheck = document.getElementById('setting-url-domain');
 const readmeHeadingSelect = document.getElementById('setting-readme-heading');
 
 function sendSettingsToCsvFrame() {
@@ -214,16 +211,14 @@ function sendSettingsToCsvFrame() {
 		frameCsv.contentWindow.postMessage({
 			type: 'updateCsvSettings',
 			settings: {
-				useFolderNumber: folderNumCheck.checked,
-				useUrlDomain: urlDomainCheck.checked,
-				readmeHeadingStyle: readmeHeadingSelect.value
+				useFolderNumber: folderNumCheck ? folderNumCheck.checked : true,
+				readmeHeadingStyle: readmeHeadingSelect ? readmeHeadingSelect.value : 'hash'
 			}
 		}, '*');
 	}
 }
 
 if (folderNumCheck) folderNumCheck.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
-if (urlDomainCheck) urlDomainCheck.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
 if (readmeHeadingSelect) readmeHeadingSelect.addEventListener('change', () => { saveSettings(); updateMiniPreview(); sendSettingsToCsvFrame(); });
 
 frameCsv.addEventListener('load', sendSettingsToCsvFrame);
@@ -249,14 +244,14 @@ function sendSettingsToPreviewFrame() {
 		framePreview.contentWindow.postMessage({
 			type: 'updatePreviewSettings',
 			settings: {
-				readmeAuto: readmeAutoCheck.checked,
-				readmeWidth: parseInt(readmeWidthInput.value) || 1024,
-				readmeHeight: parseInt(readmeHeightInput.value) || 768,
-				readmeFontSize: parseInt(readmeFontSizeInput.value) || 20,
-				readmeBgColor: readmeBgInput.value,
-				readmeFontFamily: readmeFontSelect.value,
-				alarmTime: parseInt(alarmTimeInput.value) || 0,
-				alarmVol: parseFloat(alarmVolInput.value) || 0.5,
+				readmeAuto: readmeAutoCheck ? readmeAutoCheck.checked : true,
+				readmeWidth: readmeWidthInput ? (parseInt(readmeWidthInput.value) || 1024) : 1024,
+				readmeHeight: readmeHeightInput ? (parseInt(readmeHeightInput.value) || 768) : 768,
+				readmeFontSize: readmeFontSizeInput ? (parseInt(readmeFontSizeInput.value) || 20) : 20,
+				readmeBgColor: readmeBgInput ? readmeBgInput.value : '#fdfbf7',
+				readmeFontFamily: readmeFontSelect ? readmeFontSelect.value : "'Sawarabi Gothic', sans-serif",
+				alarmTime: alarmTimeInput ? (parseInt(alarmTimeInput.value) || 0) : 0,
+				alarmVol: alarmVolInput ? (parseFloat(alarmVolInput.value) || 0.5) : 0.5,
 				alarmSound: alarmSoundSelect ? alarmSoundSelect.value : 'se/call_niwatori.mp3'
 			}
 		}, '*');
@@ -347,13 +342,13 @@ if (testAlarmBtn) {
 
 if (resetReadmeBtn) {
 	resetReadmeBtn.addEventListener('click', () => {
-		readmeAutoCheck.checked = true;
-		readmeWidthInput.value = 1024;
-		readmeHeightInput.value = 768;
+		if (readmeAutoCheck) readmeAutoCheck.checked = true;
+		if (readmeWidthInput) readmeWidthInput.value = 1024;
+		if (readmeHeightInput) readmeHeightInput.value = 768;
 		if (readmePresetSelect) readmePresetSelect.value = "1024x768";
-		readmeFontSizeInput.value = 20;
-		readmeBgInput.value = '#fdfbf7';
-		readmeFontSelect.value = "'Sawarabi Gothic', sans-serif";
+		if (readmeFontSizeInput) readmeFontSizeInput.value = 20;
+		if (readmeBgInput) readmeBgInput.value = '#fdfbf7';
+		if (readmeFontSelect) readmeFontSelect.value = "'Sawarabi Gothic', sans-serif";
 		updateReadmeSizeInputsState();
 		updateMiniPreview();
 		saveSettings();

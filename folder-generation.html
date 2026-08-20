@@ -4,7 +4,7 @@
 <head>
 	<meta name="robots" content="noindex">
 	<meta charset="UTF-8">
-	<title>準用モード │ 発表配信ツール コッケコッコー!!!</title>
+	<title>準備モード │ 発表配信ツール コッケコッコー!!!</title>
 	<script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"
 		integrity="sha384-E1pALgGQd5jo9+CjsxlKe6NWRynty/TMVcFeBANdn+V5RTR5v+POlW5Ys+JJrUa8"
 		crossorigin="anonymous"></script>
@@ -47,7 +47,9 @@
 
 			<div id="csv-controls" class="hidden" style="padding: 15px;">
 				<div class="csv-box">
-					<label class="csv-label">回答リスト</label>
+					<label class="csv-label" style="display: flex; align-items: center; gap: 6px;">
+						<i data-lucide="list" style="width: 16px; height: 16px;"></i>回答リスト
+					</label>
 					<div style="display: flex; gap: 8px; align-items: center;">
 						<button id="csv-prev-btn" class="csv-icon-btn"><i data-lucide="chevron-left"
 								style="width:16px; height:16px;"></i></button>
@@ -58,15 +60,32 @@
 				</div>
 
 				<div class="csv-box">
-					<label class="csv-label">非表示にする項目</label>
-					<p class="csv-note">配信に映したくない項目を非表示にします</p>
+					<label class="csv-label" style="display: flex; align-items: center; gap: 6px;">
+						<i data-lucide="eye-off" style="width: 16px; height: 16px;"></i>非表示にする項目
+					</label>
+					<p class="csv-note">配信に映したくない項目を非表示にできます</p>
 					<div id="csv-column-checkboxes"></div>
+				</div>
+
+				<!-- URLの表記方法 -->
+				<div class="csv-box">
+					<label class="csv-label" style="display: flex; align-items: center; gap: 6px;">
+						<i data-lucide="link" style="width: 16px; height: 16px;"></i>URLの表記方法
+					</label>
+					<p class="csv-note">URLの伏せ字スタイルを変更できます</p>
+					<select id="csv-url-format" class="csv-select">
+						<option value="number" selected>URL-01</option>
+						<option value="domain">URL-01__ドメイン</option>
+						<option value="none">（伏字にしない）</option>
+					</select>
 				</div>
 
 				<!-- カテゴリ設定エリア -->
 				<div class="csv-box">
-					<label class="csv-label">カテゴリ設定（任意）</label>
-					<p class="csv-note">フォルダの先頭に表示されます。ジャンル分け、発表順の整理、自分用のメモなどに使えます</p>
+					<label class="csv-label" style="display: flex; align-items: center; gap: 6px;">
+						<i data-lucide="tag" style="width: 16px; height: 16px;"></i>ジャンル設定（任意）
+					</label>
+					<p class="csv-note">フォルダの先頭に表示されます。研究の分類、発表順の整理、自分用のメモなどに使えます</p>
 					<input type="text" id="csv-tag-input" class="csv-select" placeholder="例：泥団子,◯日目,要連絡"
 						autocomplete="off">
 					<div id="category-history-container"
@@ -75,12 +94,14 @@
 
 				<div class="csv-box">
 					<button id="csv-filename-accordion-btn" class="csv-accordion-btn">
-						<span>ファイル名に含める項目</span>
+						<span style="display: flex; align-items: center; gap: 6px;">
+							<i data-lucide="folder-edit" style="width: 16px; height: 16px;"></i>ファイル名に含める項目
+						</span>
 						<i data-lucide="chevron-down" id="csv-filename-accordion-icon"
 							style="transition: transform 0.2s;"></i>
 					</button>
 					<div id="csv-filename-accordion-content" class="hidden">
-						<p class="csv-note">複数選択可能／ドラッグで順序の入れ替え</p>
+						<p class="csv-note">ONにすると、フォルダ名に反映されます。ドラッグで順序を変えられます</p>
 						<div id="csv-filename-checkboxes"></div>
 					</div>
 				</div>

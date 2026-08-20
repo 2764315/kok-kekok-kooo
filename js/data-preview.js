@@ -124,6 +124,20 @@ window.addEventListener('DOMContentLoaded', () => {
 	// フォルダ読み込み前はプレビュー枠をHDに固定
 	userSelectedWidth = 1280; userSelectedHeight = 720; userSelectedPreset = "1280x720";
 	applySize(userSelectedWidth, userSelectedHeight, userSelectedPreset);
+
+	// ★ サイドバーのリストがスクロールできないバグを確実に修正するCSS補正
+	const sidebarEl = document.getElementById('sidebar');
+	const sidebarScrollArea = document.getElementById('sidebar-scroll-area');
+	if (sidebarEl) {
+		sidebarEl.style.height = '100vh';
+		sidebarEl.style.maxHeight = '100vh';
+	}
+	if (sidebarScrollArea) {
+		// ベースサイズを0pxにしてコンテンツ量への依存を無くし、スクロールを有効化
+		sidebarScrollArea.style.flex = '1 1 0px';
+		sidebarScrollArea.style.minHeight = '0';
+		sidebarScrollArea.style.overflowY = 'auto';
+	}
 });
 
 // --- index.htmlからの設定受信 ---
