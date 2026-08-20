@@ -735,15 +735,15 @@ function createListButton(file, container, folderName, isSubItem = false, fileIc
 			const actionBtn = button.querySelector('.item-action');
 			const sharedDomains = ['gigafile.nu', 'gigafile.jp', 'xgf.nu', 'datadeliver.net', 'dtbn.jp', 'firestorage.jp', 'xfs.jp', 'tenpu.me', 'ac-data.info', 'okurin.bitpark.co.jp', 'delifile.link'];
 
-			// 安全にホスト名をパースして判定
+			// ★ 安全にホスト名をパースして判定 (CodeQL修正箇所)
 			const host = getHostFromUrl(text);
 			const isDriveFolder = host === 'drive.google.com' && text.includes('/folders/');
-			const containsTransfer = sharedDomains.some(d => host.includes(d));
+			const containsTransfer = sharedDomains.some(d => host === d || host.endsWith('.' + d));
 
 			const isKnownEmbeddable = (host === 'docs.google.com' && /\/(presentation|spreadsheets|document)\/d\//.test(text)) ||
-				host.includes('sharepoint.com') ||
-				host.includes('1drv.ms') ||
-				((host.includes('youtube.com') || host === 'youtu.be') && isYtApiReady) ||
+				(host === 'sharepoint.com' || host.endsWith('.sharepoint.com')) ||
+				(host === '1drv.ms' || host.endsWith('.1drv.ms')) ||
+				(((host === 'youtube.com' || host.endsWith('.youtube.com')) || host === 'youtu.be') && isYtApiReady) ||
 				(host === 'drive.google.com' && /\/(file|open)\//.test(text));
 
 			if (/^https?:\/\/\S+$/.test(text)) {
@@ -937,7 +937,8 @@ function showContent(file) {
 						}
 					}
 				}
-				else if (host.includes('sharepoint.com') || host.includes('1drv.ms')) {
+				// ★ 安全なホスト判定 (CodeQL修正箇所)
+				else if ((host === 'sharepoint.com' || host.endsWith('.sharepoint.com')) || (host === '1drv.ms' || host.endsWith('.1drv.ms'))) {
 					try { const urlObj = new URL(text); urlObj.searchParams.set('action', 'embedview'); urlObj.searchParams.set('wdAr', '1.7777777777777777'); iframeSrc = urlObj.toString(); } catch (e) { console.error(e); }
 				}
 				else if (host === 'drive.google.com' && text.includes('/open?id=')) {
