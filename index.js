@@ -177,10 +177,12 @@ function updateReadmeSizeInputsState() {
 		readmeWidthInput.disabled = !isAuto;
 		readmeHeightInput.disabled = !isAuto;
 
-		const widthField = readmeWidthInput.closest('.tw-field');
-		const heightField = readmeHeightInput.closest('.tw-field');
-		if (widthField) widthField.style.opacity = isAuto ? '1' : '0.5';
-		if (heightField) heightField.style.opacity = isAuto ? '1' : '0.5';
+		// ★新しい行単位（tw-setting-row）のレイアウトに合わせて表示を切り替えるよう修正
+		const sizeRow = document.getElementById('row-readme-size');
+		if (sizeRow) {
+			sizeRow.style.opacity = isAuto ? '1' : '0.5';
+			sizeRow.style.pointerEvents = isAuto ? 'auto' : 'none';
+		}
 	}
 }
 
