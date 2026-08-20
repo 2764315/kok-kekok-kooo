@@ -9,8 +9,8 @@
 		integrity="sha384-E1pALgGQd5jo9+CjsxlKe6NWRynty/TMVcFeBANdn+V5RTR5v+POlW5Ys+JJrUa8"
 		crossorigin="anonymous"></script>
 	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
-	<!-- 分割したCSSを読み込み -->
 	<link rel="stylesheet" href="css/style.css">
+	<link rel="icon" href="favicon.ico">
 </head>
 
 <body>
@@ -19,11 +19,11 @@
 		<div style="display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center;">
 			<button id="nav-csv-btn" class="activity-icon active" title="フォルダ生成">
 				<i data-lucide="folder-plus"></i>
-				<span>準備用</span>
+				<span>準備</span>
 			</button>
 			<button id="nav-preview-btn" class="activity-icon" title="データプレビュー">
 				<i data-lucide="monitor-play"></i>
-				<span>配信用</span>
+				<span>配信</span>
 			</button>
 		</div>
 		<div style="margin-top: auto; margin-bottom: 15px; width: 100%; display: flex; justify-content: center;">
@@ -125,7 +125,8 @@
 									<label id="label-readme-auto" class="tw-label"
 										style="margin-bottom:0;">README.txtのプレビューサイズを固定する</label>
 									<div id="hint-readme-auto" class="tw-hint">
-										シーン切り替えなどでキャプチャーサイズが異なる時などに使用します</div>
+										ONにすると、README.txtのみ設定したプレビューサイズに固定できます<br>
+										発表前のキャプチャーサイズと、発表中のキャプチャーサイズが異なる場合などにオススメです</div>
 								</div>
 								<label class="toggle-switch">
 									<input type="checkbox" id="setting-readme-auto" checked>
