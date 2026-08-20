@@ -1,3 +1,94 @@
+// --- 背景色から文字色(白/黒)を判定する関数 ---
+function getTextColorForBackground(hexColor) {
+	let hex = hexColor.replace('#', '');
+	if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+	const r = parseInt(hex.substr(0, 2), 16);
+	const g = parseInt(hex.substr(2, 2), 16);
+	const b = parseInt(hex.substr(4, 2), 16);
+	// 輝度（YIQ）を計算して文字色を判定
+	const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+	return (yiq >= 128) ? '#333333' : '#ffffff';
+}
+
+// --- モーダル内のミニプレビューとアスペクト比定規を更新する関数 ---
+function updateMiniPreview() {
+	const previewBox = document.getElementById('readme-mini-preview');
+	const previewContainer = document.getElementById('readme-mini-preview-container');
+	const rulerWidth = document.getElementById('preview-ruler-width');
+	const rulerHeight = document.getElementById('preview-ruler-height');
+
+	if (!previewBox) return;
+
+	const bgColor = document.getElementById('setting-readme-bg').value;
+	const fontFamily = document.getElementById('setting-readme-font').value;
+	const fontSize = parseFloat(document.getElementById('setting-readme-font-size').value) || 20;
+	const headingStyle = document.getElementById('setting-readme-heading').value;
+
+	const widthInput = document.getElementById('setting-readme-width');
+	const heightInput = document.getElementById('setting-readme-height');
+	const presetSelect = document.getElementById('setting-readme-preset');
+
+	const width = parseFloat(widthInput.value) || 1024;
+	const height = parseFloat(heightInput.value) || 768;
+	const isAuto = document.getElementById('setting-readme-auto').checked;
+
+	let headingText = "【見出し】";
+	if (headingStyle === "hash") headingText = "# 見出し";
+	else if (headingStyle === "line") headingText = "―― 見出し ――";
+	else if (headingStyle === "none") headingText = "見出し";
+
+	previewBox.innerText = `${headingText}\nこれはREDME.txt（前置きテキスト）の表示プレビューです。\nプレビューサイズの変更や、フォント、背景色の反映状態を確認できます。`;
+
+	previewBox.style.backgroundColor = bgColor;
+	previewBox.style.color = getTextColorForBackground(bgColor);
+	previewBox.style.fontFamily = fontFamily;
+
+	if (previewContainer) {
+		const containerWidth = 400; // HTML側で指定した最大幅
+		let scale = 1;
+
+		if (isAuto) {
+			previewContainer.style.aspectRatio = `${width} / ${height}`;
+			if (rulerWidth) rulerWidth.innerText = `${width}px`;
+			if (rulerHeight) rulerHeight.innerText = `${height}px`;
+			scale = containerWidth / width;
+		} else {
+			// AutoがOFFのとき、現在の設定サイズではなく「iframe側での実際の表示サイズ」を取得する
+			let currentPreviewW = 1280;
+			let currentPreviewH = 720;
+			const framePreview = document.getElementById('frame-preview');
+			if (framePreview && framePreview.contentWindow) {
+				try {
+					// presentation-areaのボーダーを含まない純粋なコンテンツ領域のサイズ(clientWidth)を取得
+					const area = framePreview.contentWindow.document.getElementById('presentation-area');
+					if (area) {
+						currentPreviewW = area.clientWidth || parseInt(area.style.width) || 1280;
+						currentPreviewH = area.clientHeight || parseInt(area.style.height) || 720;
+					}
+				} catch (e) { }
+			}
+
+			previewContainer.style.aspectRatio = `${currentPreviewW} / ${currentPreviewH}`;
+			if (rulerWidth) rulerWidth.innerText = `${currentPreviewW}px`;
+			if (rulerHeight) rulerHeight.innerText = `${currentPreviewH}px`;
+			scale = containerWidth / currentPreviewW;
+		}
+
+		if (presetSelect) {
+			const presetValue = `${widthInput.value}x${heightInput.value}`;
+			const matchingOption = Array.from(presetSelect.options).find(opt => opt.value === presetValue);
+			presetSelect.value = matchingOption ? presetValue : "";
+		}
+
+		const scaledFontSize = fontSize * scale;
+		const scaledPadding = 40 * scale;
+
+		previewBox.style.fontSize = scaledFontSize + 'px';
+		previewBox.style.padding = scaledPadding + 'px';
+	}
+}
+
+
 // --- LocalStorageによる設定の保存と復元 ---
 function saveSettings() {
 	const settings = {
@@ -89,7 +180,9 @@ const globalCloseSettingsBtn = document.getElementById('global-close-settings-bt
 globalSettingsBtn.addEventListener('click', () => {
 	globalSettingsModalOverlay.classList.add('show');
 
-	// 現在表示されているiframeに合わせてタブを切り替える
+	// モーダルを開くたびに最新の表示サイズを反映させる
+	updateMiniPreview();
+
 	const isCsvVisible = frameCsv.style.display !== 'none';
 
 	helpTabBtns.forEach(b => b.classList.remove('active'));
@@ -129,18 +222,17 @@ function sendSettingsToCsvFrame() {
 	}
 }
 
-// 値が変更されたら保存＆送信
 if (folderNumCheck) folderNumCheck.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
 if (urlDomainCheck) urlDomainCheck.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
-if (readmeHeadingSelect) readmeHeadingSelect.addEventListener('change', () => { saveSettings(); sendSettingsToCsvFrame(); });
+if (readmeHeadingSelect) readmeHeadingSelect.addEventListener('change', () => { saveSettings(); updateMiniPreview(); sendSettingsToCsvFrame(); });
 
-// iframe がロードされたら初期設定を送信
 frameCsv.addEventListener('load', sendSettingsToCsvFrame);
 
 // --- プレビュー設定の連携 (iframe への送信) ---
 const readmeAutoCheck = document.getElementById('setting-readme-auto');
 const readmeWidthInput = document.getElementById('setting-readme-width');
 const readmeHeightInput = document.getElementById('setting-readme-height');
+const readmePresetSelect = document.getElementById('setting-readme-preset');
 const readmeFontSizeInput = document.getElementById('setting-readme-font-size');
 const readmeBgInput = document.getElementById('setting-readme-bg');
 const readmeFontSelect = document.getElementById('setting-readme-font');
@@ -176,8 +268,8 @@ function updateReadmeSizeInputsState() {
 		const isAuto = readmeAutoCheck.checked;
 		readmeWidthInput.disabled = !isAuto;
 		readmeHeightInput.disabled = !isAuto;
+		if (readmePresetSelect) readmePresetSelect.disabled = !isAuto;
 
-		// ★新しい行単位（tw-setting-row）のレイアウトに合わせて表示を切り替えるよう修正
 		const sizeRow = document.getElementById('row-readme-size');
 		if (sizeRow) {
 			sizeRow.style.opacity = isAuto ? '1' : '0.5';
@@ -186,19 +278,34 @@ function updateReadmeSizeInputsState() {
 	}
 }
 
-// 値が変更されたら保存＆送信
 if (readmeAutoCheck) {
 	readmeAutoCheck.addEventListener('change', () => {
 		updateReadmeSizeInputsState();
 		saveSettings();
+		updateMiniPreview();
 		sendSettingsToPreviewFrame();
 	});
 }
-if (readmeWidthInput) readmeWidthInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
-if (readmeHeightInput) readmeHeightInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
-if (readmeFontSizeInput) readmeFontSizeInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
-if (readmeBgInput) readmeBgInput.addEventListener('input', () => { saveSettings(); sendSettingsToPreviewFrame(); }); // inputだとリアルタイム反映
-if (readmeFontSelect) readmeFontSelect.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
+
+if (readmePresetSelect) {
+	readmePresetSelect.addEventListener('change', (e) => {
+		if (!e.target.value) return;
+		const [w, h] = e.target.value.split('x');
+		if (readmeWidthInput) readmeWidthInput.value = w;
+		if (readmeHeightInput) readmeHeightInput.value = h;
+		saveSettings();
+		updateMiniPreview();
+		sendSettingsToPreviewFrame();
+	});
+}
+
+if (readmeWidthInput) readmeWidthInput.addEventListener('input', () => { saveSettings(); updateMiniPreview(); sendSettingsToPreviewFrame(); });
+if (readmeHeightInput) readmeHeightInput.addEventListener('input', () => { saveSettings(); updateMiniPreview(); sendSettingsToPreviewFrame(); });
+
+if (readmeFontSizeInput) readmeFontSizeInput.addEventListener('input', () => { saveSettings(); updateMiniPreview(); sendSettingsToPreviewFrame(); });
+if (readmeBgInput) readmeBgInput.addEventListener('input', () => { saveSettings(); updateMiniPreview(); sendSettingsToPreviewFrame(); });
+if (readmeFontSelect) readmeFontSelect.addEventListener('change', () => { saveSettings(); updateMiniPreview(); sendSettingsToPreviewFrame(); });
+
 if (alarmTimeInput) alarmTimeInput.addEventListener('change', () => { saveSettings(); sendSettingsToPreviewFrame(); });
 if (alarmVolInput) {
 	alarmVolInput.addEventListener('input', () => {
@@ -224,45 +331,42 @@ function playRoosterVoice() {
 	let soundSrc = alarmSoundSelect ? alarmSoundSelect.value : 'se/call_niwatori.mp3';
 	alarmAudio.src = soundSrc;
 
-	// 再生位置を先頭に戻して音量を設定
 	alarmAudio.currentTime = 0;
 	alarmAudio.volume = masterVol;
 
-	// 再生
 	alarmAudio.play().catch(e => {
 		console.error("音声の再生に失敗しました:", e);
 	});
 }
 
-// テスト再生ボタン
 if (testAlarmBtn) {
 	testAlarmBtn.addEventListener('click', () => {
 		playRoosterVoice();
 	});
 }
 
-// 初期化ボタン
 if (resetReadmeBtn) {
 	resetReadmeBtn.addEventListener('click', () => {
 		readmeAutoCheck.checked = true;
 		readmeWidthInput.value = 1024;
 		readmeHeightInput.value = 768;
+		if (readmePresetSelect) readmePresetSelect.value = "1024x768";
 		readmeFontSizeInput.value = 20;
 		readmeBgInput.value = '#fdfbf7';
 		readmeFontSelect.value = "'Sawarabi Gothic', sans-serif";
 		updateReadmeSizeInputsState();
+		updateMiniPreview();
 		saveSettings();
 		sendSettingsToPreviewFrame();
 	});
 }
 
-// iframe がロードされたら初期設定を送信
 framePreview.addEventListener('load', sendSettingsToPreviewFrame);
 
-// ページロード時の初期設定実行
 document.addEventListener('DOMContentLoaded', () => {
 	loadSettings();
 	updateReadmeSizeInputsState();
+	updateMiniPreview();
 });
 
 lucide.createIcons();

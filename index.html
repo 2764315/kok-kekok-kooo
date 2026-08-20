@@ -8,7 +8,9 @@
 	<script src="https://unpkg.com/lucide@0.292.0/dist/umd/lucide.min.js"
 		integrity="sha384-E1pALgGQd5jo9+CjsxlKe6NWRynty/TMVcFeBANdn+V5RTR5v+POlW5Ys+JJrUa8"
 		crossorigin="anonymous"></script>
-	<link href="https://fonts.googleapis.com/css2?family=Sawarabi+Gothic&display=swap" rel="stylesheet">
+	<link
+		href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP&family=Sawarabi+Gothic&family=Sawarabi+Mincho&family=Yomogi&family=Zen+Maru+Gothic&display=swap"
+		rel="stylesheet">
 	<link rel="stylesheet" href="css/style.css">
 	<link rel="icon" href="favicon.ico">
 </head>
@@ -26,7 +28,13 @@
 				<span>配信</span>
 			</button>
 		</div>
-		<div style="margin-top: auto; margin-bottom: 15px; width: 100%; display: flex; justify-content: center;">
+		<div
+			style="margin-top: auto; margin-bottom: 15px; width: 100%; display: flex; flex-direction: column; gap: 15px; align-items: center;">
+			<a href="https://github.com/2764315/kok-kekok-kooo/blob/main/README.md" target="_blank"
+				class="activity-icon" title="使い方">
+				<i data-lucide="help-circle"></i>
+				<span>使い方</span>
+			</a>
 			<button id="global-settings-btn" class="activity-icon" title="初期設定">
 				<i data-lucide="settings"></i>
 				<span>設定</span>
@@ -117,6 +125,67 @@
 				<div id="help-preview" class="help-tab-content">
 					<h3 class="tw-group-title">README表示設定</h3>
 					<div class="tw-setting-group">
+						<!-- モーダル内プレビュー用のエリア -->
+						<div class="tw-setting-row"
+							style="flex-direction: column; align-items: center; gap: 0.75rem; background-color: #f8fafc;">
+							<div class="tw-label"
+								style="font-size: 0.8125rem; color: #6b7280; display: flex; align-items: center; gap: 6px; width: 100%;">
+								<i data-lucide="eye" style="width: 16px; height: 16px;"></i>
+								テキストのプレビュー確認
+							</div>
+
+							<div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+								<!-- 幅の定規 -->
+								<div
+									style="display: flex; align-items: center; justify-content: center; margin-bottom: 4px; width: 100%; max-width: 400px;">
+									<div style="flex: 1; height: 1px; background-color: #cbd5e1; position: relative;">
+										<div
+											style="position: absolute; left: 0; top: -3px; width: 1px; height: 7px; background-color: #cbd5e1;">
+										</div>
+									</div>
+									<span id="preview-ruler-width"
+										style="font-size: 11px; color: #64748b; padding: 0 8px; font-family: monospace;">1024px</span>
+									<div style="flex: 1; height: 1px; background-color: #cbd5e1; position: relative;">
+										<div
+											style="position: absolute; right: 0; top: -3px; width: 1px; height: 7px; background-color: #cbd5e1;">
+										</div>
+									</div>
+								</div>
+
+								<div
+									style="display: flex; align-items: stretch; justify-content: center; max-width: 100%;">
+									<!-- プレビュー枠本体 (アスペクト比連動) -->
+									<div id="readme-mini-preview-container"
+										style="border: 1px solid #d1d5db; border-radius: 0.375rem; overflow: hidden; width: 400px; aspect-ratio: 1024 / 768; transition: aspect-ratio 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+										<div id="readme-mini-preview"
+											style="width: 100%; height: 100%; overflow: auto; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; text-align: left;">
+											【見出し】
+											これはREDME.txt（前置きテキスト）の表示プレビューです。
+											プレビューサイズの変更や、フォント、背景色の反映状態を確認できます。</div>
+									</div>
+
+									<!-- 高さの定規 -->
+									<div
+										style="display: flex; flex-direction: column; align-items: center; margin-left: 4px;">
+										<div
+											style="flex: 1; width: 1px; background-color: #cbd5e1; position: relative;">
+											<div
+												style="position: absolute; top: 0; left: -3px; width: 7px; height: 1px; background-color: #cbd5e1;">
+											</div>
+										</div>
+										<span id="preview-ruler-height"
+											style="font-size: 11px; color: #64748b; padding: 8px 0; writing-mode: vertical-rl; font-family: monospace; transform: rotate(180deg);">768px</span>
+										<div
+											style="flex: 1; width: 1px; background-color: #cbd5e1; position: relative;">
+											<div
+												style="position: absolute; bottom: 0; left: -3px; width: 7px; height: 1px; background-color: #cbd5e1;">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+
 						<div class="tw-setting-row">
 							<div class="tw-setting-info">
 								<i data-lucide="maximize" class="tw-setting-icon"></i>
@@ -141,7 +210,8 @@
 									<div class="tw-hint">固定時の表示サイズを指定します</div>
 								</div>
 							</div>
-							<div class="tw-setting-action">
+							<div class="tw-setting-action"
+								style="flex-direction: column; align-items: flex-end; gap: 6px;">
 								<div style="display: flex; align-items: center; gap: 8px;">
 									<input type="number" class="tw-input" id="setting-readme-width" value="1024"
 										style="width: 80px; text-align: center;">
@@ -149,6 +219,15 @@
 									<input type="number" class="tw-input" id="setting-readme-height" value="768"
 										style="width: 80px; text-align: center;">
 								</div>
+								<select class="tw-select" id="setting-readme-preset"
+									style="width: 175px; padding: 2px 6px; font-size: 12px; height: 28px;">
+									<option value="">カスタム</option>
+									<option value="1920x1080">FHD (1920×1080)</option>
+									<option value="1280x720">HD (1280×720)</option>
+									<option value="1024x768" selected>XGA (1024×768)</option>
+									<option value="720x480">SD (720×480)</option>
+									<option value="640x480">VGA (640×480)</option>
+								</select>
 							</div>
 						</div>
 						<div class="tw-setting-row">
