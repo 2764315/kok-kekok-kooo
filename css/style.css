@@ -730,6 +730,7 @@ iframe {
   min-height: 0;
   overflow: auto;
   align-items: flex-start;
+  flex-wrap: wrap; /
 }
 
 .csv-card {

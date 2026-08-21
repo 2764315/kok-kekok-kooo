@@ -3,6 +3,7 @@ const csvState = {
 	csvData: [], headers: [], hiddenColumns: new Set(), filenameColumns: [],
 	filenameOrder: [], currentIndex: 0, generatedFiles: [], deleteLogs: [],
 	tags: [], categoryHistory: new Set(), deletedUrls: {},
+	editedFiles: {}, // ← 追加：プレビューで手動編集された内容を保持するオブジェクト
 	settings: {
 		useFolderNumber: true,
 		useUrlDomain: true,
@@ -299,12 +300,50 @@ function attachCsvTreeClickEvents(folderPath) {
 	});
 }
 
+let currentFileId = null; // 現在表示中のファイルID（'readme' や 'URL-01' など）を保持
+
 function updateCsvPreviewContent(fileData) {
-	if (fileData.isUrl) {
-		csvPreviewContent.innerHTML = `<a href="${fileData.content}" target="_blank" rel="noopener noreferrer" style="color: #007b5e; text-decoration: underline; word-break: break-all;">${fileData.content}</a>`;
+	currentFileId = fileData.id;
+	// 編集履歴があるかチェック
+	const editedContent = csvState.editedFiles[csvState.currentIndex]?.[fileData.id];
+
+	if (editedContent !== undefined) {
+		// 編集履歴がある場合は、そのテキストを表示
+		csvPreviewContent.innerText = editedContent;
 	} else {
-		csvPreviewContent.textContent = fileData.content;
+		// 編集履歴がない場合は初期表示
+		if (fileData.isUrl) {
+			csvPreviewContent.innerHTML = `<a href="${fileData.content}" target="_blank" rel="noopener noreferrer" style="color: #007b5e; text-decoration: underline; word-break: break-all;">${fileData.content}</a>`;
+		} else {
+			csvPreviewContent.textContent = fileData.content;
+		}
 	}
+}
+
+// 追加：プレビュー内容が直接編集されたら csvState に保存する
+csvPreviewContent.addEventListener('input', () => {
+	if (currentFileId !== null) {
+		if (!csvState.editedFiles[csvState.currentIndex]) {
+			csvState.editedFiles[csvState.currentIndex] = {};
+		}
+		// innerText を使うことで、画面上の改行をそのままZIPにも反映できるようにする
+		csvState.editedFiles[csvState.currentIndex][currentFileId] = csvPreviewContent.innerText;
+	}
+});
+
+// 追加：リセットボタン（HTMLで <button id="csv-reset-btn"> を付けた前提）の処理
+const csvResetBtn = document.getElementById('csv-reset-btn');
+if (csvResetBtn) {
+	csvResetBtn.addEventListener('click', () => {
+		if (currentFileId !== null && csvState.editedFiles[csvState.currentIndex]) {
+			// 編集履歴を削除して再描画（初期状態に戻す）
+			delete csvState.editedFiles[csvState.currentIndex][currentFileId];
+			const fileData = csvState.generatedFiles.find(f => f.id === currentFileId);
+			if (fileData) {
+				updateCsvPreviewContent(fileData);
+			}
+		}
+	});
 }
 
 function updateCsvPreview() {
@@ -419,6 +458,14 @@ function updateCsvPreview() {
 				}
 				csvState.deletedUrls = newDeletedUrls;
 
+				const newEditedFiles = {};
+				for (const key in csvState.editedFiles) {
+					const k = parseInt(key);
+					if (k < csvState.currentIndex) newEditedFiles[k] = csvState.editedFiles[k];
+					else if (k > csvState.currentIndex) newEditedFiles[k - 1] = csvState.editedFiles[k];
+				}
+				csvState.editedFiles = newEditedFiles;
+
 				if (csvState.csvData.length === 0) {
 					// 全て削除された場合は初期状態に戻す
 					csvControls.classList.add('hidden');
@@ -482,18 +529,24 @@ csvDownloadBtn.addEventListener('click', async () => {
 		const folder = zip.folder(folderName);
 
 		const deleted = csvState.deletedUrls[index] || [];
+		const edited = csvState.editedFiles[index] || {}; // ← 追加：編集履歴を取得
+
 		let readmeContent = infoText.trim();
 		extractedUrls.forEach(urlObj => {
 			if (deleted.includes(urlObj.id)) {
-				// displayText（表示されている文字列そのまま）を対象に検閲置換を行う
 				readmeContent = readmeContent.split(urlObj.displayText).join('[—検閲済み—]');
 			}
 		});
 
-		folder.file(`README-${safeTitle}.txt`, readmeContent);
+		// READMEの書き込み（編集されていれば編集内容を優先）
+		let finalReadmeContent = edited['readme'] !== undefined ? edited['readme'] : readmeContent;
+		folder.file(`README-${safeTitle}.txt`, finalReadmeContent);
+
 		extractedUrls.forEach(urlObj => {
 			if (!deleted.includes(urlObj.id)) {
-				folder.file(`${urlObj.id}.txt`, urlObj.url);
+				// URLファイルも書き込み（編集されていれば編集内容を優先）
+				let finalUrlContent = edited[urlObj.id] !== undefined ? edited[urlObj.id] : urlObj.url;
+				folder.file(`${urlObj.id}.txt`, finalUrlContent);
 			}
 		});
 	});

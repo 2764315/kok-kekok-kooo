@@ -125,11 +125,22 @@
 		</div>
 
 		<div class="csv-preview-container">
-			<!-- XGAサイズ（1024x768）に固定されたカード -->
-			<div class="csv-card" style="width: 1024px; height: 768px; flex-shrink: 0;">
-				<div class="csv-card-header"><i data-lucide="file-text" style="width:16px; height:16px;"></i> ファイル内容
+			<!-- 修正：style属性に max-width: 100%; と flex-shrink: 1; を設定 -->
+			<div class="csv-card" style="width: 1024px; max-width: 100%; height: 768px; flex-shrink: 1;">
+				<!-- 修正：ヘッダーを左右分割し、リセットボタンを追加 -->
+				<div class="csv-card-header" style="justify-content: space-between;">
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<i data-lucide="file-text" style="width:16px; height:16px;"></i> ファイル内容
+					</div>
+					<!-- 追加：リセットボタン -->
+					<button id="csv-reset-btn" class="csv-icon-btn"
+						style="font-size: 12px; padding: 2px 8px; margin: 0;">
+						<i data-lucide="rotate-ccw" style="width:14px; height:14px;"></i> リセット
+					</button>
 				</div>
-				<div id="csv-preview-content">左側のメニューからCSVファイルをアップロードしてください<br><a target="_blank" style="color:
+				<!-- 修正：contenteditable="true" とアウトライン無効化のスタイルを追加 -->
+				<div id="csv-preview-content" contenteditable="true" style="outline: none;">
+					左側のメニューからCSVファイルをアップロードしてください<br><a target="_blank" style="color:
 						#007b5e; text-decoration: underline; word-break: break-all; font-size:0.8rem;"
 						href=" https://drive.google.com/file/d/1JoGCsHNYkgiG49YZDgzf6DhyTRbQ9clW/view?usp=sharing">サンプルCSVはこちら(ダウンロードOK)<svg
 							xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -143,15 +154,15 @@
 					</a>
 				</div>
 			</div>
-			<div class="csv-card" style="width: 300px; height: 768px; flex-shrink: 0;">
+			<!-- 修正：こちらも max-width: 100%; と flex-shrink: 1; を設定 -->
+			<div class="csv-card" style="width: 300px; max-width: 100%; height: 768px; flex-shrink: 1;">
 				<div class="csv-card-header"><i data-lucide="list-tree" style="width:16px; height:16px;"></i> 生成ファイル構成
 				</div>
 				<div id="csv-tree-container">CSVアップロード後に表示されます</div>
 			</div>
 		</div>
-	</div>
 
-	<script src="js/folder-generation.js"></script>
+		<script src="js/folder-generation.js"></script>
 
 </body>
 
