@@ -36,8 +36,12 @@
 
 		<div id="csv-scroll-area">
 			<div class="sticky-top">
-				<label class="csv-btn csv-btn-yellow">
-					<i data-lucide="file-spreadsheet"></i> CSVを読み込む
+				<label class="csv-btn csv-btn-yellow" id="csv-upload-dropzone"
+					style="flex-direction: column; gap: 4px; padding: 12px 8px; text-align: center;">
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<i data-lucide="file-spreadsheet"></i> CSVを読み込む
+					</div>
+					<span style="font-size: 11px; font-weight: normal;">(またはドラッグ＆ドロップ)</span>
 					<input type="file" id="csv-file" accept=".csv" class="hidden" />
 				</label>
 				<p id="csv-empty-hint" style="font-size: 13px; color: #555; margin: 12px 0 0 0; line-height: 1.4;">
@@ -140,25 +144,26 @@
 				</div>
 				<!-- 修正：contenteditable="true" とアウトライン無効化のスタイルを追加 -->
 				<div id="csv-preview-content" contenteditable="true" style="outline: none;">
-					左側のメニューからCSVファイルをアップロードしてください<br><a target="_blank" style="color:
-						#007b5e; text-decoration: underline; word-break: break-all; font-size:0.8rem;"
-						href=" https://drive.google.com/file/d/1JoGCsHNYkgiG49YZDgzf6DhyTRbQ9clW/view?usp=sharing">サンプルCSVはこちら(ダウンロードOK)<svg
-							xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-							stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-							data-lucide="external-link" style="width:16px;height:16px;"
-							class="lucide lucide-external-link">
-							<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-							<polyline points="15 3 21 3 21 9"></polyline>
-							<line x1="10" x2="21" y1="14" y2="3"></line>
-						</svg>
-					</a>
-				</div>
+					左側のメニューからCSVファイルをアップロードしてください<br><a target="_blank"
+						style="color:#007b5e; text-decoration:underline; word-break:break-all; font-size:0.8rem;"
+						href="https://drive.google.com/file/d/1JoGCsHNYkgiG49YZDgzf6DhyTRbQ9clW/view?usp=sharing">サンプルCSVはこちら(ダウンロードOK)<i
+							data-lucide="external-link"
+							style="width:14px; height:14px; margin-left: 2px; vertical-align: middle;"></i></a></div>
 			</div>
 			<!-- 修正：こちらも max-width: 100%; と flex-shrink: 1; を設定 -->
 			<div class="csv-card" style="width: 300px; max-width: 100%; height: 768px; flex-shrink: 1;">
-				<div class="csv-card-header"><i data-lucide="list-tree" style="width:16px; height:16px;"></i> 生成ファイル構成
+				<div class="csv-card-header" style="justify-content: space-between;">
+					<div style="display: flex; align-items: center; gap: 8px;">
+						<i data-lucide="list-tree" style="width:16px; height:16px;"></i> 生成ファイル構成
+					</div>
+					<!-- 追加：ファイル追加ボタン -->
+					<label id="csv-add-file-btn" class="csv-icon-btn"
+						style="font-size: 12px; padding: 2px 8px; margin: 0; cursor: pointer; font-weight: normal;">
+						<i data-lucide="plus" style="width:14px; height:14px;"></i> ファイル追加
+						<input type="file" id="csv-add-file-input" multiple class="hidden" />
+					</label>
 				</div>
-				<div id="csv-tree-container">CSVアップロード後に表示されます</div>
+				<div id="csv-tree-container">CSVアップロード後に表示<br>（ドラッグ＆ドロップでファイル追加可能）</div>
 			</div>
 		</div>
 

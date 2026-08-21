@@ -3,7 +3,8 @@ const csvState = {
 	csvData: [], headers: [], hiddenColumns: new Set(), filenameColumns: [],
 	filenameOrder: [], currentIndex: 0, generatedFiles: [], deleteLogs: [],
 	tags: [], categoryHistory: new Set(), deletedUrls: {},
-	editedFiles: {}, // ← 追加：プレビューで手動編集された内容を保持するオブジェクト
+	editedFiles: {}, // プレビューで手動編集された内容を保持するオブジェクト
+	addedFiles: {},  // ドラッグ＆ドロップで追加されたファイルを保持するオブジェクト
 	settings: {
 		useFolderNumber: true,
 		useUrlDomain: true,
@@ -52,9 +53,8 @@ csvAccordionBtn.addEventListener('click', () => {
 	else csvAccordionIcon.style.transform = 'rotate(180deg)';
 });
 
-// ファイル読み込み処理
-csvFileInput.addEventListener('change', (e) => {
-	const file = e.target.files[0];
+// --- 修正：CSV読み込み処理の共通関数化 ---
+function loadCsvFile(file) {
 	if (!file) return;
 	Papa.parse(file, {
 		header: true, skipEmptyLines: true,
@@ -66,6 +66,8 @@ csvFileInput.addEventListener('change', (e) => {
 			csvState.deleteLogs = [];
 			csvState.tags = new Array(results.data.length).fill("");
 			csvState.deletedUrls = {};
+			csvState.editedFiles = {}; // リセット（前回追加分）
+			csvState.addedFiles = {};  // リセット（前回追加分）
 			csvState.categoryHistory.clear();
 
 			csvState.headers.forEach(h => {
@@ -90,7 +92,34 @@ csvFileInput.addEventListener('change', (e) => {
 			}
 		}
 	});
+}
+
+// クリックによるファイル選択時の処理
+csvFileInput.addEventListener('change', (e) => {
+	loadCsvFile(e.target.files[0]);
 });
+
+// 追加：ドラッグ＆ドロップによるCSV読み込み処理
+const csvUploadDropzone = document.getElementById('csv-upload-dropzone');
+if (csvUploadDropzone) {
+	csvUploadDropzone.addEventListener('dragover', (e) => {
+		e.preventDefault();
+		csvUploadDropzone.classList.add('drag-over');
+	});
+	csvUploadDropzone.addEventListener('dragleave', () => {
+		csvUploadDropzone.classList.remove('drag-over');
+	});
+	csvUploadDropzone.addEventListener('drop', (e) => {
+		e.preventDefault();
+		csvUploadDropzone.classList.remove('drag-over');
+		const file = e.dataTransfer.files[0];
+		if (file && file.name.toLowerCase().endsWith('.csv')) {
+			loadCsvFile(file);
+		} else {
+			alert('CSVファイルを選択してください。');
+		}
+	});
+}
 
 csvPrevBtn.addEventListener('click', () => {
 	if (csvState.currentIndex > 0) { csvState.currentIndex--; csvRowSelect.value = csvState.currentIndex; updateCsvPreview(); }
@@ -304,6 +333,33 @@ let currentFileId = null; // 現在表示中のファイルID（'readme' や 'UR
 
 function updateCsvPreviewContent(fileData) {
 	currentFileId = fileData.id;
+
+	// 追加：データ表示時は pre-wrap を有効にする
+	csvPreviewContent.classList.add('is-loaded');
+
+	// 手動でドロップされた追加ファイルの場合
+	if (fileData.isAdded) {
+		csvPreviewContent.setAttribute('contenteditable', 'false'); // 追加ファイルは編集不可
+
+		if (fileData.type.startsWith('image/')) {
+			// 画像ファイルの場合はプレビュー表示
+			const blob = new Blob([fileData.content], { type: fileData.type });
+			const url = URL.createObjectURL(blob);
+			csvPreviewContent.innerHTML = `<img src="${url}" style="max-width:100%; max-height:100%; object-fit:contain;">`;
+		} else if (fileData.type.startsWith('text/')) {
+			// テキストファイルの場合
+			const decoder = new TextDecoder('utf-8');
+			csvPreviewContent.textContent = decoder.decode(fileData.content);
+		} else {
+			// その他バイナリファイル等
+			csvPreviewContent.textContent = `※配信モードで表示確認をしてください\nファイル名: ${fileData.name}`;
+		}
+		return;
+	}
+
+	// 既存ファイル（READMEやURL）の場合は編集可能にする
+	csvPreviewContent.setAttribute('contenteditable', 'true');
+
 	// 編集履歴があるかチェック
 	const editedContent = csvState.editedFiles[csvState.currentIndex]?.[fileData.id];
 
@@ -320,9 +376,9 @@ function updateCsvPreviewContent(fileData) {
 	}
 }
 
-// 追加：プレビュー内容が直接編集されたら csvState に保存する
+// プレビュー内容が直接編集されたら csvState に保存する
 csvPreviewContent.addEventListener('input', () => {
-	if (currentFileId !== null) {
+	if (currentFileId !== null && csvPreviewContent.getAttribute('contenteditable') === 'true') {
 		if (!csvState.editedFiles[csvState.currentIndex]) {
 			csvState.editedFiles[csvState.currentIndex] = {};
 		}
@@ -331,7 +387,7 @@ csvPreviewContent.addEventListener('input', () => {
 	}
 });
 
-// 追加：リセットボタン（HTMLで <button id="csv-reset-btn"> を付けた前提）の処理
+// リセットボタンの処理
 const csvResetBtn = document.getElementById('csv-reset-btn');
 if (csvResetBtn) {
 	csvResetBtn.addEventListener('click', () => {
@@ -382,6 +438,19 @@ function updateCsvPreview() {
 		}
 	});
 
+	// 手動追加されたファイルを generatedFiles にマージ
+	const addedFiles = csvState.addedFiles[csvState.currentIndex] || [];
+	addedFiles.forEach(file => {
+		csvState.generatedFiles.push({
+			id: file.id,
+			name: file.name,
+			content: file.data, // ArrayBufferデータ
+			isUrl: false,
+			isAdded: true,
+			type: file.type
+		});
+	});
+
 	updateCsvPreviewContent(csvState.generatedFiles[0]);
 	csvPreviewFolderName.textContent = `${folderPath}`;
 
@@ -415,10 +484,16 @@ function updateCsvPreview() {
 					<button class="csv-file-delete-btn" data-file-id="${file.id}" data-file-url="${file.content}" title="このファイルを削除">
 						<i data-lucide="trash-2" style="width:14px; height:14px; color:#999; transition: color 0.2s;"></i>
 					</button>`;
+		} else if (file.isAdded) {
+			// 追加ファイル用の削除ボタン
+			deleteFileBtn = `
+					<button class="csv-added-delete-btn" data-file-id="${file.id}" title="この追加ファイルを削除">
+						<i data-lucide="trash-2" style="width:14px; height:14px; color:#999; transition: color 0.2s;"></i>
+					</button>`;
 		}
 
 		treeHtml += `<div class="csv-tree-item ${activeClass}" data-index="${index}" style="width: 100%;">
-								<i data-lucide="file-text" style="width:14px; height:14px; ${iconColor}"></i>
+								<i data-lucide="${file.isAdded && file.type.startsWith('image/') ? 'image' : 'file-text'}" style="width:14px; height:14px; ${iconColor}"></i>
 								<span style="flex-grow:1; overflow:hidden; text-overflow:ellipsis;">${file.name}</span>
 								${deleteFileBtn}
 							</div>`;
@@ -450,6 +525,7 @@ function updateCsvPreview() {
 				csvState.csvData.splice(csvState.currentIndex, 1);
 				csvState.tags.splice(csvState.currentIndex, 1);
 
+				// 削除されたURLインデックスのズレ修正
 				const newDeletedUrls = {};
 				for (const key in csvState.deletedUrls) {
 					const k = parseInt(key);
@@ -458,6 +534,7 @@ function updateCsvPreview() {
 				}
 				csvState.deletedUrls = newDeletedUrls;
 
+				// 手動編集された内容のインデックスのズレ修正
 				const newEditedFiles = {};
 				for (const key in csvState.editedFiles) {
 					const k = parseInt(key);
@@ -466,17 +543,34 @@ function updateCsvPreview() {
 				}
 				csvState.editedFiles = newEditedFiles;
 
+				// ドラッグ＆ドロップ追加ファイルのインデックスのズレ修正
+				const newAddedFiles = {};
+				for (const key in csvState.addedFiles) {
+					const k = parseInt(key);
+					if (k < csvState.currentIndex) newAddedFiles[k] = csvState.addedFiles[k];
+					else if (k > csvState.currentIndex) newAddedFiles[k - 1] = csvState.addedFiles[k];
+				}
+				csvState.addedFiles = newAddedFiles;
+
 				if (csvState.csvData.length === 0) {
 					// 全て削除された場合は初期状態に戻す
 					csvControls.classList.add('hidden');
 					csvDownloadArea.classList.add('hidden');
 					document.getElementById('csv-empty-hint').style.display = 'block';
 					csvPreviewFolderName.textContent = '未選択';
-					csvPreviewContent.textContent = '左側のメニューからCSVファイルをアップロードしてください';
+
+					// 追加：初期状態に戻す時は pre-wrap を無効化する
+					csvPreviewContent.classList.remove('is-loaded');
+
+					// 修正：テキストだけでなく、リンク付きの初期HTMLを入れ直す
+					csvPreviewContent.innerHTML = `左側のメニューからCSVファイルをアップロードしてください<br><a target="_blank" style="color:#007b5e; text-decoration:underline; word-break:break-all; font-size:0.8rem;" href="https://drive.google.com/file/d/1JoGCsHNYkgiG49YZDgzf6DhyTRbQ9clW/view?usp=sharing">サンプルCSVはこちら(ダウンロードOK)<i data-lucide="external-link" style="width:14px; height:14px; margin-left: 2px; vertical-align: middle;"></i></a>`;
+
+					csvPreviewContent.setAttribute('contenteditable', 'false');
 					csvTreeContainer.innerHTML = 'CSVアップロード後に表示されます';
 					csvTagInput.value = "";
 					csvState.categoryHistory.clear();
 					renderCategoryHistory();
+					lucide.createIcons({ root: csvPreviewContent }); // リンク横のアイコン再描画
 				} else {
 					if (csvState.currentIndex >= csvState.csvData.length) {
 						csvState.currentIndex = csvState.csvData.length - 1;
@@ -510,8 +604,61 @@ function updateCsvPreview() {
 			}
 		});
 	});
+
+	// 追加ファイルの個別削除ボタン
+	document.querySelectorAll('.csv-added-delete-btn').forEach(btn => {
+		btn.addEventListener('click', (e) => {
+			e.stopPropagation();
+			if (confirm('追加したこのファイルを削除しますか？')) {
+				const fileId = e.currentTarget.getAttribute('data-file-id');
+				csvState.addedFiles[csvState.currentIndex] = csvState.addedFiles[csvState.currentIndex].filter(f => f.id !== fileId);
+				updateCsvPreview();
+			}
+		});
+	});
 }
 
+// --- csv-tree-container へのドラッグ＆ドロップによるファイル追加 ---
+csvTreeContainer.addEventListener('dragover', (e) => {
+	e.preventDefault();
+	csvTreeContainer.classList.add('drag-over');
+});
+
+csvTreeContainer.addEventListener('dragleave', () => {
+	csvTreeContainer.classList.remove('drag-over');
+});
+
+csvTreeContainer.addEventListener('drop', (e) => {
+	e.preventDefault();
+	csvTreeContainer.classList.remove('drag-over');
+
+	if (csvState.csvData.length === 0) return;
+
+	const files = e.dataTransfer.files;
+	if (files.length > 0) {
+		if (!csvState.addedFiles[csvState.currentIndex]) {
+			csvState.addedFiles[csvState.currentIndex] = [];
+		}
+
+		Array.from(files).forEach(file => {
+			const reader = new FileReader();
+			// ファイルをバイナリデータ(ArrayBuffer)として読み込む
+			reader.onload = (event) => {
+				csvState.addedFiles[csvState.currentIndex].push({
+					id: 'added-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+					name: file.name,
+					type: file.type,
+					data: event.target.result,
+					isAdded: true
+				});
+				updateCsvPreview(); // 読み込み完了後にプレビューを更新
+			};
+			reader.readAsArrayBuffer(file);
+		});
+	}
+});
+
+// ZIPのダウンロード
 csvDownloadBtn.addEventListener('click', async () => {
 	if (csvState.csvData.length === 0) return;
 	const zip = new JSZip();
@@ -529,7 +676,7 @@ csvDownloadBtn.addEventListener('click', async () => {
 		const folder = zip.folder(folderName);
 
 		const deleted = csvState.deletedUrls[index] || [];
-		const edited = csvState.editedFiles[index] || {}; // ← 追加：編集履歴を取得
+		const edited = csvState.editedFiles[index] || {}; // 編集履歴を取得
 
 		let readmeContent = infoText.trim();
 		extractedUrls.forEach(urlObj => {
@@ -549,6 +696,13 @@ csvDownloadBtn.addEventListener('click', async () => {
 				folder.file(`${urlObj.id}.txt`, finalUrlContent);
 			}
 		});
+
+		// 手動追加されたファイルをZIPに書き込む
+		const addedFiles = csvState.addedFiles[index] || [];
+		addedFiles.forEach(file => {
+			// file.data は ArrayBuffer なのでそのまま JSZip に渡せる
+			folder.file(file.name, file.data);
+		});
 	});
 
 	if (csvState.deleteLogs.length > 0) {
@@ -566,5 +720,37 @@ csvDownloadBtn.addEventListener('click', async () => {
 	const content = await zip.generateAsync({ type: 'blob' });
 	saveAs(content, zipFileName);
 });
+
+// --- 追加：「ファイル追加」ボタンからの追加処理 ---
+const csvAddFileInput = document.getElementById('csv-add-file-input');
+if (csvAddFileInput) {
+	csvAddFileInput.addEventListener('change', (e) => {
+		if (csvState.csvData.length === 0) return;
+
+		const files = e.target.files;
+		if (files.length > 0) {
+			if (!csvState.addedFiles[csvState.currentIndex]) {
+				csvState.addedFiles[csvState.currentIndex] = [];
+			}
+
+			Array.from(files).forEach(file => {
+				const reader = new FileReader();
+				reader.onload = (event) => {
+					csvState.addedFiles[csvState.currentIndex].push({
+						id: 'added-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+						name: file.name,
+						type: file.type,
+						data: event.target.result,
+						isAdded: true
+					});
+					updateCsvPreview();
+				};
+				reader.readAsArrayBuffer(file);
+			});
+			// 選択状態をリセット（同じファイルを再度追加できるようにする）
+			e.target.value = '';
+		}
+	});
+}
 
 lucide.createIcons();

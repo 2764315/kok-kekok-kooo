@@ -756,7 +756,6 @@ iframe {
 }
 
 #csv-preview-content {
-  white-space: pre-wrap;
   word-wrap: break-word;
   padding: 20px;
   overflow: auto;
@@ -765,6 +764,10 @@ iframe {
   color: #333;
   background-color: #fff;
   flex: 1;
+}
+
+#csv-preview-content.is-loaded {
+  white-space: pre-wrap;
 }
 
 #csv-tree-container {
@@ -1607,4 +1610,27 @@ body.chromakey-mode .text-preview-content {
   text-orientation: upright;
   font-size: 12px;
   letter-spacing: 2px;
+}
+
+/* csv-tree-containerへのドラッグ＆ドロップ時エフェクト */
+#csv-tree-container.drag-over {
+  background-color: #eaf8f4;
+  border: 2px dashed #007b5e;
+  box-sizing: border-box;
+}
+
+/* CSV読み込みボタンのドラッグ＆ドロップ用エフェクト */
+#csv-upload-dropzone {
+  transition: all 0.2s;
+}
+
+/* CSV読み込みボタンのドラッグ＆ドロップ用エフェクト */
+#csv-upload-dropzone {
+  transition: all 0.2s;
+}
+
+#csv-upload-dropzone.drag-over {
+  background-color: #e2c00a;
+  transform: scale(1.02);
+  border: 2px dashed #333;
 }
