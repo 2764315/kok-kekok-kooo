@@ -561,7 +561,22 @@ function updateGroupNumbers() {
 	});
 }
 
-loadBtn.addEventListener('click', () => { folderInput.click(); });
+if (loadBtn && folderInput) {
+	// ドラッグが重なった時の見た目の変更のみ行う
+	loadBtn.addEventListener('dragover', () => {
+		loadBtn.classList.add('drag-over');
+	});
+
+	loadBtn.addEventListener('dragleave', () => {
+		loadBtn.classList.remove('drag-over');
+	});
+
+	loadBtn.addEventListener('drop', () => {
+		loadBtn.classList.remove('drag-over');
+		// e.preventDefault() や JSでのファイル代入処理は行いません。
+		// 透明な <input> タグが直接フォルダを受け取り、中身を自動展開して change イベントを発生させます。
+	});
+}
 
 folderInput.addEventListener('change', (event) => {
 	const files = Array.from(event.target.files);

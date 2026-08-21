@@ -1634,3 +1634,14 @@ body.chromakey-mode .text-preview-content {
   transform: scale(1.02);
   border: 2px dashed #333;
 }
+
+/* data-preview.html の読み込みボタン用 D&D エフェクト */
+#load-btn {
+  transition: all 0.2s;
+}
+
+#load-btn.drag-over {
+  background-color: #e2c00a;
+  transform: scale(1.02);
+  border: 2px dashed #333;
+}

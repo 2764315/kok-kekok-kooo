@@ -35,11 +35,17 @@
 
 		<div id="sidebar-scroll-area">
 			<div class="hide-on-collapse sticky-top">
-				<input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+				<label id="load-btn"
+					style="position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 4px; padding: 12px 8px; text-align: center; cursor: pointer;">
+					<div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+						<i data-lucide="folder-up"></i> フォルダを読み込む
+					</div>
+					<span style="font-size: 11px; font-weight: normal;">(またはドラッグ＆ドロップ)</span>
 
-				<button id="load-btn">
-					<i data-lucide="folder-open"></i>フォルダを読み込む
-				</button>
+					<!-- 修正：透明にしてボタン全体を覆い、ブラウザ標準の機能を直接使う -->
+					<input type="file" id="folder-input" webkitdirectory directory
+						style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer;" />
+				</label>
 
 				<h3 style="margin-bottom: 4px;">発表リスト</h3>
 				<p id="drag-hint-text"
